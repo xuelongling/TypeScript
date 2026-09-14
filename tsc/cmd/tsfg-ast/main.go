@@ -7,17 +7,17 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/core"
 	"github.com/microsoft/typescript-go/internal/parser"
+	"os"
+	"path/filepath"
 )
 
 type statement struct {
-	Kind string `json:"kind"`
-	Start int `json:"start"`
-	End int `json:"end"`
+	Kind  string `json:"kind"`
+	Start int    `json:"start"`
+	End   int    `json:"end"`
 }
 
 func main() {
@@ -26,7 +26,10 @@ func main() {
 		os.Exit(2)
 	}
 	text, err := os.ReadFile(os.Args[1])
-	if err != nil { fmt.Fprintln(os.Stderr, err); os.Exit(2) }
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
 	file := parser.ParseSourceFile(ast.SourceFileParseOptions{FileName: filepath.Base(os.Args[1])}, string(text), core.ScriptKindTS)
 	statements := []statement{}
 	for _, node := range file.Statements.Nodes {
@@ -35,16 +38,21 @@ func main() {
 	identifiers := []string{}
 	var visit ast.Visitor
 	visit = func(node *ast.Node) bool {
-		if node.Kind == ast.KindIdentifier { identifiers = append(identifiers, node.Text()) }
+		if node.Kind == ast.KindIdentifier {
+			identifiers = append(identifiers, node.Text())
+		}
 		node.ForEachChild(visit)
 		return false
 	}
 	file.ForEachChild(visit)
 	result := struct {
-		Kind string `json:"kind"`
-		Statements []statement `json:"statements"`
-		Identifiers []string `json:"identifiers"`
-		ParseDiagnosticCount int `json:"parseDiagnosticCount"`
+		Kind                 string      `json:"kind"`
+		Statements           []statement `json:"statements"`
+		Identifiers          []string    `json:"identifiers"`
+		ParseDiagnosticCount int         `json:"parseDiagnosticCount"`
 	}{file.AsNode().Kind.String(), statements, identifiers, len(file.Diagnostics())}
-	if err := json.NewEncoder(os.Stdout).Encode(result); err != nil { fmt.Fprintln(os.Stderr, err); os.Exit(2) }
+	if err := json.NewEncoder(os.Stdout).Encode(result); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
 }
