@@ -2,5 +2,5 @@
 canonical_url = "https://github.com/microsoft/TypeScript.git"
 base_oid = "1e4744d68260a7cb91b62b12edc3f6a2187faaf1"
 license = "Apache-2.0"
-sync_branch = "refs/heads/tsfg-r02a-intake"
-local_changes = "Add source provenance only for tsfg R02a workspace materialization; language baseline TypeScript 7.0.2. No frontend code, generation or build changes; Source Intake is not complete."
+sync_branch = "refs/heads/tsfg-r02a-ast"
+local_changes = "Add compiler-side tsfg AST source intake probe and fixed TS input; TypeScript 7.0.2 remains unchanged. Generation maintenance and complete Source Intake are not verified."
