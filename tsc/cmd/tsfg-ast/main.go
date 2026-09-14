@@ -16,6 +16,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/vfs/iovfs"
 	"os"
 	"path/filepath"
+	"sort"
 )
 
 type statement struct {
@@ -81,6 +82,25 @@ func main() {
 		Host:           compiler.NewCompilerHost("/", fs, "/internal/bundled/libs", nil, nil),
 		SingleThreaded: core.TSTrue,
 	})
+	approved := map[string]bool{name: true}
+	for _, input := range libs {
+		approved[input] = true
+	}
+	sourceFiles := []string{}
+	for _, source := range program.GetSourceFiles() {
+		input := source.FileName()
+		if !approved[input] {
+			fmt.Fprintln(os.Stderr, "unapproved Program input:", input)
+			os.Exit(2)
+		}
+		delete(approved, input)
+		sourceFiles = append(sourceFiles, input)
+	}
+	if len(approved) != 0 {
+		fmt.Fprintln(os.Stderr, "Program omitted required inputs")
+		os.Exit(2)
+	}
+	sort.Strings(sourceFiles)
 	file := program.GetSourceFile(name)
 	if file == nil {
 		fmt.Fprintln(os.Stderr, "source was not parsed")
@@ -121,7 +141,8 @@ func main() {
 		SemanticDiagnostics  []diagnosticObservation `json:"semanticDiagnostics"`
 		ProgramDiagnostics   []diagnosticObservation `json:"programDiagnostics"`
 		GlobalDiagnostics    []diagnosticObservation `json:"globalDiagnostics"`
-	}{file.AsNode().Kind.String(), statements, identifiers, len(file.Diagnostics()), types, syntax, semantic, programDiagnostics, global}
+		SourceFiles          []string                `json:"sourceFiles"`
+	}{file.AsNode().Kind.String(), statements, identifiers, len(file.Diagnostics()), types, syntax, semantic, programDiagnostics, global, sourceFiles}
 	if err := json.NewEncoder(os.Stdout).Encode(result); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
