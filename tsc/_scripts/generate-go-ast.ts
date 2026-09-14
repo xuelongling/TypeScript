@@ -14,7 +14,7 @@
  *   - Is*() type guard functions
  */
 
-import { execaSync } from "execa";
+import { spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -1007,7 +1007,13 @@ function generateKind(): string {
 
 function writeAndFormat(filePath: string, content: string) {
     fs.writeFileSync(filePath, content);
-    execaSync("dprint", ["fmt", filePath], { stdio: "inherit", cwd: ROOT });
+    const formatter = process.env.TSFG_DPRINT;
+    const config = process.env.TSFG_DPRINT_CONFIG;
+    if (!formatter || !path.isAbsolute(formatter) || !config || !path.isAbsolute(config)) {
+        throw new Error("Go AST generation requires absolute TSFG_DPRINT and TSFG_DPRINT_CONFIG inputs");
+    }
+    const formatted = spawnSync(formatter, ["fmt", "--config", config, filePath], { stdio: "inherit", cwd: ROOT });
+    if (formatted.error || formatted.status !== 0) throw new Error(`Go AST formatter failed: ${formatted.error ?? formatted.status}`);
     console.log(`Wrote ${filePath}`);
 }
 
