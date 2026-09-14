@@ -11,6 +11,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/compiler"
 	"github.com/microsoft/typescript-go/internal/core"
+	"github.com/microsoft/typescript-go/internal/locale"
 	"github.com/microsoft/typescript-go/internal/tsoptions"
 	"github.com/microsoft/typescript-go/internal/vfs/iovfs"
 	"os"
@@ -26,6 +27,27 @@ type statement struct {
 type typeObservation struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
+}
+
+type diagnosticObservation struct {
+	Code     int32  `json:"code"`
+	Category string `json:"category"`
+	Message  string `json:"message"`
+	File     string `json:"file"`
+	Start    int    `json:"start"`
+	End      int    `json:"end"`
+}
+
+func observeDiagnostics(diagnostics []*ast.Diagnostic) []diagnosticObservation {
+	result := []diagnosticObservation{}
+	for _, d := range diagnostics {
+		name := ""
+		if d.File() != nil {
+			name = filepath.Base(d.File().FileName())
+		}
+		result = append(result, diagnosticObservation{d.Code(), d.Category().Name(), d.Localize(locale.Default), name, d.Pos(), d.End()})
+	}
+	return result
 }
 
 func main() {
@@ -70,6 +92,7 @@ func main() {
 	}
 	identifiers := []string{}
 	types := []typeObservation{}
+	syntax := observeDiagnostics(program.GetSyntacticDiagnostics(context.Background(), nil))
 	// Convert types while their owning checker is exclusively borrowed. Only values escape.
 	checker, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
 	defer release()
@@ -86,12 +109,13 @@ func main() {
 	}
 	file.ForEachChild(visit)
 	result := struct {
-		Kind                 string            `json:"kind"`
-		Statements           []statement       `json:"statements"`
-		Identifiers          []string          `json:"identifiers"`
-		ParseDiagnosticCount int               `json:"parseDiagnosticCount"`
-		Types                []typeObservation `json:"types"`
-	}{file.AsNode().Kind.String(), statements, identifiers, len(file.Diagnostics()), types}
+		Kind                 string                  `json:"kind"`
+		Statements           []statement             `json:"statements"`
+		Identifiers          []string                `json:"identifiers"`
+		ParseDiagnosticCount int                     `json:"parseDiagnosticCount"`
+		Types                []typeObservation       `json:"types"`
+		SyntaxDiagnostics    []diagnosticObservation `json:"syntaxDiagnostics"`
+	}{file.AsNode().Kind.String(), statements, identifiers, len(file.Diagnostics()), types, syntax}
 	if err := json.NewEncoder(os.Stdout).Encode(result); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
