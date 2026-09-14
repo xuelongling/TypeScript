@@ -30,7 +30,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
-	file := parser.ParseSourceFile(ast.SourceFileParseOptions{FileName: filepath.Base(os.Args[1])}, string(text), core.ScriptKindTS)
+	file := parser.ParseSourceFile(ast.SourceFileParseOptions{FileName: "/tsfg/" + filepath.Base(os.Args[1])}, string(text), core.ScriptKindTS)
 	statements := []statement{}
 	for _, node := range file.Statements.Nodes {
 		statements = append(statements, statement{node.Kind.String(), node.Pos(), node.End()})
