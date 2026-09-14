@@ -93,6 +93,9 @@ func main() {
 	identifiers := []string{}
 	types := []typeObservation{}
 	syntax := observeDiagnostics(program.GetSyntacticDiagnostics(context.Background(), nil))
+	semantic := observeDiagnostics(program.GetSemanticDiagnostics(context.Background(), nil))
+	programDiagnostics := observeDiagnostics(program.GetProgramDiagnostics())
+	global := observeDiagnostics(program.GetGlobalDiagnostics(context.Background()))
 	// Convert types while their owning checker is exclusively borrowed. Only values escape.
 	checker, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
 	defer release()
@@ -115,7 +118,10 @@ func main() {
 		ParseDiagnosticCount int                     `json:"parseDiagnosticCount"`
 		Types                []typeObservation       `json:"types"`
 		SyntaxDiagnostics    []diagnosticObservation `json:"syntaxDiagnostics"`
-	}{file.AsNode().Kind.String(), statements, identifiers, len(file.Diagnostics()), types, syntax}
+		SemanticDiagnostics  []diagnosticObservation `json:"semanticDiagnostics"`
+		ProgramDiagnostics   []diagnosticObservation `json:"programDiagnostics"`
+		GlobalDiagnostics    []diagnosticObservation `json:"globalDiagnostics"`
+	}{file.AsNode().Kind.String(), statements, identifiers, len(file.Diagnostics()), types, syntax, semantic, programDiagnostics, global}
 	if err := json.NewEncoder(os.Stdout).Encode(result); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
