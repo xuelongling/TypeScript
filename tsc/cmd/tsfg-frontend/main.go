@@ -102,11 +102,14 @@ type integerLiteral struct {
 type statement struct {
 	Kind        string      `json:"kind"`
 	Expression  *expression `json:"expression,omitempty"`
+	Condition   *expression `json:"condition,omitempty"`
 	Symbol      *symbol     `json:"symbol,omitempty"`
 	Initializer *expression `json:"initializer,omitempty"`
 	Target      *expression `json:"target,omitempty"`
 	Value       *expression `json:"value,omitempty"`
 	Body        []statement `json:"body,omitempty"`
+	ThenBody    []statement `json:"thenBody,omitempty"`
+	ElseBody    []statement `json:"elseBody,omitempty"`
 	Range       span        `json:"range"`
 }
 
@@ -461,18 +464,16 @@ func i32LiteralReturn(file *ast.SourceFile, check *checker.Checker, d *ast.Diagn
 		if decl.Type == nil || scalar(check.GetTypeFromTypeNode(decl.Type)) != "i32" || decl.Body.Kind != ast.KindBlock {
 			continue
 		}
-		for _, item := range decl.Body.AsBlock().Statements.Nodes {
-			if item.Kind != ast.KindReturnStatement || d.Pos() < item.Pos() || d.End() > item.End() {
-				continue
+		var value *big.Int
+		if visitStatements(decl.Body.AsBlock().Statements.Nodes, func(item *ast.Node) bool {
+			if item.Kind != ast.KindReturnStatement || d.Pos() < item.Pos() || d.End() > item.End() ||
+				item.AsReturnStatement().Expression == nil {
+				return false
 			}
-			expr := item.AsReturnStatement().Expression
-			if expr == nil {
-				continue
-			}
-			value, _, ok := exactInteger(file, expr)
-			if ok {
-				return value, true
-			}
+			value, _, _ = exactInteger(file, item.AsReturnStatement().Expression)
+			return value != nil
+		}) {
+			return value, true
 		}
 	}
 	return nil, false
@@ -491,6 +492,31 @@ func localDeclaration(node *ast.Node) *ast.Node {
 		return nil
 	}
 	return list[0]
+}
+
+func visitStatements(nodes []*ast.Node, visit func(*ast.Node) bool) bool {
+	for _, node := range nodes {
+		if visit(node) {
+			return true
+		}
+		switch node.Kind {
+		case ast.KindBlock:
+			if visitStatements(node.AsBlock().Statements.Nodes, visit) {
+				return true
+			}
+		case ast.KindIfStatement:
+			branch := node.AsIfStatement()
+			if visitStatements([]*ast.Node{branch.ThenStatement}, visit) ||
+				(branch.ElseStatement != nil && visitStatements([]*ast.Node{branch.ElseStatement}, visit)) {
+				return true
+			}
+		case ast.KindWhileStatement:
+			if visitStatements([]*ast.Node{node.AsWhileStatement().Statement}, visit) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func defaultI32LocalReturn(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) (*big.Int, bool) {
@@ -553,15 +579,12 @@ func contextualI32Local(file *ast.SourceFile, check *checker.Checker, d *ast.Dia
 	if d.File() != file || d.Code() != 2322 {
 		return nil, false
 	}
-	var walk func([]*ast.Node) (*big.Int, bool)
-	walk = func(items []*ast.Node) (*big.Int, bool) {
-		for _, item := range items {
-			if item.Kind == ast.KindBlock {
-				if value, ok := walk(item.AsBlock().Statements.Nodes); ok {
-					return value, true
-				}
-				continue
-			}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
+			continue
+		}
+		var value *big.Int
+		if visitStatements(node.Body().AsBlock().Statements.Nodes, func(item *ast.Node) bool {
 			for _, decl := range localDeclarations(item) {
 				if decl.Kind != ast.KindVariableDeclaration || d.Pos() < decl.Pos() || d.End() > decl.End() {
 					continue
@@ -570,19 +593,13 @@ func contextualI32Local(file *ast.SourceFile, check *checker.Checker, d *ast.Dia
 				if local.Type == nil || scalar(check.GetTypeFromTypeNode(local.Type)) != "i32" || local.Initializer == nil {
 					continue
 				}
-				value, _, ok := exactInteger(file, local.Initializer)
-				if ok {
-					return value, true
+				value, _, _ = exactInteger(file, local.Initializer)
+				if value != nil {
+					return true
 				}
 			}
-		}
-		return nil, false
-	}
-	for _, node := range file.Statements.Nodes {
-		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
-			continue
-		}
-		if value, ok := walk(node.Body().AsBlock().Statements.Nodes); ok {
+			return false
+		}) {
 			return value, true
 		}
 	}
@@ -593,43 +610,79 @@ func contextualI32Assignment(file *ast.SourceFile, check *checker.Checker, d *as
 	if d.File() != file || d.Code() != 2322 {
 		return nil, false
 	}
-	var walk func([]*ast.Node) (*big.Int, bool)
-	walk = func(items []*ast.Node) (*big.Int, bool) {
-		for _, item := range items {
-			if item.Kind == ast.KindBlock {
-				if value, ok := walk(item.AsBlock().Statements.Nodes); ok {
-					return value, true
-				}
-				continue
-			}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
+			continue
+		}
+		var value *big.Int
+		if visitStatements(node.Body().AsBlock().Statements.Nodes, func(item *ast.Node) bool {
 			if item.Kind != ast.KindExpressionStatement {
-				continue
+				return false
 			}
 			expr := item.AsExpressionStatement().Expression
 			if expr.Kind != ast.KindBinaryExpression || expr.AsBinaryExpression().OperatorToken.Kind != ast.KindEqualsToken {
-				continue
+				return false
 			}
 			binary := expr.AsBinaryExpression()
 			if d.Pos() < item.Pos() || d.End() > item.End() ||
 				scalar(check.GetTypeAtLocation(binary.Left)) != "i32" {
-				continue
+				return false
 			}
-			value, _, ok := exactInteger(file, binary.Right)
-			if ok {
-				return value, true
-			}
+			value, _, _ = exactInteger(file, binary.Right)
+			return value != nil
+		}) {
+			return value, true
 		}
-		return nil, false
+	}
+	return nil, false
+}
+
+func supportedOperatorAssignment(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
+	if d.File() != file || d.Code() != 2322 {
+		return false
 	}
 	for _, node := range file.Statements.Nodes {
 		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
 			continue
 		}
-		if value, ok := walk(node.Body().AsBlock().Statements.Nodes); ok {
-			return value, true
+		decl := node.AsFunctionDeclaration()
+		bindings := parameterBindings(check, decl.Parameters.Nodes, nil)
+		body := decl.Body.AsBlock().Statements.Nodes
+		visitStatements(body, func(item *ast.Node) bool {
+			for _, local := range localDeclarations(item) {
+				if local.Name() == nil || local.Name().Kind != ast.KindIdentifier {
+					continue
+				}
+				t := scalar(check.GetTypeAtLocation(local.Name()))
+				if t == "f64" && local.AsVariableDeclaration().Type == nil && local.AsVariableDeclaration().Initializer != nil {
+					if _, _, ok := exactInteger(file, local.AsVariableDeclaration().Initializer); ok {
+						t = "i32"
+					}
+				}
+				bindings[check.GetSymbolAtLocation(local.Name())] = symbol{Type: t}
+			}
+			return false
+		})
+		if visitStatements(body, func(item *ast.Node) bool {
+			if item.Kind != ast.KindExpressionStatement {
+				return false
+			}
+			expr := item.AsExpressionStatement().Expression
+			if expr.Kind != ast.KindBinaryExpression || expr.AsBinaryExpression().OperatorToken.Kind != ast.KindEqualsToken {
+				return false
+			}
+			binary := expr.AsBinaryExpression()
+			if d.Pos() < item.Pos() || d.End() > item.End() ||
+				scalar(check.GetTypeAtLocation(binary.Left)) != "i32" {
+				return false
+			}
+			projected, failure := projectOperator(file, check, binary.Right, bindings)
+			return failure == nil && projected.Type == "i32"
+		}) {
+			return true
 		}
 	}
-	return nil, false
+	return false
 }
 
 func scalarAssignmentMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
@@ -748,15 +801,15 @@ func scalarReturnMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.D
 		if decl.Type == nil || scalar(check.GetTypeFromTypeNode(decl.Type)) == "" || decl.Body.Kind != ast.KindBlock {
 			continue
 		}
-		body := decl.Body.AsBlock().Statements.Nodes
-		for _, item := range body {
+		if visitStatements(decl.Body.AsBlock().Statements.Nodes, func(item *ast.Node) bool {
 			if item.Kind != ast.KindReturnStatement || d.Pos() < item.Pos() || d.End() > item.End() {
-				continue
+				return false
 			}
 			expr := item.AsReturnStatement().Expression
-			if expr != nil && scalar(check.GetTypeAtLocation(expr)) != "" && scalar(check.GetTypeAtLocation(expr)) != scalar(check.GetTypeFromTypeNode(decl.Type)) {
-				return true
-			}
+			return expr != nil && scalar(check.GetTypeAtLocation(expr)) != "" &&
+				scalar(check.GetTypeAtLocation(expr)) != scalar(check.GetTypeFromTypeNode(decl.Type))
+		}) {
+			return true
 		}
 	}
 	return false
@@ -896,6 +949,35 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 				return nil, failure
 			}
 			out = append(out, statement{Kind: "block", Body: body, Range: offset(p.file, node)})
+		case ast.KindIfStatement:
+			branch := node.AsIfStatement()
+			condition, failure := p.expr(branch.Expression, "bool")
+			if failure.Status != "" {
+				return nil, failure
+			}
+			thenBody, failure := p.statements([]*ast.Node{branch.ThenStatement}, returnType)
+			if failure.Status != "" {
+				return nil, failure
+			}
+			projected := statement{Kind: "if", Condition: condition, ThenBody: thenBody, Range: expressionOffset(p.file, node)}
+			if branch.ElseStatement != nil {
+				projected.ElseBody, failure = p.statements([]*ast.Node{branch.ElseStatement}, returnType)
+				if failure.Status != "" {
+					return nil, failure
+				}
+			}
+			out = append(out, projected)
+		case ast.KindWhileStatement:
+			loop := node.AsWhileStatement()
+			condition, failure := p.expr(loop.Expression, "bool")
+			if failure.Status != "" {
+				return nil, failure
+			}
+			body, failure := p.statements([]*ast.Node{loop.Statement}, returnType)
+			if failure.Status != "" {
+				return nil, failure
+			}
+			out = append(out, statement{Kind: "while", Condition: condition, Body: body, Range: expressionOffset(p.file, node)})
 		default:
 			return nil, failAt("r02b-d-unsupported", "unsupported", p.file, node)
 		}
@@ -1037,7 +1119,7 @@ func analyze(r request) response {
 	for _, group := range groups {
 		for _, d := range group.items {
 			code := group.code
-			if supportedOperatorReturn(file, check, d) {
+			if supportedOperatorReturn(file, check, d) || supportedOperatorAssignment(file, check, d) {
 				continue
 			}
 			if value, ok := i32LiteralReturn(file, check, d); ok {
