@@ -81,11 +81,19 @@ type symbol struct {
 }
 
 type expression struct {
-	Kind    string          `json:"kind"`
-	Type    string          `json:"type"`
-	Symbol  string          `json:"symbol,omitempty"`
-	Literal *integerLiteral `json:"literal,omitempty"`
-	Range   span            `json:"range"`
+	Kind      string          `json:"kind"`
+	Type      string          `json:"type"`
+	Symbol    string          `json:"symbol,omitempty"`
+	Target    string          `json:"target,omitempty"`
+	Arguments []expression    `json:"arguments,omitempty"`
+	Signature *signature      `json:"signature,omitempty"`
+	Literal   *integerLiteral `json:"literal,omitempty"`
+	Range     span            `json:"range"`
+}
+
+type signature struct {
+	Parameters []string `json:"parameters"`
+	ReturnType string   `json:"returnType"`
 }
 
 type integerLiteral struct {
@@ -103,10 +111,16 @@ type statement struct {
 
 type function struct {
 	Name       string      `json:"name"`
+	Symbol     string      `json:"symbol"`
 	Parameters []symbol    `json:"parameters"`
 	ReturnType string      `json:"returnType"`
 	Body       []statement `json:"body"`
 	Range      span        `json:"range"`
+}
+
+type functionInfo struct {
+	ID        string
+	Signature signature
 }
 
 type response struct {
@@ -145,6 +159,14 @@ func sourcePosition(file *ast.SourceFile, start, end int) primary {
 func failAt(code, category string, file *ast.SourceFile, node *ast.Node) response {
 	result := fail(code, category, file.FileName(), offset(file, node))
 	result.Diagnostics[0].Primary = sourcePosition(file, node.Pos(), node.End())
+	return result
+}
+
+func failCallAt(code string, file *ast.SourceFile, node *ast.Node) response {
+	result := failAt(code, "error", file, node)
+	result.Diagnostics[0].RuleID = "r01-calls"
+	result.Diagnostics[0].RuleIDs = []string{"r01-calls"}
+	result.Diagnostics[0].Phase = "types"
 	return result
 }
 
@@ -369,6 +391,142 @@ func scalarReturnMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.D
 	return false
 }
 
+func callDiagnostic(file *ast.SourceFile, d *ast.Diagnostic) (string, bool) {
+	if d.File() != file {
+		return "", false
+	}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
+			continue
+		}
+		for _, item := range node.Body().AsBlock().Statements.Nodes {
+			if item.Kind != ast.KindReturnStatement {
+				continue
+			}
+			expr := item.AsReturnStatement().Expression
+			if expr == nil || expr.Kind != ast.KindCallExpression || d.Pos() < item.Pos() || d.End() > item.End() {
+				continue
+			}
+			if d.Code() != 2322 && (d.Pos() < expr.Pos() || d.End() > expr.End()) {
+				continue
+			}
+			switch d.Code() {
+			case 2304:
+				return "r01-d-unresolved-name", true
+			case 2345, 2322:
+				return "r01-d-scalar-type", true
+			case 2554:
+				return "r02b-d-type", true
+			}
+		}
+	}
+	return "", false
+}
+
+func i32LiteralCallArgument(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) (*big.Int, bool) {
+	if d.File() != file || d.Code() != 2345 {
+		return nil, false
+	}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
+			continue
+		}
+		for _, item := range node.Body().AsBlock().Statements.Nodes {
+			if item.Kind != ast.KindReturnStatement {
+				continue
+			}
+			expr := item.AsReturnStatement().Expression
+			if expr == nil || expr.Kind != ast.KindCallExpression {
+				continue
+			}
+			call := expr.AsCallExpression()
+			if call.Expression.Kind != ast.KindIdentifier {
+				continue
+			}
+			callee := check.GetSymbolAtLocation(call.Expression)
+			for _, declaration := range file.Statements.Nodes {
+				if declaration.Kind != ast.KindFunctionDeclaration || declaration.Name() == nil ||
+					check.GetSymbolAtLocation(declaration.Name()) != callee {
+					continue
+				}
+				parameters := declaration.AsFunctionDeclaration().Parameters.Nodes
+				for index, argument := range call.Arguments.Nodes {
+					if index >= len(parameters) || d.Pos() < argument.Pos() || d.End() > argument.End() {
+						continue
+					}
+					paramType := parameters[index].AsParameterDeclaration().Type
+					if paramType != nil && scalar(check.GetTypeFromTypeNode(paramType)) == "i32" {
+						value, _, ok := exactInteger(file, argument)
+						return value, ok
+					}
+				}
+			}
+		}
+	}
+	return nil, false
+}
+
+func projectExpression(file *ast.SourceFile, check *checker.Checker, node *ast.Node, expected string,
+	refs map[*ast.Symbol]symbol, functions map[*ast.Symbol]functionInfo) (expression, *response) {
+	if value, literal, ok := exactInteger(file, node); ok && expected == "i32" {
+		if !i32InRange(value) {
+			failure := failAt("r01-d-integer-range", "error", file, node)
+			return expression{}, &failure
+		}
+		return expression{Kind: "integer", Type: "i32", Literal: literal, Range: offset(file, node)}, nil
+	}
+	if node.Kind == ast.KindIdentifier {
+		resolved := check.GetSymbolAtLocation(node)
+		ref, ok := refs[resolved]
+		if !ok {
+			failure := failAt("r02b-d-type", "error", file, node)
+			return expression{}, &failure
+		}
+		if ref.Type != expected {
+			failure := failAt("r01-d-scalar-type", "error", file, node)
+			return expression{}, &failure
+		}
+		return expression{Kind: "reference", Type: ref.Type, Symbol: ref.ID, Range: offset(file, node)}, nil
+	}
+	if node.Kind == ast.KindCallExpression {
+		call := node.AsCallExpression()
+		if call.Expression.Kind != ast.KindIdentifier || call.QuestionDotToken != nil || call.TypeArguments != nil {
+			failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+			return expression{}, &failure
+		}
+		target, ok := functions[check.GetSymbolAtLocation(call.Expression)]
+		if !ok {
+			failure := failCallAt("r01-d-unresolved-name", file, call.Expression)
+			return expression{}, &failure
+		}
+		if target.Signature.ReturnType != expected {
+			failure := failCallAt("r01-d-scalar-type", file, node)
+			return expression{}, &failure
+		}
+		if len(call.Arguments.Nodes) != len(target.Signature.Parameters) {
+			failure := failCallAt("r02b-d-type", file, node)
+			return expression{}, &failure
+		}
+		arguments := make([]expression, 0, len(call.Arguments.Nodes))
+		for index, argument := range call.Arguments.Nodes {
+			projected, failure := projectExpression(file, check, argument, target.Signature.Parameters[index], refs, functions)
+			if failure != nil {
+				if failure.Diagnostics[0].Code == "r01-d-scalar-type" {
+					failure.Diagnostics[0].RuleID = "r01-calls"
+					failure.Diagnostics[0].RuleIDs = []string{"r01-calls"}
+				}
+				return expression{}, failure
+			}
+			arguments = append(arguments, projected)
+		}
+		sig := target.Signature
+		return expression{Kind: "call", Type: sig.ReturnType, Target: target.ID,
+			Arguments: arguments, Signature: &sig, Range: offset(file, node)}, nil
+	}
+	failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+	return expression{}, &failure
+}
+
 func analyze(r request) response {
 	if !valid(r) {
 		return fail("r02b-d-input", "input", r.RootFile, span{})
@@ -421,6 +579,16 @@ func analyze(r request) response {
 	for _, group := range groups {
 		for _, d := range group.items {
 			code := group.code
+			if value, ok := i32LiteralCallArgument(file, check, d); ok {
+				if i32InRange(value) {
+					continue
+				}
+				code = "r01-d-integer-range"
+			}
+			callCode, isCall := callDiagnostic(file, d)
+			if isCall && code != "r01-d-integer-range" {
+				code = callCode
+			}
 			if value, ok := i32LiteralReturn(file, check, d); ok {
 				if i32InRange(value) {
 					continue
@@ -450,12 +618,15 @@ func analyze(r request) response {
 				primaryLocation = sourcePosition(d.File(), d.Pos(), d.End())
 			}
 			phase := "syntax"
-			if code == "r01-d-scalar-type" || code == "r01-d-integer-range" || code == "r02b-d-type" {
+			if code == "r01-d-scalar-type" || code == "r01-d-integer-range" || code == "r01-d-unresolved-name" || code == "r02b-d-type" {
 				phase = "types"
 			}
 			rule := "r01-ts-baseline"
 			if code == "r01-d-integer-range" || code == "r01-d-scalar-type" {
 				rule = "r01-literals"
+			}
+			if isCall && code != "r01-d-integer-range" {
+				rule = "r01-calls"
 			}
 			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: code, RuleID: rule, RuleIDs: []string{rule},
 				Category: "error", Phase: phase, Severity: "error", File: name, Range: where,
@@ -465,6 +636,39 @@ func analyze(r request) response {
 	if len(result.Diagnostics) != 0 {
 		result.Status = "error"
 		return result
+	}
+	functions := map[*ast.Symbol]functionInfo{}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Body() == nil {
+			return failAt("r02b-d-unsupported", "unsupported", file, node)
+		}
+		decl := node.AsFunctionDeclaration()
+		if decl.Type == nil || decl.Body.Kind != ast.KindBlock {
+			return failAt("r02b-d-unsupported", "unsupported", file, node)
+		}
+		returnType := scalar(check.GetTypeFromTypeNode(decl.Type))
+		if returnType == "" {
+			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
+		}
+		parameters := make([]string, 0, len(decl.Parameters.Nodes))
+		for _, p := range decl.Parameters.Nodes {
+			if p.Name() == nil || p.AsParameterDeclaration().Type == nil || p.AsParameterDeclaration().Initializer != nil {
+				return failAt("r02b-d-unsupported", "unsupported", file, p)
+			}
+			t := scalar(check.GetTypeAtLocation(p.Name()))
+			if t == "" {
+				return failAt("r02b-d-unsupported", "unsupported", file, p)
+			}
+			parameters = append(parameters, t)
+		}
+		resolved := check.GetSymbolAtLocation(node.Name())
+		if resolved == nil {
+			return failAt("r02b-d-type", "error", file, node.Name())
+		}
+		s := symbol{ID: fmt.Sprintf("s%d", len(result.Symbols)+1), Name: node.Name().Text(),
+			Kind: "function", Type: returnType, Range: offset(file, node.Name())}
+		result.Symbols = append(result.Symbols, s)
+		functions[resolved] = functionInfo{ID: s.ID, Signature: signature{Parameters: parameters, ReturnType: returnType}}
 	}
 	for _, node := range file.Statements.Nodes {
 		if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Body() == nil {
@@ -478,11 +682,13 @@ func analyze(r request) response {
 		if len(body) < 1 || len(body) > 2 {
 			return failAt("r02b-d-unsupported", "unsupported", file, node)
 		}
-		fn := function{Name: node.Name().Text(), Parameters: []symbol{}, Body: []statement{}, Range: offset(file, node)}
+		info := functions[check.GetSymbolAtLocation(node.Name())]
+		fn := function{Name: node.Name().Text(), Symbol: info.ID, Parameters: []symbol{}, Body: []statement{}, Range: offset(file, node)}
 		fn.ReturnType = scalar(check.GetTypeFromTypeNode(decl.Type))
 		if fn.ReturnType == "" {
 			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
 		}
+		refs := map[*ast.Symbol]symbol{}
 		for _, p := range decl.Parameters.Nodes {
 			if p.Name() == nil || p.AsParameterDeclaration().Type == nil || p.AsParameterDeclaration().Initializer != nil {
 				return failAt("r02b-d-unsupported", "unsupported", file, p)
@@ -494,6 +700,7 @@ func analyze(r request) response {
 			s := symbol{ID: fmt.Sprintf("s%d", len(result.Symbols)+1), Name: p.Name().Text(), Kind: "parameter", Type: t, Range: offset(file, p.Name())}
 			result.Symbols = append(result.Symbols, s)
 			fn.Parameters = append(fn.Parameters, s)
+			refs[check.GetSymbolAtLocation(p.Name())] = s
 		}
 		var localNode *ast.Node
 		var localSymbol *ast.Symbol
@@ -522,6 +729,7 @@ func analyze(r request) response {
 			}
 			s := symbol{ID: fmt.Sprintf("s%d", len(result.Symbols)+1), Name: localNode.Name().Text(), Kind: "local", Type: "i32", Range: offset(file, localNode.Name())}
 			result.Symbols = append(result.Symbols, s)
+			refs[localSymbol] = s
 			fn.Body = append(fn.Body, statement{Kind: "variable", Symbol: &s, Initializer: &expression{Kind: "integer", Type: "i32", Literal: literal, Range: offset(file, init)}, Range: offset(file, body[0])})
 		}
 		bodyNode := body[len(body)-1]
@@ -529,37 +737,11 @@ func analyze(r request) response {
 			return failAt("r02b-d-unsupported", "unsupported", file, bodyNode)
 		}
 		expr := bodyNode.AsReturnStatement().Expression
-		if value, literal, ok := exactInteger(file, expr); ok && fn.ReturnType == "i32" {
-			if !i32InRange(value) {
-				return failAt("r01-d-integer-range", "error", file, expr)
-			}
-			fn.Body = append(fn.Body, statement{Kind: "return", Expression: &expression{Kind: "integer", Type: "i32", Literal: literal, Range: offset(file, expr)}, Range: offset(file, bodyNode)})
-			result.Functions = append(result.Functions, fn)
-			continue
+		projected, failure := projectExpression(file, check, expr, fn.ReturnType, refs, functions)
+		if failure != nil {
+			return *failure
 		}
-		if expr.Kind != ast.KindIdentifier {
-			return failAt("r02b-d-unsupported", "unsupported", file, expr)
-		}
-		resolved := check.GetSymbolAtLocation(expr)
-		ref := ""
-		for i, p := range decl.Parameters.Nodes {
-			if resolved != nil && resolved == check.GetSymbolAtLocation(p.Name()) {
-				ref = fn.Parameters[i].ID
-				break
-			}
-		}
-		if localSymbol != nil && resolved == localSymbol {
-			ref = fn.Body[0].Symbol.ID
-		}
-		if localSymbol != nil && resolved == localSymbol && fn.ReturnType != "i32" {
-			return failAt("r01-d-scalar-type", "error", file, expr)
-		}
-		if ref == "" || scalar(check.GetTypeAtLocation(expr)) != fn.ReturnType {
-			if !(localSymbol != nil && resolved == localSymbol && fn.ReturnType == "i32") {
-				return failAt("r01-d-scalar-type", "error", file, expr)
-			}
-		}
-		fn.Body = append(fn.Body, statement{Kind: "return", Expression: &expression{Kind: "reference", Type: fn.ReturnType, Symbol: ref, Range: offset(file, expr)}, Range: offset(file, bodyNode)})
+		fn.Body = append(fn.Body, statement{Kind: "return", Expression: &projected, Range: offset(file, bodyNode)})
 		result.Functions = append(result.Functions, fn)
 	}
 	if len(result.Functions) == 0 {
