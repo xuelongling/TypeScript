@@ -106,10 +106,10 @@ type response struct {
 	Diagnostics []diagnostic `json:"diagnostics,omitempty"`
 }
 
-func fail(code, category, file string, location span) response {
-	phase := "syntax"
-	rule := "r01-ts-baseline"
-	if code == "r01-d-scalar-type" || code == "r01-d-unresolved-name" || category == "prohibited" {
+func diagnosticMetadata(code, category string, unresolvedCall bool) (phase, rule string) {
+	phase = "syntax"
+	rule = "r01-ts-baseline"
+	if code == "r01-d-scalar-type" || code == "r01-d-unresolved-name" || code == "r02b-d-type" || category == "prohibited" {
 		phase = "types"
 	} else if category == "unsupported" {
 		phase = "capability"
@@ -118,7 +118,14 @@ func fail(code, category, file string, location span) response {
 		rule = "r01-input-boundary"
 	} else if code == "r01-d-scalar-type" {
 		rule = "r01-bool"
+	} else if code == "r01-d-unresolved-name" && unresolvedCall {
+		rule = "r01-calls"
 	}
+	return phase, rule
+}
+
+func fail(code, category, file string, location span) response {
+	phase, rule := diagnosticMetadata(code, category, false)
 	return response{Status: "error", Diagnostics: []diagnostic{{Code: code, RuleID: rule, RuleIDs: []string{rule}, Category: category,
 		Phase: phase, Severity: "error", File: file, Range: location,
 		Primary: primary{SourceID: file, Start: location.Start, End: location.End}}}}
@@ -214,9 +221,57 @@ func prohibitedNode(file *ast.SourceFile) *ast.Node {
 			return true
 		}
 		if node.Kind == ast.KindBinaryExpression {
-			operator := node.AsBinaryExpression().OperatorToken
+			binary := node.AsBinaryExpression()
+			operator := binary.OperatorToken
 			if operator.Kind == ast.KindEqualsEqualsToken || operator.Kind == ast.KindExclamationEqualsToken {
 				found = operator
+				return true
+			}
+			if operator.Kind == ast.KindEqualsToken {
+				if binary.Left.Kind == ast.KindElementAccessExpression ||
+					(binary.Left.Kind == ast.KindPropertyAccessExpression && binary.Left.AsPropertyAccessExpression().Name().Text() == "__proto__") {
+					found = binary.Left
+					return true
+				}
+			}
+		}
+		if node.Kind == ast.KindDeleteExpression {
+			found = node
+			return true
+		}
+		if node.Kind == ast.KindCallExpression {
+			callee := node.AsCallExpression().Expression
+			if (callee.Kind == ast.KindIdentifier && (callee.Text() == "eval" || callee.Text() == "Function")) ||
+				(callee.Kind == ast.KindPropertyAccessExpression && callee.AsPropertyAccessExpression().Expression.Kind == ast.KindIdentifier &&
+					callee.AsPropertyAccessExpression().Expression.Text() == "Object" && callee.AsPropertyAccessExpression().Name().Text() == "setPrototypeOf") {
+				found = callee
+				return true
+			}
+		}
+		if node.Kind == ast.KindNewExpression {
+			callee := node.AsNewExpression().Expression
+			if callee.Kind == ast.KindIdentifier && callee.Text() == "Proxy" {
+				found = callee
+				return true
+			}
+		}
+		return node.ForEachChild(visit)
+	}
+	file.ForEachChild(visit)
+	return found
+}
+
+func isUnresolvedCall(file *ast.SourceFile, d *ast.Diagnostic) bool {
+	if d.File() != file {
+		return false
+	}
+	var found bool
+	var visit func(*ast.Node) bool
+	visit = func(node *ast.Node) bool {
+		if node.Kind == ast.KindCallExpression {
+			callee := node.AsCallExpression().Expression
+			if d.Pos() >= callee.Pos() && d.End() <= callee.End() {
+				found = true
 				return true
 			}
 		}
@@ -296,14 +351,7 @@ func analyze(r request) response {
 				where = span{d.File().GetPositionMap().UTF8ToUTF16(d.Pos()), d.File().GetPositionMap().UTF8ToUTF16(d.End())}
 				primaryLocation = sourcePosition(d.File(), d.Pos(), d.End())
 			}
-			phase := "syntax"
-			if code == "r01-d-scalar-type" || code == "r01-d-unresolved-name" || code == "r02b-d-type" {
-				phase = "types"
-			}
-			rule := "r01-ts-baseline"
-			if code == "r01-d-scalar-type" {
-				rule = "r01-bool"
-			}
+			phase, rule := diagnosticMetadata(code, "error", code == "r01-d-unresolved-name" && isUnresolvedCall(file, d))
 			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: code, RuleID: rule, RuleIDs: []string{rule},
 				Category: "error", Phase: phase, Severity: "error", File: name, Range: where,
 				Primary: primaryLocation, UpstreamCode: d.Code()})
