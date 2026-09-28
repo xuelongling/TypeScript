@@ -252,6 +252,9 @@ func analyze(r request) response {
 			if d.Code() == 6053 || d.Code() == 2688 || d.Code() == 2307 {
 				return fail("r02b-d-input", "input", r.RootFile, span{})
 			}
+			if d.Code() == 6504 {
+				code = "r02b-d-input"
+			}
 			if code == "r02b-d-type" && d.Code() == 2322 && boolReturnMismatch(file, check, d) {
 				code = "r01-d-scalar-type"
 			}
@@ -266,8 +269,12 @@ func analyze(r request) response {
 			if code == "r01-d-scalar-type" || code == "r02b-d-type" {
 				phase = "types"
 			}
-			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: code, RuleID: "r01-ts-baseline", RuleIDs: []string{"r01-ts-baseline"},
-				Category: "error", Phase: phase, Severity: "error", File: name, Range: where,
+			ruleID, category := "r01-ts-baseline", "error"
+			if code == "r02b-d-input" {
+				ruleID, category = "r01-input-boundary", "input"
+			}
+			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: code, RuleID: ruleID, RuleIDs: []string{ruleID},
+				Category: category, Phase: phase, Severity: "error", File: name, Range: where,
 				Primary: primaryLocation, UpstreamCode: d.Code()})
 		}
 	}
