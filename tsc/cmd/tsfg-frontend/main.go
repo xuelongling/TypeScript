@@ -1439,6 +1439,9 @@ func analyze(r request) response {
 			if code == "r02b-d-type" && (d.Code() == 2304 || d.Code() == 2552) {
 				code = "r01-d-unresolved-name"
 			}
+			if d.Code() == 6504 {
+				code = "r02b-d-input"
+			}
 			name, where := r.RootFile, span{}
 			primaryLocation := primary{SourceID: name}
 			if d.File() != nil {
@@ -1451,14 +1454,18 @@ func analyze(r request) response {
 				phase = "types"
 			}
 			rule := "r01-ts-baseline"
+			category := "error"
 			if code == "r01-d-integer-range" || code == "r01-d-scalar-type" {
 				rule = "r01-literals"
 			}
 			if isCall && code != "r01-d-integer-range" {
 				rule = "r01-calls"
 			}
+			if code == "r02b-d-input" {
+				rule, category = "r01-input-boundary", "input"
+			}
 			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: code, RuleID: rule, RuleIDs: []string{rule},
-				Category: "error", Phase: phase, Severity: "error", File: name, Range: where,
+				Category: category, Phase: phase, Severity: "error", File: name, Range: where,
 				Primary: primaryLocation, UpstreamCode: d.Code()})
 		}
 	}
