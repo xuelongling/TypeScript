@@ -25,6 +25,7 @@ import (
 type inputFile struct {
 	Path    string `json:"path"`
 	Content string `json:"content"`
+	SHA256  string `json:"sha256,omitempty"`
 }
 
 type request struct {
@@ -101,6 +102,7 @@ type function struct {
 
 type response struct {
 	Status      string       `json:"status"`
+	Inputs      []string     `json:"inputs,omitempty"`
 	Functions   []function   `json:"functions,omitempty"`
 	Symbols     []symbol     `json:"symbols,omitempty"`
 	Diagnostics []diagnostic `json:"diagnostics,omitempty"`
@@ -139,13 +141,10 @@ func valid(r request) bool {
 		r.Declarations.Version != "minimal-bool-v1" || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS || len(r.Files) == 0 || len(r.Declarations.Paths) == 0 {
 		return false
 	}
-	if len(r.Files) != len(r.Declarations.Paths)+1 {
-		return false
-	}
 	seen := map[string]bool{}
 	for _, file := range r.Files {
 		if file.Path != path.Clean(file.Path) || !strings.HasPrefix(file.Path, r.SourceRoot+"/") || seen[file.Path] ||
-			(!strings.HasSuffix(file.Path, ".ts") && !strings.HasSuffix(file.Path, ".d.ts")) {
+			(file.Path != r.RootFile && !strings.HasSuffix(file.Path, ".d.ts")) {
 			return false
 		}
 		seen[file.Path] = true
@@ -153,10 +152,12 @@ func valid(r request) bool {
 	if !seen[r.RootFile] || !strings.HasSuffix(r.RootFile, ".ts") || strings.HasSuffix(r.RootFile, ".d.ts") {
 		return false
 	}
+	declarations := map[string]bool{}
 	for _, name := range r.Declarations.Paths {
-		if !seen[name] || !strings.HasSuffix(name, ".d.ts") {
+		if !seen[name] || !strings.HasSuffix(name, ".d.ts") || declarations[name] {
 			return false
 		}
+		declarations[name] = true
 	}
 	return true
 }
@@ -202,11 +203,10 @@ func analyze(r request) response {
 		return fail("r02b-d-input", "input", r.RootFile, span{})
 	}
 	contents := map[string]string{}
-	fileNames := []string{}
 	for _, file := range r.Files {
 		contents[file.Path] = file.Content
-		fileNames = append(fileNames, file.Path)
 	}
+	fileNames := append([]string{r.RootFile}, r.Declarations.Paths...)
 	slices.Sort(fileNames)
 	fs := vfstest.FromMap(contents, true)
 	program := compiler.NewProgram(compiler.ProgramOptions{
@@ -222,19 +222,19 @@ func analyze(r request) response {
 		return fail("r02b-d-input", "input", r.RootFile, span{})
 	}
 	approved := map[string]bool{}
-	for _, name := range fileNames {
+	for name := range contents {
 		approved[name] = true
 	}
+	consumed := []string{}
 	for _, source := range program.GetSourceFiles() {
 		if !approved[source.FileName()] {
 			return fail("r02b-d-input", "input", source.FileName(), span{})
 		}
+		consumed = append(consumed, source.FileName())
 		delete(approved, source.FileName())
 	}
-	if len(approved) != 0 {
-		return fail("r02b-d-input", "input", r.RootFile, span{})
-	}
-	result := response{Status: "ok", Functions: []function{}, Symbols: []symbol{}}
+	slices.Sort(consumed)
+	result := response{Status: "ok", Inputs: consumed, Functions: []function{}, Symbols: []symbol{}}
 	groups := []struct {
 		items []*ast.Diagnostic
 		code  string
@@ -249,6 +249,9 @@ func analyze(r request) response {
 	for _, group := range groups {
 		for _, d := range group.items {
 			code := group.code
+			if d.Code() == 6053 || d.Code() == 2688 || d.Code() == 2307 {
+				return fail("r02b-d-input", "input", r.RootFile, span{})
+			}
 			if code == "r02b-d-type" && d.Code() == 2322 && boolReturnMismatch(file, check, d) {
 				code = "r01-d-scalar-type"
 			}
