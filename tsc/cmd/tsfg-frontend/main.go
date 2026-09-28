@@ -173,6 +173,30 @@ func scalar(t *checker.Type) string {
 	return ""
 }
 
+func boolReturnMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
+	if d.File() != file {
+		return false
+	}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil {
+			continue
+		}
+		decl := node.AsFunctionDeclaration()
+		if decl.Type == nil || scalar(check.GetTypeFromTypeNode(decl.Type)) != "bool" || decl.Body.Kind != ast.KindBlock {
+			continue
+		}
+		body := decl.Body.AsBlock().Statements.Nodes
+		if len(body) != 1 || body[0].Kind != ast.KindReturnStatement {
+			continue
+		}
+		expr := body[0].AsReturnStatement().Expression
+		if expr != nil && d.Pos() >= expr.Pos() && d.End() <= expr.End() {
+			return true
+		}
+	}
+	return false
+}
+
 func analyze(r request) response {
 	if !valid(r) {
 		return fail("r02b-d-input", "input", r.RootFile, span{})
@@ -210,6 +234,8 @@ func analyze(r request) response {
 	if len(approved) != 0 {
 		return fail("r02b-d-input", "input", r.RootFile, span{})
 	}
+	check, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
+	defer release()
 	result := response{Status: "ok", Functions: []function{}, Symbols: []symbol{}}
 	for _, group := range []struct {
 		items []*ast.Diagnostic
@@ -222,7 +248,7 @@ func analyze(r request) response {
 	} {
 		for _, d := range group.items {
 			code := group.code
-			if code == "r02b-d-type" && d.Code() == 2322 {
+			if code == "r02b-d-type" && d.Code() == 2322 && boolReturnMismatch(file, check, d) {
 				code = "r01-d-scalar-type"
 			}
 			name, where := r.RootFile, span{}
@@ -245,8 +271,6 @@ func analyze(r request) response {
 		result.Status = "error"
 		return result
 	}
-	check, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
-	defer release()
 	for _, node := range file.Statements.Nodes {
 		if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Body() == nil {
 			return failAt("r02b-d-unsupported", "unsupported", file, node)
