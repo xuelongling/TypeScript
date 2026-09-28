@@ -265,6 +265,9 @@ func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Nod
 		}
 		return &expression{Kind: "integer", Type: "i32", Literal: literal, Range: expressionOffset(file, node)}, nil
 	}
+	if node.Kind == ast.KindNumericLiteral {
+		return &expression{Kind: "numeric", Type: "f64", Range: expressionOffset(file, node)}, nil
+	}
 	if node.Kind == ast.KindIdentifier {
 		binding, ok := bindings[check.GetSymbolAtLocation(node)]
 		if ok && binding.Type != "" {
@@ -299,6 +302,10 @@ func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Nod
 			operand, failure := projectOperator(file, check, prefix.Operand, bindings)
 			if failure != nil {
 				return nil, failure
+			}
+			if operand.Type == "f64" && (operator == "+" || operator == "-") {
+				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+				return nil, &failure
 			}
 			if operand.Type != expected {
 				failure := failAt("r01-d-scalar-type", "error", file, prefix.Operand)
