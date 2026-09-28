@@ -303,31 +303,44 @@ func defaultI32LocalReturn(file *ast.SourceFile, check *checker.Checker, d *ast.
 			continue
 		}
 		defaults := map[*ast.Symbol]*big.Int{}
-		for _, item := range fn.Body.AsBlock().Statements.Nodes {
-			for _, decl := range localDeclarations(item) {
-				if decl.Kind != ast.KindVariableDeclaration || decl.Name() == nil {
-					continue
-				}
-				local := decl.AsVariableDeclaration()
-				if local.Type != nil || local.Initializer == nil {
-					continue
-				}
-				if value, _, ok := exactInteger(file, local.Initializer); ok {
-					defaults[check.GetSymbolAtLocation(decl.Name())] = value
-				} else if local.Initializer.Kind == ast.KindIdentifier {
-					if value := defaults[check.GetSymbolAtLocation(local.Initializer)]; value != nil {
-						defaults[check.GetSymbolAtLocation(decl.Name())] = value
-					}
-				}
-			}
-			if item.Kind == ast.KindReturnStatement && d.Pos() >= item.Pos() && d.End() <= item.End() {
-				ret := item.AsReturnStatement().Expression
-				if ret != nil && ret.Kind == ast.KindIdentifier {
-					if value := defaults[check.GetSymbolAtLocation(ret)]; value != nil {
+		var walk func([]*ast.Node) (*big.Int, bool)
+		walk = func(items []*ast.Node) (*big.Int, bool) {
+			for _, item := range items {
+				if item.Kind == ast.KindBlock {
+					if value, ok := walk(item.AsBlock().Statements.Nodes); ok {
 						return value, true
 					}
+					continue
+				}
+				for _, decl := range localDeclarations(item) {
+					if decl.Kind != ast.KindVariableDeclaration || decl.Name() == nil {
+						continue
+					}
+					local := decl.AsVariableDeclaration()
+					if local.Type != nil || local.Initializer == nil {
+						continue
+					}
+					if value, _, ok := exactInteger(file, local.Initializer); ok {
+						defaults[check.GetSymbolAtLocation(decl.Name())] = value
+					} else if local.Initializer.Kind == ast.KindIdentifier {
+						if value := defaults[check.GetSymbolAtLocation(local.Initializer)]; value != nil {
+							defaults[check.GetSymbolAtLocation(decl.Name())] = value
+						}
+					}
+				}
+				if item.Kind == ast.KindReturnStatement && d.Pos() >= item.Pos() && d.End() <= item.End() {
+					ret := item.AsReturnStatement().Expression
+					if ret != nil && ret.Kind == ast.KindIdentifier {
+						if value := defaults[check.GetSymbolAtLocation(ret)]; value != nil {
+							return value, true
+						}
+					}
 				}
 			}
+			return nil, false
+		}
+		if value, ok := walk(fn.Body.AsBlock().Statements.Nodes); ok {
+			return value, true
 		}
 	}
 	return nil, false
@@ -377,11 +390,15 @@ func contextualI32Assignment(file *ast.SourceFile, check *checker.Checker, d *as
 	if d.File() != file || d.Code() != 2322 {
 		return nil, false
 	}
-	for _, node := range file.Statements.Nodes {
-		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
-			continue
-		}
-		for _, item := range node.Body().AsBlock().Statements.Nodes {
+	var walk func([]*ast.Node) (*big.Int, bool)
+	walk = func(items []*ast.Node) (*big.Int, bool) {
+		for _, item := range items {
+			if item.Kind == ast.KindBlock {
+				if value, ok := walk(item.AsBlock().Statements.Nodes); ok {
+					return value, true
+				}
+				continue
+			}
 			if item.Kind != ast.KindExpressionStatement {
 				continue
 			}
@@ -398,6 +415,15 @@ func contextualI32Assignment(file *ast.SourceFile, check *checker.Checker, d *as
 			if ok {
 				return value, true
 			}
+		}
+		return nil, false
+	}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
+			continue
+		}
+		if value, ok := walk(node.Body().AsBlock().Statements.Nodes); ok {
+			return value, true
 		}
 	}
 	return nil, false
