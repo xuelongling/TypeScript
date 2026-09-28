@@ -629,6 +629,26 @@ func contextualI32Assignment(file *ast.SourceFile, check *checker.Checker, d *as
 	return nil, false
 }
 
+func operatorBindings(file *ast.SourceFile, check *checker.Checker, decl *ast.FunctionDeclaration) map[*ast.Symbol]symbol {
+	bindings := parameterBindings(check, decl.Parameters.Nodes, nil)
+	visitStatements(decl.Body.AsBlock().Statements.Nodes, func(item *ast.Node) bool {
+		for _, local := range localDeclarations(item) {
+			if local.Name() == nil || local.Name().Kind != ast.KindIdentifier {
+				continue
+			}
+			t := scalar(check.GetTypeAtLocation(local.Name()))
+			if t == "f64" && local.AsVariableDeclaration().Type == nil && local.AsVariableDeclaration().Initializer != nil {
+				if _, _, ok := exactInteger(file, local.AsVariableDeclaration().Initializer); ok {
+					t = "i32"
+				}
+			}
+			bindings[check.GetSymbolAtLocation(local.Name())] = symbol{Type: t}
+		}
+		return false
+	})
+	return bindings
+}
+
 func supportedOperatorAssignment(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
 	if d.File() != file || d.Code() != 2322 {
 		return false
@@ -638,23 +658,8 @@ func supportedOperatorAssignment(file *ast.SourceFile, check *checker.Checker, d
 			continue
 		}
 		decl := node.AsFunctionDeclaration()
-		bindings := parameterBindings(check, decl.Parameters.Nodes, nil)
+		bindings := operatorBindings(file, check, decl)
 		body := decl.Body.AsBlock().Statements.Nodes
-		visitStatements(body, func(item *ast.Node) bool {
-			for _, local := range localDeclarations(item) {
-				if local.Name() == nil || local.Name().Kind != ast.KindIdentifier {
-					continue
-				}
-				t := scalar(check.GetTypeAtLocation(local.Name()))
-				if t == "f64" && local.AsVariableDeclaration().Type == nil && local.AsVariableDeclaration().Initializer != nil {
-					if _, _, ok := exactInteger(file, local.AsVariableDeclaration().Initializer); ok {
-						t = "i32"
-					}
-				}
-				bindings[check.GetSymbolAtLocation(local.Name())] = symbol{Type: t}
-			}
-			return false
-		})
 		if visitStatements(body, func(item *ast.Node) bool {
 			if item.Kind != ast.KindExpressionStatement {
 				return false
@@ -1008,10 +1013,10 @@ func supportedOperatorReturn(file *ast.SourceFile, check *checker.Checker, d *as
 		if decl.Type == nil || scalar(check.GetTypeFromTypeNode(decl.Type)) != "i32" {
 			continue
 		}
-		bindings := parameterBindings(check, decl.Parameters.Nodes, nil)
-		for _, item := range decl.Body.AsBlock().Statements.Nodes {
+		bindings := operatorBindings(file, check, decl)
+		if visitStatements(decl.Body.AsBlock().Statements.Nodes, func(item *ast.Node) bool {
 			if item.Kind != ast.KindReturnStatement || d.Pos() < item.Pos() || d.End() > item.End() {
-				continue
+				return false
 			}
 			expr := item.AsReturnStatement().Expression
 			if expr != nil && (expr.Kind == ast.KindBinaryExpression || expr.Kind == ast.KindPrefixUnaryExpression || expr.Kind == ast.KindParenthesizedExpression) {
@@ -1030,6 +1035,9 @@ func supportedOperatorReturn(file *ast.SourceFile, check *checker.Checker, d *as
 				projected, failure := projectOperator(file, check, expr, bindings)
 				return failure == nil && projected.Type == "i32"
 			}
+			return false
+		}) {
+			return true
 		}
 	}
 	return false
