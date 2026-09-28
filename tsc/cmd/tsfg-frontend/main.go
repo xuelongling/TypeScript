@@ -429,6 +429,42 @@ func scalarAssignmentMismatch(file *ast.SourceFile, check *checker.Checker, d *a
 	return false
 }
 
+func scalarLocalMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
+	if d.File() != file || d.Code() != 2322 {
+		return false
+	}
+	var walk func([]*ast.Node) bool
+	walk = func(items []*ast.Node) bool {
+		for _, item := range items {
+			if item.Kind == ast.KindBlock && walk(item.AsBlock().Statements.Nodes) {
+				return true
+			}
+			for _, decl := range localDeclarations(item) {
+				if decl.Kind != ast.KindVariableDeclaration || d.Pos() < decl.Pos() || d.End() > decl.End() {
+					continue
+				}
+				local := decl.AsVariableDeclaration()
+				if local.Type == nil || local.Initializer == nil {
+					continue
+				}
+				expected := scalar(check.GetTypeFromTypeNode(local.Type))
+				actual := scalar(check.GetTypeAtLocation(local.Initializer))
+				if expected != "" && actual != "" && expected != actual {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind == ast.KindFunctionDeclaration && node.Body() != nil && node.Body().Kind == ast.KindBlock &&
+			walk(node.Body().AsBlock().Statements.Nodes) {
+			return true
+		}
+	}
+	return false
+}
+
 func pendingLocalForm(nodes []*ast.Node) *ast.Node {
 	for _, node := range nodes {
 		if node.Kind == ast.KindBlock {
@@ -708,7 +744,8 @@ func analyze(r request) response {
 				}
 				code = "r01-d-integer-range"
 			}
-			if code == "r02b-d-type" && (scalarReturnMismatch(file, check, d) || scalarAssignmentMismatch(file, check, d)) {
+			if code == "r02b-d-type" && (scalarReturnMismatch(file, check, d) ||
+				scalarAssignmentMismatch(file, check, d) || scalarLocalMismatch(file, check, d)) {
 				code = "r01-d-scalar-type"
 			}
 			if code == "r02b-d-type" && d.Code() == 2304 {
