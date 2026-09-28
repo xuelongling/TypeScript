@@ -48,15 +48,16 @@ type span struct {
 }
 
 type diagnostic struct {
-	Code         string  `json:"code"`
-	RuleID       string  `json:"ruleId"`
-	Category     string  `json:"category"`
-	Phase        string  `json:"phase"`
-	Severity     string  `json:"severity"`
-	File         string  `json:"file"`
-	Range        span    `json:"range"`
-	Primary      primary `json:"primary"`
-	UpstreamCode int32   `json:"upstreamCode,omitempty"`
+	Code         string   `json:"code"`
+	RuleID       string   `json:"ruleId"`
+	RuleIDs      []string `json:"ruleIds"`
+	Category     string   `json:"category"`
+	Phase        string   `json:"phase"`
+	Severity     string   `json:"severity"`
+	File         string   `json:"file"`
+	Range        span     `json:"range"`
+	Primary      primary  `json:"primary"`
+	UpstreamCode int32    `json:"upstreamCode,omitempty"`
 }
 
 type primary struct {
@@ -110,7 +111,7 @@ func fail(code, category, file string, location span) response {
 	if code == "r01-d-scalar-type" {
 		phase = "types"
 	}
-	return response{Status: "error", Diagnostics: []diagnostic{{Code: code, RuleID: "r01-ts-baseline", Category: category,
+	return response{Status: "error", Diagnostics: []diagnostic{{Code: code, RuleID: "r01-ts-baseline", RuleIDs: []string{"r01-ts-baseline"}, Category: category,
 		Phase: phase, Severity: "error", File: file, Range: location,
 		Primary: primary{SourceID: file, Start: location.Start, End: location.End}}}}
 }
@@ -231,7 +232,7 @@ func analyze(r request) response {
 			if group.code == "r01-d-scalar-type" {
 				phase = "types"
 			}
-			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: group.code, RuleID: "r01-ts-baseline",
+			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: group.code, RuleID: "r01-ts-baseline", RuleIDs: []string{"r01-ts-baseline"},
 				Category: "error", Phase: phase, Severity: "error", File: name, Range: where,
 				Primary: primaryLocation, UpstreamCode: d.Code()})
 		}
