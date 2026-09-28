@@ -428,6 +428,42 @@ func i32LiteralCallArgument(file *ast.SourceFile, check *checker.Checker, d *ast
 	if d.File() != file || d.Code() != 2345 {
 		return nil, false
 	}
+	var inspectCall func(*ast.Node) (*big.Int, bool)
+	inspectCall = func(expr *ast.Node) (*big.Int, bool) {
+		if expr == nil || expr.Kind != ast.KindCallExpression {
+			return nil, false
+		}
+		call := expr.AsCallExpression()
+		for _, argument := range call.Arguments.Nodes {
+			if d.Pos() >= argument.Pos() && d.End() <= argument.End() {
+				if value, ok := inspectCall(argument); ok {
+					return value, true
+				}
+			}
+		}
+		if call.Expression.Kind != ast.KindIdentifier {
+			return nil, false
+		}
+		callee := check.GetSymbolAtLocation(call.Expression)
+		for _, declaration := range file.Statements.Nodes {
+			if declaration.Kind != ast.KindFunctionDeclaration || declaration.Name() == nil ||
+				check.GetSymbolAtLocation(declaration.Name()) != callee {
+				continue
+			}
+			parameters := declaration.AsFunctionDeclaration().Parameters.Nodes
+			for index, argument := range call.Arguments.Nodes {
+				if index >= len(parameters) || d.Pos() < argument.Pos() || d.End() > argument.End() {
+					continue
+				}
+				paramType := parameters[index].AsParameterDeclaration().Type
+				if paramType != nil && scalar(check.GetTypeFromTypeNode(paramType)) == "i32" {
+					value, _, ok := exactInteger(file, argument)
+					return value, ok
+				}
+			}
+		}
+		return nil, false
+	}
 	for _, node := range file.Statements.Nodes {
 		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
 			continue
@@ -436,31 +472,8 @@ func i32LiteralCallArgument(file *ast.SourceFile, check *checker.Checker, d *ast
 			if item.Kind != ast.KindReturnStatement {
 				continue
 			}
-			expr := item.AsReturnStatement().Expression
-			if expr == nil || expr.Kind != ast.KindCallExpression {
-				continue
-			}
-			call := expr.AsCallExpression()
-			if call.Expression.Kind != ast.KindIdentifier {
-				continue
-			}
-			callee := check.GetSymbolAtLocation(call.Expression)
-			for _, declaration := range file.Statements.Nodes {
-				if declaration.Kind != ast.KindFunctionDeclaration || declaration.Name() == nil ||
-					check.GetSymbolAtLocation(declaration.Name()) != callee {
-					continue
-				}
-				parameters := declaration.AsFunctionDeclaration().Parameters.Nodes
-				for index, argument := range call.Arguments.Nodes {
-					if index >= len(parameters) || d.Pos() < argument.Pos() || d.End() > argument.End() {
-						continue
-					}
-					paramType := parameters[index].AsParameterDeclaration().Type
-					if paramType != nil && scalar(check.GetTypeFromTypeNode(paramType)) == "i32" {
-						value, _, ok := exactInteger(file, argument)
-						return value, ok
-					}
-				}
+			if value, ok := inspectCall(item.AsReturnStatement().Expression); ok {
+				return value, true
 			}
 		}
 	}
