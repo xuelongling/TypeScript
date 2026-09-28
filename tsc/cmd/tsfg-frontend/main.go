@@ -250,7 +250,7 @@ func prohibitedNode(file *ast.SourceFile) *ast.Node {
 		}
 		if node.Kind == ast.KindNewExpression {
 			callee := node.AsNewExpression().Expression
-			if callee.Kind == ast.KindIdentifier && callee.Text() == "Proxy" {
+			if callee.Kind == ast.KindIdentifier && (callee.Text() == "Proxy" || callee.Text() == "Function") {
 				found = callee
 				return true
 			}
