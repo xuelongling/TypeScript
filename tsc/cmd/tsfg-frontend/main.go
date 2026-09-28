@@ -190,7 +190,7 @@ func boolReturnMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.Dia
 			continue
 		}
 		expr := body[0].AsReturnStatement().Expression
-		if expr != nil && d.Pos() >= expr.Pos() && d.End() <= expr.End() {
+		if expr != nil && d.Pos() >= body[0].Pos() && d.End() <= body[0].End() {
 			return true
 		}
 	}
@@ -234,10 +234,8 @@ func analyze(r request) response {
 	if len(approved) != 0 {
 		return fail("r02b-d-input", "input", r.RootFile, span{})
 	}
-	check, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
-	defer release()
 	result := response{Status: "ok", Functions: []function{}, Symbols: []symbol{}}
-	for _, group := range []struct {
+	groups := []struct {
 		items []*ast.Diagnostic
 		code  string
 	}{
@@ -245,7 +243,10 @@ func analyze(r request) response {
 		{program.GetSemanticDiagnostics(context.Background(), nil), "r02b-d-type"},
 		{program.GetProgramDiagnostics(), "r02b-d-type"},
 		{program.GetGlobalDiagnostics(context.Background()), "r02b-d-type"},
-	} {
+	}
+	check, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
+	defer release()
+	for _, group := range groups {
 		for _, d := range group.items {
 			code := group.code
 			if code == "r02b-d-type" && d.Code() == 2322 && boolReturnMismatch(file, check, d) {
