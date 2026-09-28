@@ -19,6 +19,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/checker"
 	"github.com/microsoft/typescript-go/internal/compiler"
 	"github.com/microsoft/typescript-go/internal/core"
+	"github.com/microsoft/typescript-go/internal/scanner"
 	"github.com/microsoft/typescript-go/internal/tsoptions"
 	"github.com/microsoft/typescript-go/internal/vfs/vfstest"
 )
@@ -206,25 +207,12 @@ func exactInteger(file *ast.SourceFile, expr *ast.Node) (*big.Int, *integerLiter
 	if operand.Kind != ast.KindNumericLiteral {
 		return nil, nil, false
 	}
-	start, end := operand.Pos(), operand.End()
+	start, end := scanner.SkipTrivia(file.Text(), operand.Pos()), operand.End()
 	if start < 0 || end > len(file.Text()) || start >= end {
 		return nil, nil, false
 	}
-	fragment := strings.TrimSpace(file.Text()[start:end])
-	// The scanner owns token boundaries; the original source retains separators and radix spelling.
-	index := len(fragment)
-	for index > 0 {
-		ch := fragment[index-1]
-		if ch >= '0' && ch <= '9' || ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch == '_' {
-			index--
-			continue
-		}
-		break
-	}
-	token := fragment[index:]
-	if token == "" {
-		return nil, nil, false
-	}
+	// Parse the entire source token, not a numeric suffix of a fractional literal.
+	token := file.Text()[start:end]
 	clean := strings.ReplaceAll(token, "_", "")
 	base := 10
 	digits := clean
