@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"os"
 	"path"
 	"slices"
@@ -79,16 +80,24 @@ type symbol struct {
 }
 
 type expression struct {
-	Kind   string `json:"kind"`
-	Type   string `json:"type"`
-	Symbol string `json:"symbol,omitempty"`
-	Range  span   `json:"range"`
+	Kind    string          `json:"kind"`
+	Type    string          `json:"type"`
+	Symbol  string          `json:"symbol,omitempty"`
+	Literal *integerLiteral `json:"literal,omitempty"`
+	Range   span            `json:"range"`
+}
+
+type integerLiteral struct {
+	Decimal string `json:"decimal"`
+	Token   string `json:"token"`
 }
 
 type statement struct {
-	Kind       string     `json:"kind"`
-	Expression expression `json:"expression"`
-	Range      span       `json:"range"`
+	Kind        string      `json:"kind"`
+	Expression  *expression `json:"expression,omitempty"`
+	Symbol      *symbol     `json:"symbol,omitempty"`
+	Initializer *expression `json:"initializer,omitempty"`
+	Range       span        `json:"range"`
 }
 
 type function struct {
@@ -102,16 +111,20 @@ type function struct {
 type response struct {
 	Status      string       `json:"status"`
 	Functions   []function   `json:"functions,omitempty"`
-	Symbols     []symbol     `json:"symbols,omitempty"`
+	Symbols     []symbol     `json:"symbols"`
 	Diagnostics []diagnostic `json:"diagnostics,omitempty"`
 }
 
 func fail(code, category, file string, location span) response {
 	phase := "syntax"
-	if code == "r01-d-scalar-type" {
+	if code == "r01-d-scalar-type" || code == "r01-d-integer-range" {
 		phase = "types"
 	}
-	return response{Status: "error", Diagnostics: []diagnostic{{Code: code, RuleID: "r01-ts-baseline", RuleIDs: []string{"r01-ts-baseline"}, Category: category,
+	rule := "r01-ts-baseline"
+	if code == "r01-d-integer-range" {
+		rule = "r01-literals"
+	}
+	return response{Status: "error", Diagnostics: []diagnostic{{Code: code, RuleID: rule, RuleIDs: []string{rule}, Category: category,
 		Phase: phase, Severity: "error", File: file, Range: location,
 		Primary: primary{SourceID: file, Start: location.Start, End: location.End}}}}
 }
@@ -136,7 +149,7 @@ func failAt(code, category string, file *ast.SourceFile, node *ast.Node) respons
 
 func valid(r request) bool {
 	if r.SourceRoot == "" || !strings.HasPrefix(r.SourceRoot, "/") || path.Clean(r.SourceRoot) != r.SourceRoot || r.RootFile == "" ||
-		r.Declarations.Version != "minimal-bool-v1" || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS || len(r.Files) == 0 || len(r.Declarations.Paths) == 0 {
+		(r.Declarations.Version != "minimal-bool-v1" && r.Declarations.Version != "minimal-scalars-v2") || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS || len(r.Files) == 0 || len(r.Declarations.Paths) == 0 {
 		return false
 	}
 	if len(r.Files) != len(r.Declarations.Paths)+1 {
@@ -170,11 +183,180 @@ func scalar(t *checker.Type) string {
 	if t != nil && t.IsBooleanLike() {
 		return "bool"
 	}
+	if t != nil && t.Alias() != nil && t.Alias().Symbol() != nil && t.Alias().Symbol().Name == "i32" {
+		return "i32"
+	}
+	if t != nil && t.Flags()&checker.TypeFlagsNumberLike != 0 {
+		return "f64"
+	}
 	return ""
 }
 
-func boolReturnMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
-	if d.File() != file {
+func exactInteger(file *ast.SourceFile, expr *ast.Node) (*big.Int, *integerLiteral, bool) {
+	negative := false
+	operand := expr
+	if expr.Kind == ast.KindPrefixUnaryExpression {
+		prefix := expr.AsPrefixUnaryExpression()
+		if prefix.Operator != ast.KindMinusToken || prefix.Operand.Kind != ast.KindNumericLiteral {
+			return nil, nil, false
+		}
+		negative = true
+		operand = prefix.Operand
+	}
+	if operand.Kind != ast.KindNumericLiteral {
+		return nil, nil, false
+	}
+	start, end := operand.Pos(), operand.End()
+	if start < 0 || end > len(file.Text()) || start >= end {
+		return nil, nil, false
+	}
+	fragment := strings.TrimSpace(file.Text()[start:end])
+	// The scanner owns token boundaries; the original source retains separators and radix spelling.
+	index := len(fragment)
+	for index > 0 {
+		ch := fragment[index-1]
+		if ch >= '0' && ch <= '9' || ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch == '_' {
+			index--
+			continue
+		}
+		break
+	}
+	token := fragment[index:]
+	if token == "" {
+		return nil, nil, false
+	}
+	clean := strings.ReplaceAll(token, "_", "")
+	base := 10
+	digits := clean
+	if len(clean) > 2 && clean[0] == '0' {
+		switch clean[1] {
+		case 'x', 'X':
+			base, digits = 16, clean[2:]
+		case 'b', 'B':
+			base, digits = 2, clean[2:]
+		case 'o', 'O':
+			base, digits = 8, clean[2:]
+		}
+	}
+	value, ok := new(big.Int).SetString(digits, base)
+	if !ok {
+		return nil, nil, false
+	}
+	if negative {
+		value.Neg(value)
+		token = "-" + token
+	}
+	return value, &integerLiteral{Decimal: value.String(), Token: token}, true
+}
+
+func i32InRange(value *big.Int) bool {
+	return value.Cmp(big.NewInt(-2147483648)) >= 0 && value.Cmp(big.NewInt(2147483647)) <= 0
+}
+
+func i32LiteralReturn(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) (*big.Int, bool) {
+	if d.File() != file || d.Code() != 2322 {
+		return nil, false
+	}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil {
+			continue
+		}
+		decl := node.AsFunctionDeclaration()
+		if decl.Type == nil || scalar(check.GetTypeFromTypeNode(decl.Type)) != "i32" || decl.Body.Kind != ast.KindBlock {
+			continue
+		}
+		for _, item := range decl.Body.AsBlock().Statements.Nodes {
+			if item.Kind != ast.KindReturnStatement || d.Pos() < item.Pos() || d.End() > item.End() {
+				continue
+			}
+			expr := item.AsReturnStatement().Expression
+			if expr == nil {
+				continue
+			}
+			value, _, ok := exactInteger(file, expr)
+			if ok {
+				return value, true
+			}
+		}
+	}
+	return nil, false
+}
+
+func localDeclaration(node *ast.Node) *ast.Node {
+	if node.Kind != ast.KindVariableStatement {
+		return nil
+	}
+	list := node.AsVariableStatement().DeclarationList.AsVariableDeclarationList().Declarations.Nodes
+	if len(list) != 1 || list[0].Kind != ast.KindVariableDeclaration {
+		return nil
+	}
+	return list[0]
+}
+
+func defaultI32LocalReturn(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) (*big.Int, bool) {
+	if d.File() != file || d.Code() != 2322 {
+		return nil, false
+	}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil {
+			continue
+		}
+		fn := node.AsFunctionDeclaration()
+		if fn.Type == nil || scalar(check.GetTypeFromTypeNode(fn.Type)) != "i32" || fn.Body.Kind != ast.KindBlock {
+			continue
+		}
+		body := fn.Body.AsBlock().Statements.Nodes
+		if len(body) != 2 || body[1].Kind != ast.KindReturnStatement || d.Pos() < body[1].Pos() || d.End() > body[1].End() {
+			continue
+		}
+		decl := localDeclaration(body[0])
+		if decl == nil || decl.Name() == nil || decl.AsVariableDeclaration().Type != nil {
+			continue
+		}
+		ret := body[1].AsReturnStatement().Expression
+		if ret == nil || ret.Kind != ast.KindIdentifier || check.GetSymbolAtLocation(ret) != check.GetSymbolAtLocation(decl.Name()) {
+			continue
+		}
+		init := decl.AsVariableDeclaration().Initializer
+		if init == nil {
+			continue
+		}
+		value, _, ok := exactInteger(file, init)
+		if ok {
+			return value, true
+		}
+	}
+	return nil, false
+}
+
+func contextualI32Local(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) (*big.Int, bool) {
+	if d.File() != file || d.Code() != 2322 {
+		return nil, false
+	}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
+			continue
+		}
+		for _, item := range node.Body().AsBlock().Statements.Nodes {
+			decl := localDeclaration(item)
+			if decl == nil || d.Pos() < decl.Pos() || d.End() > decl.End() {
+				continue
+			}
+			local := decl.AsVariableDeclaration()
+			if local.Type == nil || scalar(check.GetTypeFromTypeNode(local.Type)) != "i32" || local.Initializer == nil {
+				continue
+			}
+			value, _, ok := exactInteger(file, local.Initializer)
+			if ok {
+				return value, true
+			}
+		}
+	}
+	return nil, false
+}
+
+func scalarReturnMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
+	if d.File() != file || d.Code() != 2322 {
 		return false
 	}
 	for _, node := range file.Statements.Nodes {
@@ -182,16 +364,18 @@ func boolReturnMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.Dia
 			continue
 		}
 		decl := node.AsFunctionDeclaration()
-		if decl.Type == nil || scalar(check.GetTypeFromTypeNode(decl.Type)) != "bool" || decl.Body.Kind != ast.KindBlock {
+		if decl.Type == nil || scalar(check.GetTypeFromTypeNode(decl.Type)) == "" || decl.Body.Kind != ast.KindBlock {
 			continue
 		}
 		body := decl.Body.AsBlock().Statements.Nodes
-		if len(body) != 1 || body[0].Kind != ast.KindReturnStatement {
-			continue
-		}
-		expr := body[0].AsReturnStatement().Expression
-		if expr != nil && d.Pos() >= body[0].Pos() && d.End() <= body[0].End() {
-			return true
+		for _, item := range body {
+			if item.Kind != ast.KindReturnStatement || d.Pos() < item.Pos() || d.End() > item.End() {
+				continue
+			}
+			expr := item.AsReturnStatement().Expression
+			if expr != nil && scalar(check.GetTypeAtLocation(expr)) != "" && scalar(check.GetTypeAtLocation(expr)) != scalar(check.GetTypeFromTypeNode(decl.Type)) {
+				return true
+			}
 		}
 	}
 	return false
@@ -249,7 +433,25 @@ func analyze(r request) response {
 	for _, group := range groups {
 		for _, d := range group.items {
 			code := group.code
-			if code == "r02b-d-type" && d.Code() == 2322 && boolReturnMismatch(file, check, d) {
+			if value, ok := i32LiteralReturn(file, check, d); ok {
+				if i32InRange(value) {
+					continue
+				}
+				code = "r01-d-integer-range"
+			}
+			if value, ok := defaultI32LocalReturn(file, check, d); ok {
+				if i32InRange(value) {
+					continue
+				}
+				code = "r01-d-integer-range"
+			}
+			if value, ok := contextualI32Local(file, check, d); ok {
+				if i32InRange(value) {
+					continue
+				}
+				code = "r01-d-integer-range"
+			}
+			if code == "r02b-d-type" && scalarReturnMismatch(file, check, d) {
 				code = "r01-d-scalar-type"
 			}
 			name, where := r.RootFile, span{}
@@ -260,10 +462,14 @@ func analyze(r request) response {
 				primaryLocation = sourcePosition(d.File(), d.Pos(), d.End())
 			}
 			phase := "syntax"
-			if code == "r01-d-scalar-type" || code == "r02b-d-type" {
+			if code == "r01-d-scalar-type" || code == "r01-d-integer-range" || code == "r02b-d-type" {
 				phase = "types"
 			}
-			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: code, RuleID: "r01-ts-baseline", RuleIDs: []string{"r01-ts-baseline"},
+			rule := "r01-ts-baseline"
+			if code == "r01-d-integer-range" {
+				rule = "r01-literals"
+			}
+			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: code, RuleID: rule, RuleIDs: []string{rule},
 				Category: "error", Phase: phase, Severity: "error", File: name, Range: where,
 				Primary: primaryLocation, UpstreamCode: d.Code()})
 		}
@@ -277,7 +483,11 @@ func analyze(r request) response {
 			return failAt("r02b-d-unsupported", "unsupported", file, node)
 		}
 		decl := node.AsFunctionDeclaration()
-		if decl.Type == nil || decl.Body.Kind != ast.KindBlock || len(decl.Body.AsBlock().Statements.Nodes) != 1 {
+		if decl.Type == nil || decl.Body.Kind != ast.KindBlock {
+			return failAt("r02b-d-unsupported", "unsupported", file, node)
+		}
+		body := decl.Body.AsBlock().Statements.Nodes
+		if len(body) < 1 || len(body) > 2 {
 			return failAt("r02b-d-unsupported", "unsupported", file, node)
 		}
 		fn := function{Name: node.Name().Text(), Parameters: []symbol{}, Body: []statement{}, Range: offset(file, node)}
@@ -297,11 +507,48 @@ func analyze(r request) response {
 			result.Symbols = append(result.Symbols, s)
 			fn.Parameters = append(fn.Parameters, s)
 		}
-		bodyNode := decl.Body.AsBlock().Statements.Nodes[0]
+		var localNode *ast.Node
+		var localSymbol *ast.Symbol
+		if len(body) == 2 {
+			localNode = localDeclaration(body[0])
+			if localNode == nil || localNode.Name() == nil {
+				return failAt("r02b-d-unsupported", "unsupported", file, body[0])
+			}
+			if localType := localNode.AsVariableDeclaration().Type; localType != nil && scalar(check.GetTypeFromTypeNode(localType)) != "i32" {
+				return failAt("r02b-d-unsupported", "unsupported", file, localType)
+			}
+			init := localNode.AsVariableDeclaration().Initializer
+			if init == nil {
+				return failAt("r02b-d-unsupported", "unsupported", file, body[0])
+			}
+			value, literal, ok := exactInteger(file, init)
+			if !ok {
+				return failAt("r02b-d-unsupported", "unsupported", file, init)
+			}
+			if !i32InRange(value) {
+				return failAt("r01-d-integer-range", "error", file, init)
+			}
+			localSymbol = check.GetSymbolAtLocation(localNode.Name())
+			if localSymbol == nil {
+				return failAt("r02b-d-type", "error", file, localNode.Name())
+			}
+			s := symbol{ID: fmt.Sprintf("s%d", len(result.Symbols)+1), Name: localNode.Name().Text(), Kind: "local", Type: "i32", Range: offset(file, localNode.Name())}
+			result.Symbols = append(result.Symbols, s)
+			fn.Body = append(fn.Body, statement{Kind: "variable", Symbol: &s, Initializer: &expression{Kind: "integer", Type: "i32", Literal: literal, Range: offset(file, init)}, Range: offset(file, body[0])})
+		}
+		bodyNode := body[len(body)-1]
 		if bodyNode.Kind != ast.KindReturnStatement || bodyNode.AsReturnStatement().Expression == nil {
 			return failAt("r02b-d-unsupported", "unsupported", file, bodyNode)
 		}
 		expr := bodyNode.AsReturnStatement().Expression
+		if value, literal, ok := exactInteger(file, expr); ok && fn.ReturnType == "i32" {
+			if !i32InRange(value) {
+				return failAt("r01-d-integer-range", "error", file, expr)
+			}
+			fn.Body = append(fn.Body, statement{Kind: "return", Expression: &expression{Kind: "integer", Type: "i32", Literal: literal, Range: offset(file, expr)}, Range: offset(file, bodyNode)})
+			result.Functions = append(result.Functions, fn)
+			continue
+		}
 		if expr.Kind != ast.KindIdentifier {
 			return failAt("r02b-d-unsupported", "unsupported", file, expr)
 		}
@@ -313,10 +560,15 @@ func analyze(r request) response {
 				break
 			}
 		}
-		if ref == "" || scalar(check.GetTypeAtLocation(expr)) != "bool" {
-			return failAt("r01-d-scalar-type", "error", file, expr)
+		if localSymbol != nil && resolved == localSymbol {
+			ref = fn.Body[0].Symbol.ID
 		}
-		fn.Body = append(fn.Body, statement{Kind: "return", Expression: expression{Kind: "reference", Type: "bool", Symbol: ref, Range: offset(file, expr)}, Range: offset(file, bodyNode)})
+		if ref == "" || scalar(check.GetTypeAtLocation(expr)) != fn.ReturnType {
+			if !(localSymbol != nil && resolved == localSymbol && fn.ReturnType == "i32") {
+				return failAt("r01-d-scalar-type", "error", file, expr)
+			}
+		}
+		fn.Body = append(fn.Body, statement{Kind: "return", Expression: &expression{Kind: "reference", Type: fn.ReturnType, Symbol: ref, Range: offset(file, expr)}, Range: offset(file, bodyNode)})
 		result.Functions = append(result.Functions, fn)
 	}
 	if len(result.Functions) == 0 {
