@@ -258,11 +258,16 @@ func i32InRange(value *big.Int) bool {
 	return value.Cmp(big.NewInt(-2147483648)) >= 0 && value.Cmp(big.NewInt(2147483647)) <= 0
 }
 
-func integerLiteralOperand(expr *expression) bool {
-	for expr.Kind == "group" {
-		expr = expr.Operand
+func integerLiteralNode(file *ast.SourceFile, node *ast.Node) bool {
+	for node.Kind == ast.KindParenthesizedExpression {
+		node = node.AsParenthesizedExpression().Expression
 	}
-	return expr.Kind == "integer"
+	_, _, ok := exactInteger(file, node)
+	return ok
+}
+
+func explicitFloatOperand(file *ast.SourceFile, check *checker.Checker, node *ast.Node) bool {
+	return !integerLiteralNode(file, node) && scalar(check.GetTypeAtLocation(node)) == "f64"
 }
 
 func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Node, bindings map[*ast.Symbol]symbol) (*expression, *response) {
@@ -311,7 +316,8 @@ func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Nod
 			if failure != nil {
 				return nil, failure
 			}
-			if operand.Type == "f64" && (operator == "+" || operator == "-" || operator == "!") {
+			if (operand.Type == "f64" && (operator == "+" || operator == "-")) ||
+				(operator == "!" && (operand.Type == "i32" || operand.Type == "f64")) {
 				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
 				return nil, &failure
 			}
@@ -370,6 +376,16 @@ func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Nod
 			operator = "||"
 		}
 		if operator != "" {
+			floatOperation := false
+			switch operator {
+			case "+", "-", "*", "/", "%", "<", "<=", ">", ">=", "===", "!==":
+				floatOperation = true
+			}
+			if floatOperation && ((explicitFloatOperand(file, check, binary.Left) && integerLiteralNode(file, binary.Right)) ||
+				(explicitFloatOperand(file, check, binary.Right) && integerLiteralNode(file, binary.Left))) {
+				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+				return nil, &failure
+			}
 			left, failure := projectOperator(file, check, binary.Left, bindings)
 			if failure != nil {
 				return nil, failure
@@ -390,18 +406,13 @@ func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Nod
 			if operator == "&&" || operator == "||" {
 				leftValid, rightValid = left.Type == "bool", right.Type == "bool"
 			}
-			floatOperation := false
-			switch operator {
-			case "+", "-", "*", "/", "%", "<", "<=", ">", ">=", "===", "!==":
-				floatOperation = true
-			}
-			if floatOperation && ((left.Type == "f64" && right.Type == "f64") ||
-				(left.Type == "f64" && integerLiteralOperand(right)) ||
-				(right.Type == "f64" && integerLiteralOperand(left))) {
+			if floatOperation && left.Type == "f64" && right.Type == "f64" {
 				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
 				return nil, &failure
 			}
-			if (operator == "&&" || operator == "||") && left.Type == right.Type && (left.Type == "i32" || left.Type == "f64") {
+			leftNumeric := left.Type == "i32" || left.Type == "f64"
+			rightNumeric := right.Type == "i32" || right.Type == "f64"
+			if (operator == "&&" || operator == "||") && leftNumeric && rightNumeric {
 				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
 				return nil, &failure
 			}
