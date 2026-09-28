@@ -82,12 +82,16 @@ type symbol struct {
 }
 
 type expression struct {
-	Kind    string          `json:"kind"`
-	Type    string          `json:"type"`
-	Symbol  string          `json:"symbol,omitempty"`
-	Literal *integerLiteral `json:"literal,omitempty"`
-	Boolean *bool           `json:"boolean,omitempty"`
-	Range   span            `json:"range"`
+	Kind     string          `json:"kind"`
+	Type     string          `json:"type"`
+	Operator string          `json:"operator,omitempty"`
+	Left     *expression     `json:"left,omitempty"`
+	Right    *expression     `json:"right,omitempty"`
+	Operand  *expression     `json:"operand,omitempty"`
+	Boolean  *bool           `json:"boolean,omitempty"`
+	Symbol   string          `json:"symbol,omitempty"`
+	Literal  *integerLiteral `json:"literal,omitempty"`
+	Range    span            `json:"range"`
 }
 
 type integerLiteral struct {
@@ -123,12 +127,18 @@ type response struct {
 
 func fail(code, category, file string, location span) response {
 	phase := "syntax"
-	if code == "r01-d-scalar-type" || code == "r01-d-integer-range" {
+	if code == "r01-d-scalar-type" || code == "r01-d-integer-range" || code == "r01-d-shift-count-type" {
 		phase = "types"
 	}
 	rule := "r01-ts-baseline"
 	if code == "r01-d-integer-range" || code == "r01-d-scalar-type" {
 		rule = "r01-literals"
+	}
+	if code == "r01-d-shift-count-type" {
+		rule = "r01-shifts"
+	}
+	if category == "prohibited" {
+		phase, rule = "types", "r01-input-boundary"
 	}
 	return response{Status: "error", Diagnostics: []diagnostic{{Code: code, RuleID: rule, RuleIDs: []string{rule}, Category: category,
 		Phase: phase, Severity: "error", File: file, Range: location,
@@ -148,8 +158,9 @@ func sourcePosition(file *ast.SourceFile, start, end int) primary {
 }
 
 func failAt(code, category string, file *ast.SourceFile, node *ast.Node) response {
-	result := fail(code, category, file.FileName(), offset(file, node))
-	result.Diagnostics[0].Primary = sourcePosition(file, node.Pos(), node.End())
+	start := scanner.SkipTrivia(file.Text(), node.Pos())
+	result := fail(code, category, file.FileName(), expressionOffset(file, node))
+	result.Diagnostics[0].Primary = sourcePosition(file, start, node.End())
 	return result
 }
 
@@ -183,6 +194,11 @@ func valid(r request) bool {
 func offset(file *ast.SourceFile, node *ast.Node) span {
 	positions := file.GetPositionMap()
 	return span{positions.UTF8ToUTF16(node.Pos()), positions.UTF8ToUTF16(node.End())}
+}
+
+func expressionOffset(file *ast.SourceFile, node *ast.Node) span {
+	positions := file.GetPositionMap()
+	return span{positions.UTF8ToUTF16(scanner.SkipTrivia(file.Text(), node.Pos())), positions.UTF8ToUTF16(node.End())}
 }
 
 func scalar(t *checker.Type) string {
@@ -244,6 +260,193 @@ func exactInteger(file *ast.SourceFile, expr *ast.Node) (*big.Int, *integerLiter
 
 func i32InRange(value *big.Int) bool {
 	return value.Cmp(big.NewInt(-2147483648)) >= 0 && value.Cmp(big.NewInt(2147483647)) <= 0
+}
+
+func integerLiteralNode(file *ast.SourceFile, node *ast.Node) bool {
+	for node.Kind == ast.KindParenthesizedExpression {
+		node = node.AsParenthesizedExpression().Expression
+	}
+	_, _, ok := exactInteger(file, node)
+	return ok
+}
+
+func explicitFloatOperand(file *ast.SourceFile, check *checker.Checker, node *ast.Node) bool {
+	for node.Kind == ast.KindParenthesizedExpression {
+		node = node.AsParenthesizedExpression().Expression
+	}
+	if node.Kind != ast.KindIdentifier && node.Kind != ast.KindNumericLiteral {
+		return false
+	}
+	return !integerLiteralNode(file, node) && scalar(check.GetTypeAtLocation(node)) == "f64"
+}
+
+func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Node, bindings map[*ast.Symbol]symbol) (*expression, *response) {
+	if value, literal, ok := exactInteger(file, node); ok {
+		if !i32InRange(value) {
+			failure := failAt("r01-d-integer-range", "error", file, node)
+			return nil, &failure
+		}
+		return &expression{Kind: "integer", Type: "i32", Literal: literal, Range: expressionOffset(file, node)}, nil
+	}
+	if node.Kind == ast.KindNumericLiteral {
+		return &expression{Kind: "numeric", Type: "f64", Range: expressionOffset(file, node)}, nil
+	}
+	if node.Kind == ast.KindIdentifier {
+		binding, ok := bindings[check.GetSymbolAtLocation(node)]
+		if ok && binding.Type != "" {
+			return &expression{Kind: "reference", Type: binding.Type, Symbol: binding.ID, Range: expressionOffset(file, node)}, nil
+		}
+	}
+	if node.Kind == ast.KindTrueKeyword || node.Kind == ast.KindFalseKeyword {
+		value := node.Kind == ast.KindTrueKeyword
+		return &expression{Kind: "boolean", Type: "bool", Boolean: &value, Range: expressionOffset(file, node)}, nil
+	}
+	if node.Kind == ast.KindParenthesizedExpression {
+		inner, failure := projectOperator(file, check, node.AsParenthesizedExpression().Expression, bindings)
+		if failure != nil {
+			return nil, failure
+		}
+		return &expression{Kind: "group", Type: inner.Type, Operand: inner, Range: expressionOffset(file, node)}, nil
+	}
+	if node.Kind == ast.KindPrefixUnaryExpression {
+		prefix := node.AsPrefixUnaryExpression()
+		operator, expected := "", "i32"
+		switch prefix.Operator {
+		case ast.KindExclamationToken:
+			operator, expected = "!", "bool"
+		case ast.KindTildeToken:
+			operator = "~"
+		case ast.KindPlusToken:
+			operator = "+"
+		case ast.KindMinusToken:
+			operator = "-"
+		}
+		if operator != "" {
+			operand, failure := projectOperator(file, check, prefix.Operand, bindings)
+			if failure != nil {
+				return nil, failure
+			}
+			if (operand.Type == "f64" && (operator == "+" || operator == "-")) ||
+				(operator == "!" && (operand.Type == "i32" || operand.Type == "f64")) {
+				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+				return nil, &failure
+			}
+			if operand.Type != expected {
+				failure := failAt("r01-d-scalar-type", "error", file, prefix.Operand)
+				return nil, &failure
+			}
+			return &expression{Kind: "unary", Type: expected, Operator: operator, Operand: operand, Range: expressionOffset(file, node)}, nil
+		}
+	}
+	if node.Kind == ast.KindBinaryExpression {
+		binary := node.AsBinaryExpression()
+		if binary.OperatorToken.Kind == ast.KindEqualsEqualsToken || binary.OperatorToken.Kind == ast.KindExclamationEqualsToken {
+			failure := failAt("r02b-d-prohibited", "prohibited", file, binary.OperatorToken)
+			return nil, &failure
+		}
+		operator := ""
+		switch binary.OperatorToken.Kind {
+		case ast.KindPlusToken:
+			operator = "+"
+		case ast.KindMinusToken:
+			operator = "-"
+		case ast.KindAsteriskToken:
+			operator = "*"
+		case ast.KindSlashToken:
+			operator = "/"
+		case ast.KindPercentToken:
+			operator = "%"
+		case ast.KindAmpersandToken:
+			operator = "&"
+		case ast.KindBarToken:
+			operator = "|"
+		case ast.KindCaretToken:
+			operator = "^"
+		case ast.KindLessThanLessThanToken:
+			operator = "<<"
+		case ast.KindGreaterThanGreaterThanToken:
+			operator = ">>"
+		case ast.KindGreaterThanGreaterThanGreaterThanToken:
+			operator = ">>>"
+		case ast.KindLessThanToken:
+			operator = "<"
+		case ast.KindLessThanEqualsToken:
+			operator = "<="
+		case ast.KindGreaterThanToken:
+			operator = ">"
+		case ast.KindGreaterThanEqualsToken:
+			operator = ">="
+		case ast.KindEqualsEqualsEqualsToken:
+			operator = "==="
+		case ast.KindExclamationEqualsEqualsToken:
+			operator = "!=="
+		case ast.KindAmpersandAmpersandToken:
+			operator = "&&"
+		case ast.KindBarBarToken:
+			operator = "||"
+		}
+		if operator != "" {
+			floatOperation := false
+			switch operator {
+			case "+", "-", "*", "/", "%", "<", "<=", ">", ">=", "===", "!==":
+				floatOperation = true
+			}
+			if floatOperation && ((explicitFloatOperand(file, check, binary.Left) && integerLiteralNode(file, binary.Right)) ||
+				(explicitFloatOperand(file, check, binary.Right) && integerLiteralNode(file, binary.Left))) {
+				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+				return nil, &failure
+			}
+			left, failure := projectOperator(file, check, binary.Left, bindings)
+			if failure != nil {
+				return nil, failure
+			}
+			right, failure := projectOperator(file, check, binary.Right, bindings)
+			if failure != nil {
+				return nil, failure
+			}
+			resultType := "i32"
+			if operator == "<" || operator == "<=" || operator == ">" || operator == ">=" || operator == "===" || operator == "!==" || operator == "&&" || operator == "||" {
+				resultType = "bool"
+			}
+			leftValid, rightValid := left.Type == "i32", right.Type == "i32"
+			if operator == "===" || operator == "!==" {
+				leftValid = left.Type == "i32" || left.Type == "bool"
+				rightValid = right.Type == left.Type
+			}
+			if operator == "&&" || operator == "||" {
+				leftValid, rightValid = left.Type == "bool", right.Type == "bool"
+			}
+			if floatOperation && left.Type == "f64" && right.Type == "f64" {
+				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+				return nil, &failure
+			}
+			leftNumeric := left.Type == "i32" || left.Type == "f64"
+			rightNumeric := right.Type == "i32" || right.Type == "f64"
+			if (operator == "&&" || operator == "||") && leftNumeric && rightNumeric {
+				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+				return nil, &failure
+			}
+			if !leftValid || !rightValid {
+				code := "r01-d-scalar-type"
+				invalid := binary.Left
+				if leftValid {
+					invalid = binary.Right
+					if operator == "<<" || operator == ">>" || operator == ">>>" {
+						code = "r01-d-shift-count-type"
+					}
+				}
+				failure := failAt(code, "error", file, invalid)
+				return nil, &failure
+			}
+			kind := "binary"
+			if operator == "&&" || operator == "||" {
+				kind = "shortCircuit"
+			}
+			return &expression{Kind: kind, Type: resultType, Operator: operator, Left: left, Right: right, Range: expressionOffset(file, node)}, nil
+		}
+	}
+	failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+	return nil, &failure
 }
 
 func i32LiteralReturn(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) (*big.Int, bool) {
@@ -600,7 +803,14 @@ func (p *projection) expr(node *ast.Node, expected string) (*expression, respons
 		}
 		return &expression{Kind: "integer", Type: "i32", Literal: literal, Range: offset(p.file, node)}, response{}
 	}
-	return nil, failAt("r02b-d-unsupported", "unsupported", p.file, node)
+	projected, failure := projectOperator(p.file, p.check, node, p.bindings)
+	if failure != nil {
+		return nil, *failure
+	}
+	if expected != "" && projected.Type != expected {
+		return nil, failAt("r01-d-scalar-type", "error", p.file, node)
+	}
+	return projected, response{}
 }
 
 func (p *projection) statements(nodes []*ast.Node, returnType string) ([]statement, response) {
@@ -685,6 +895,64 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 	return out, response{}
 }
 
+func parameterBindings(check *checker.Checker, parameters []*ast.Node, projected []symbol) map[*ast.Symbol]symbol {
+	bindings := map[*ast.Symbol]symbol{}
+	for i, parameter := range parameters {
+		if parameter.Name() == nil {
+			continue
+		}
+		resolved := check.GetSymbolAtLocation(parameter.Name())
+		if resolved == nil {
+			continue
+		}
+		binding := symbol{Type: scalar(check.GetTypeAtLocation(parameter.Name()))}
+		if i < len(projected) {
+			binding = projected[i]
+		}
+		bindings[resolved] = binding
+	}
+	return bindings
+}
+
+func supportedOperatorReturn(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
+	if d.File() != file || d.Code() != 2322 {
+		return false
+	}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
+			continue
+		}
+		decl := node.AsFunctionDeclaration()
+		if decl.Type == nil || scalar(check.GetTypeFromTypeNode(decl.Type)) != "i32" {
+			continue
+		}
+		bindings := parameterBindings(check, decl.Parameters.Nodes, nil)
+		for _, item := range decl.Body.AsBlock().Statements.Nodes {
+			if item.Kind != ast.KindReturnStatement || d.Pos() < item.Pos() || d.End() > item.End() {
+				continue
+			}
+			expr := item.AsReturnStatement().Expression
+			if expr != nil && (expr.Kind == ast.KindBinaryExpression || expr.Kind == ast.KindPrefixUnaryExpression || expr.Kind == ast.KindParenthesizedExpression) {
+				candidate := expr
+				for candidate.Kind == ast.KindParenthesizedExpression {
+					candidate = candidate.AsParenthesizedExpression().Expression
+				}
+				if candidate.Kind == ast.KindBinaryExpression && candidate.AsBinaryExpression().OperatorToken.Kind == ast.KindAsteriskAsteriskToken {
+					binary := candidate.AsBinaryExpression()
+					left, leftFailure := projectOperator(file, check, binary.Left, bindings)
+					right, rightFailure := projectOperator(file, check, binary.Right, bindings)
+					if leftFailure == nil && rightFailure == nil && left.Type == "i32" && right.Type == "i32" {
+						return true
+					}
+				}
+				projected, failure := projectOperator(file, check, expr, bindings)
+				return failure == nil && projected.Type == "i32"
+			}
+		}
+	}
+	return false
+}
+
 func analyze(r request) response {
 	if !valid(r) {
 		return fail("r02b-d-input", "input", r.RootFile, span{})
@@ -736,9 +1004,24 @@ func analyze(r request) response {
 	defer release()
 	if len(groups[0].items) == 0 {
 		for _, node := range file.Statements.Nodes {
-			if node.Kind == ast.KindFunctionDeclaration && node.Body() != nil && node.Body().Kind == ast.KindBlock {
-				if pending := pendingLocalForm(node.Body().AsBlock().Statements.Nodes); pending != nil {
-					return failAt("r02b-d-unsupported", "unsupported", file, pending)
+			if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
+				continue
+			}
+			if pending := pendingLocalForm(node.Body().AsBlock().Statements.Nodes); pending != nil {
+				return failAt("r02b-d-unsupported", "unsupported", file, pending)
+			}
+			decl := node.AsFunctionDeclaration()
+			bindings := parameterBindings(check, decl.Parameters.Nodes, nil)
+			for _, item := range decl.Body.AsBlock().Statements.Nodes {
+				if item.Kind != ast.KindReturnStatement || item.AsReturnStatement().Expression == nil {
+					continue
+				}
+				expr := item.AsReturnStatement().Expression
+				if expr.Kind == ast.KindBinaryExpression || expr.Kind == ast.KindPrefixUnaryExpression || expr.Kind == ast.KindParenthesizedExpression {
+					_, failure := projectOperator(file, check, expr, bindings)
+					if failure != nil && failure.Diagnostics[0].Category != "unsupported" {
+						return *failure
+					}
 				}
 			}
 		}
@@ -746,6 +1029,9 @@ func analyze(r request) response {
 	for _, group := range groups {
 		for _, d := range group.items {
 			code := group.code
+			if supportedOperatorReturn(file, check, d) {
+				continue
+			}
 			if value, ok := i32LiteralReturn(file, check, d); ok {
 				if i32InRange(value) {
 					continue
