@@ -492,34 +492,42 @@ func scalarLocalMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.Di
 }
 
 func pendingLocalForm(nodes []*ast.Node) *ast.Node {
-	for _, node := range nodes {
-		if node.Kind == ast.KindBlock {
-			if found := pendingLocalForm(node.AsBlock().Statements.Nodes); found != nil {
-				return found
-			}
+	var walk func(*ast.Node) *ast.Node
+	walk = func(node *ast.Node) *ast.Node {
+		if node.Kind == ast.KindVariableDeclaration && node.AsVariableDeclaration().Initializer == nil {
+			return node
 		}
-		for _, decl := range localDeclarations(node) {
-			if decl.Kind == ast.KindVariableDeclaration && decl.AsVariableDeclaration().Initializer == nil {
-				return decl
-			}
+		if node.Kind == ast.KindBinaryExpression && ast.IsCompoundAssignment(node.AsBinaryExpression().OperatorToken.Kind) {
+			return node
 		}
 		if node.Kind == ast.KindExpressionStatement {
 			expr := node.AsExpressionStatement().Expression
 			if expr.Kind == ast.KindBinaryExpression && expr.AsBinaryExpression().OperatorToken.Kind != ast.KindEqualsToken {
 				return expr
 			}
-			if expr.Kind == ast.KindPostfixUnaryExpression {
-				operator := expr.AsPostfixUnaryExpression().Operator
-				if operator == ast.KindPlusPlusToken || operator == ast.KindMinusMinusToken {
-					return expr
-				}
+		}
+		if node.Kind == ast.KindPostfixUnaryExpression {
+			operator := node.AsPostfixUnaryExpression().Operator
+			if operator == ast.KindPlusPlusToken || operator == ast.KindMinusMinusToken {
+				return node
 			}
-			if expr.Kind == ast.KindPrefixUnaryExpression {
-				operator := expr.AsPrefixUnaryExpression().Operator
-				if operator == ast.KindPlusPlusToken || operator == ast.KindMinusMinusToken {
-					return expr
-				}
+		}
+		if node.Kind == ast.KindPrefixUnaryExpression {
+			operator := node.AsPrefixUnaryExpression().Operator
+			if operator == ast.KindPlusPlusToken || operator == ast.KindMinusMinusToken {
+				return node
 			}
+		}
+		for child := range node.IterChildren() {
+			if found := walk(child); found != nil {
+				return found
+			}
+		}
+		return nil
+	}
+	for _, node := range nodes {
+		if found := walk(node); found != nil {
+			return found
 		}
 	}
 	return nil
@@ -785,7 +793,7 @@ func analyze(r request) response {
 				primaryLocation = sourcePosition(d.File(), d.Pos(), d.End())
 			}
 			phase := "syntax"
-			if code == "r01-d-scalar-type" || code == "r01-d-integer-range" || code == "r02b-d-type" {
+			if code == "r01-d-scalar-type" || code == "r01-d-integer-range" || code == "r01-d-unresolved-name" || code == "r02b-d-type" {
 				phase = "types"
 			}
 			rule := "r01-ts-baseline"
