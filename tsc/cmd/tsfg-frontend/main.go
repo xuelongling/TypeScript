@@ -121,7 +121,7 @@ func fail(code, category, file string, location span) response {
 		phase = "types"
 	}
 	rule := "r01-ts-baseline"
-	if code == "r01-d-integer-range" {
+	if code == "r01-d-integer-range" || code == "r01-d-scalar-type" {
 		rule = "r01-literals"
 	}
 	return response{Status: "error", Diagnostics: []diagnostic{{Code: code, RuleID: rule, RuleIDs: []string{rule}, Category: category,
@@ -466,7 +466,7 @@ func analyze(r request) response {
 				phase = "types"
 			}
 			rule := "r01-ts-baseline"
-			if code == "r01-d-integer-range" {
+			if code == "r01-d-integer-range" || code == "r01-d-scalar-type" {
 				rule = "r01-literals"
 			}
 			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: code, RuleID: rule, RuleIDs: []string{rule},
@@ -562,6 +562,9 @@ func analyze(r request) response {
 		}
 		if localSymbol != nil && resolved == localSymbol {
 			ref = fn.Body[0].Symbol.ID
+		}
+		if localSymbol != nil && resolved == localSymbol && fn.ReturnType != "i32" {
+			return failAt("r01-d-scalar-type", "error", file, expr)
 		}
 		if ref == "" || scalar(check.GetTypeAtLocation(expr)) != fn.ReturnType {
 			if !(localSymbol != nil && resolved == localSymbol && fn.ReturnType == "i32") {
