@@ -374,6 +374,10 @@ func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Nod
 			if operator == "&&" || operator == "||" {
 				valid = left.Type == "bool" && right.Type == "bool"
 			}
+			if left.Type == "f64" && right.Type == "f64" && operator != "&&" && operator != "||" {
+				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+				return nil, &failure
+			}
 			if !valid {
 				code := "r01-d-scalar-type"
 				if operator == "<<" || operator == ">>" || operator == ">>>" {
@@ -523,6 +527,25 @@ func scalarReturnMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.D
 	return false
 }
 
+func parameterBindings(check *checker.Checker, parameters []*ast.Node, projected []symbol) map[*ast.Symbol]symbol {
+	bindings := map[*ast.Symbol]symbol{}
+	for i, parameter := range parameters {
+		if parameter.Name() == nil {
+			continue
+		}
+		resolved := check.GetSymbolAtLocation(parameter.Name())
+		if resolved == nil {
+			continue
+		}
+		binding := symbol{Type: scalar(check.GetTypeAtLocation(parameter.Name()))}
+		if i < len(projected) {
+			binding = projected[i]
+		}
+		bindings[resolved] = binding
+	}
+	return bindings
+}
+
 func supportedOperatorReturn(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
 	if d.File() != file || d.Code() != 2322 {
 		return false
@@ -535,16 +558,13 @@ func supportedOperatorReturn(file *ast.SourceFile, check *checker.Checker, d *as
 		if decl.Type == nil || scalar(check.GetTypeFromTypeNode(decl.Type)) != "i32" {
 			continue
 		}
-		bindings := map[*ast.Symbol]symbol{}
-		for _, parameter := range decl.Parameters.Nodes {
-			bindings[check.GetSymbolAtLocation(parameter.Name())] = symbol{Type: scalar(check.GetTypeAtLocation(parameter.Name()))}
-		}
+		bindings := parameterBindings(check, decl.Parameters.Nodes, nil)
 		for _, item := range decl.Body.AsBlock().Statements.Nodes {
 			if item.Kind != ast.KindReturnStatement || d.Pos() < item.Pos() || d.End() > item.End() {
 				continue
 			}
 			expr := item.AsReturnStatement().Expression
-			if expr != nil && (expr.Kind == ast.KindBinaryExpression || expr.Kind == ast.KindPrefixUnaryExpression) {
+			if expr != nil && (expr.Kind == ast.KindBinaryExpression || expr.Kind == ast.KindPrefixUnaryExpression || expr.Kind == ast.KindParenthesizedExpression) {
 				projected, failure := projectOperator(file, check, expr, bindings)
 				return failure == nil && projected.Type == "i32"
 			}
@@ -608,20 +628,15 @@ func analyze(r request) response {
 				continue
 			}
 			decl := node.AsFunctionDeclaration()
-			bindings := map[*ast.Symbol]symbol{}
-			for _, parameter := range decl.Parameters.Nodes {
-				if parameter.Name() != nil {
-					bindings[check.GetSymbolAtLocation(parameter.Name())] = symbol{Type: scalar(check.GetTypeAtLocation(parameter.Name()))}
-				}
-			}
+			bindings := parameterBindings(check, decl.Parameters.Nodes, nil)
 			for _, item := range decl.Body.AsBlock().Statements.Nodes {
 				if item.Kind != ast.KindReturnStatement || item.AsReturnStatement().Expression == nil {
 					continue
 				}
 				expr := item.AsReturnStatement().Expression
-				if expr.Kind == ast.KindBinaryExpression || expr.Kind == ast.KindPrefixUnaryExpression {
+				if expr.Kind == ast.KindBinaryExpression || expr.Kind == ast.KindPrefixUnaryExpression || expr.Kind == ast.KindParenthesizedExpression {
 					_, failure := projectOperator(file, check, expr, bindings)
-					if failure != nil && (failure.Diagnostics[0].Code == "r01-d-scalar-type" || failure.Diagnostics[0].Code == "r01-d-shift-count-type") {
+					if failure != nil && failure.Diagnostics[0].Category != "unsupported" {
 						return *failure
 					}
 				}
@@ -708,10 +723,7 @@ func analyze(r request) response {
 			result.Symbols = append(result.Symbols, s)
 			fn.Parameters = append(fn.Parameters, s)
 		}
-		bindings := map[*ast.Symbol]symbol{}
-		for i, p := range decl.Parameters.Nodes {
-			bindings[check.GetSymbolAtLocation(p.Name())] = fn.Parameters[i]
-		}
+		bindings := parameterBindings(check, decl.Parameters.Nodes, fn.Parameters)
 		var localNode *ast.Node
 		var localSymbol *ast.Symbol
 		if len(body) == 2 {
