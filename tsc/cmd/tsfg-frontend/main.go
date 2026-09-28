@@ -48,12 +48,25 @@ type span struct {
 }
 
 type diagnostic struct {
-	Code         string `json:"code"`
-	RuleID       string `json:"ruleId"`
-	Category     string `json:"category"`
-	File         string `json:"file"`
-	Range        span   `json:"range"`
-	UpstreamCode int32  `json:"upstreamCode,omitempty"`
+	Code         string  `json:"code"`
+	RuleID       string  `json:"ruleId"`
+	Category     string  `json:"category"`
+	Phase        string  `json:"phase"`
+	Severity     string  `json:"severity"`
+	File         string  `json:"file"`
+	Range        span    `json:"range"`
+	Primary      primary `json:"primary"`
+	UpstreamCode int32   `json:"upstreamCode,omitempty"`
+}
+
+type primary struct {
+	SourceID    string `json:"sourceId"`
+	Start       int    `json:"start"`
+	End         int    `json:"end"`
+	StartLine   int    `json:"startLine"`
+	StartColumn int    `json:"startColumn"`
+	EndLine     int    `json:"endLine"`
+	EndColumn   int    `json:"endColumn"`
 }
 
 type symbol struct {
@@ -93,7 +106,31 @@ type response struct {
 }
 
 func fail(code, category, file string, location span) response {
-	return response{Status: "error", Diagnostics: []diagnostic{{Code: code, RuleID: "r01-ts-baseline", Category: category, File: file, Range: location}}}
+	phase := "syntax"
+	if code == "r01-d-scalar-type" {
+		phase = "types"
+	}
+	return response{Status: "error", Diagnostics: []diagnostic{{Code: code, RuleID: "r01-ts-baseline", Category: category,
+		Phase: phase, Severity: "error", File: file, Range: location,
+		Primary: primary{SourceID: file, Start: location.Start, End: location.End}}}}
+}
+
+func sourcePosition(file *ast.SourceFile, start, end int) primary {
+	lines := file.ECMALineMap()
+	positions := file.GetPositionMap()
+	startLine, _ := core.PositionToLineAndByteOffset(start, lines)
+	endLine, _ := core.PositionToLineAndByteOffset(end, lines)
+	startOffset := positions.UTF8ToUTF16(start)
+	endOffset := positions.UTF8ToUTF16(end)
+	return primary{SourceID: file.FileName(), Start: startOffset, End: endOffset,
+		StartLine: startLine, StartColumn: startOffset - positions.UTF8ToUTF16(int(lines[startLine])),
+		EndLine: endLine, EndColumn: endOffset - positions.UTF8ToUTF16(int(lines[endLine]))}
+}
+
+func failAt(code, category string, file *ast.SourceFile, node *ast.Node) response {
+	result := fail(code, category, file.FileName(), offset(file, node))
+	result.Diagnostics[0].Primary = sourcePosition(file, node.Pos(), node.End())
+	return result
 }
 
 func valid(r request) bool {
@@ -178,17 +215,25 @@ func analyze(r request) response {
 		code  string
 	}{
 		{program.GetSyntacticDiagnostics(context.Background(), nil), "r02b-d-syntax"},
-		{program.GetSemanticDiagnostics(context.Background(), nil), "r02b-d-type"},
-		{program.GetProgramDiagnostics(), "r02b-d-type"},
-		{program.GetGlobalDiagnostics(context.Background()), "r02b-d-type"},
+		{program.GetSemanticDiagnostics(context.Background(), nil), "r01-d-scalar-type"},
+		{program.GetProgramDiagnostics(), "r01-d-scalar-type"},
+		{program.GetGlobalDiagnostics(context.Background()), "r01-d-scalar-type"},
 	} {
 		for _, d := range group.items {
 			name, where := r.RootFile, span{}
+			primaryLocation := primary{SourceID: name}
 			if d.File() != nil {
 				name = d.File().FileName()
 				where = span{d.File().GetPositionMap().UTF8ToUTF16(d.Pos()), d.File().GetPositionMap().UTF8ToUTF16(d.End())}
+				primaryLocation = sourcePosition(d.File(), d.Pos(), d.End())
 			}
-			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: group.code, RuleID: "r01-ts-baseline", Category: "error", File: name, Range: where, UpstreamCode: d.Code()})
+			phase := "syntax"
+			if group.code == "r01-d-scalar-type" {
+				phase = "types"
+			}
+			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: group.code, RuleID: "r01-ts-baseline",
+				Category: "error", Phase: phase, Severity: "error", File: name, Range: where,
+				Primary: primaryLocation, UpstreamCode: d.Code()})
 		}
 	}
 	if len(result.Diagnostics) != 0 {
@@ -199,24 +244,24 @@ func analyze(r request) response {
 	defer release()
 	for _, node := range file.Statements.Nodes {
 		if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Body() == nil {
-			return fail("r02b-d-unsupported", "unsupported", r.RootFile, offset(file, node))
+			return failAt("r02b-d-unsupported", "unsupported", file, node)
 		}
 		decl := node.AsFunctionDeclaration()
 		if decl.Type == nil || decl.Body.Kind != ast.KindBlock || len(decl.Body.AsBlock().Statements.Nodes) != 1 {
-			return fail("r02b-d-unsupported", "unsupported", r.RootFile, offset(file, node))
+			return failAt("r02b-d-unsupported", "unsupported", file, node)
 		}
 		fn := function{Name: node.Name().Text(), Parameters: []symbol{}, Body: []statement{}, Range: offset(file, node)}
 		fn.ReturnType = scalar(check.GetTypeFromTypeNode(decl.Type))
 		if fn.ReturnType == "" {
-			return fail("r02b-d-unsupported", "unsupported", r.RootFile, offset(file, decl.Type))
+			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
 		}
 		for _, p := range decl.Parameters.Nodes {
 			if p.Name() == nil || p.AsParameterDeclaration().Type == nil || p.AsParameterDeclaration().Initializer != nil {
-				return fail("r02b-d-unsupported", "unsupported", r.RootFile, offset(file, p))
+				return failAt("r02b-d-unsupported", "unsupported", file, p)
 			}
 			t := scalar(check.GetTypeAtLocation(p.Name()))
 			if t == "" {
-				return fail("r02b-d-unsupported", "unsupported", r.RootFile, offset(file, p))
+				return failAt("r02b-d-unsupported", "unsupported", file, p)
 			}
 			s := symbol{ID: fmt.Sprintf("s%d", len(result.Symbols)+1), Name: p.Name().Text(), Kind: "parameter", Type: t, Range: offset(file, p.Name())}
 			result.Symbols = append(result.Symbols, s)
@@ -224,11 +269,11 @@ func analyze(r request) response {
 		}
 		bodyNode := decl.Body.AsBlock().Statements.Nodes[0]
 		if bodyNode.Kind != ast.KindReturnStatement || bodyNode.AsReturnStatement().Expression == nil {
-			return fail("r02b-d-unsupported", "unsupported", r.RootFile, offset(file, bodyNode))
+			return failAt("r02b-d-unsupported", "unsupported", file, bodyNode)
 		}
 		expr := bodyNode.AsReturnStatement().Expression
 		if expr.Kind != ast.KindIdentifier {
-			return fail("r02b-d-unsupported", "unsupported", r.RootFile, offset(file, expr))
+			return failAt("r02b-d-unsupported", "unsupported", file, expr)
 		}
 		resolved := check.GetSymbolAtLocation(expr)
 		ref := ""
@@ -239,7 +284,7 @@ func analyze(r request) response {
 			}
 		}
 		if ref == "" || scalar(check.GetTypeAtLocation(expr)) != "bool" {
-			return fail("r02b-d-type", "error", r.RootFile, offset(file, expr))
+			return failAt("r01-d-scalar-type", "error", file, expr)
 		}
 		fn.Body = append(fn.Body, statement{Kind: "return", Expression: expression{Kind: "reference", Type: "bool", Symbol: ref, Range: offset(file, expr)}, Range: offset(file, bodyNode)})
 		result.Functions = append(result.Functions, fn)
