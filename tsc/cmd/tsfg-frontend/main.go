@@ -85,8 +85,9 @@ type expression struct {
 	Type      string          `json:"type"`
 	Symbol    string          `json:"symbol,omitempty"`
 	Target    string          `json:"target,omitempty"`
-	Arguments []expression    `json:"arguments,omitempty"`
+	Arguments *[]expression   `json:"arguments,omitempty"`
 	Signature *signature      `json:"signature,omitempty"`
+	Boolean   *bool           `json:"boolean,omitempty"`
 	Literal   *integerLiteral `json:"literal,omitempty"`
 	Range     span            `json:"range"`
 }
@@ -475,6 +476,14 @@ func projectExpression(file *ast.SourceFile, check *checker.Checker, node *ast.N
 		}
 		return expression{Kind: "integer", Type: "i32", Literal: literal, Range: offset(file, node)}, nil
 	}
+	if node.Kind == ast.KindTrueKeyword || node.Kind == ast.KindFalseKeyword {
+		if expected != "bool" {
+			failure := failAt("r01-d-scalar-type", "error", file, node)
+			return expression{}, &failure
+		}
+		value := node.Kind == ast.KindTrueKeyword
+		return expression{Kind: "boolean", Type: "bool", Boolean: &value, Range: offset(file, node)}, nil
+	}
 	if node.Kind == ast.KindIdentifier {
 		resolved := check.GetSymbolAtLocation(node)
 		ref, ok := refs[resolved]
@@ -521,7 +530,7 @@ func projectExpression(file *ast.SourceFile, check *checker.Checker, node *ast.N
 		}
 		sig := target.Signature
 		return expression{Kind: "call", Type: sig.ReturnType, Target: target.ID,
-			Arguments: arguments, Signature: &sig, Range: offset(file, node)}, nil
+			Arguments: &arguments, Signature: &sig, Range: offset(file, node)}, nil
 	}
 	failure := failAt("r02b-d-unsupported", "unsupported", file, node)
 	return expression{}, &failure
