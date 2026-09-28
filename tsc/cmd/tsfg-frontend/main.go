@@ -611,6 +611,18 @@ func supportedOperatorReturn(file *ast.SourceFile, check *checker.Checker, d *as
 			}
 			expr := item.AsReturnStatement().Expression
 			if expr != nil && (expr.Kind == ast.KindBinaryExpression || expr.Kind == ast.KindPrefixUnaryExpression || expr.Kind == ast.KindParenthesizedExpression) {
+				candidate := expr
+				for candidate.Kind == ast.KindParenthesizedExpression {
+					candidate = candidate.AsParenthesizedExpression().Expression
+				}
+				if candidate.Kind == ast.KindBinaryExpression && candidate.AsBinaryExpression().OperatorToken.Kind == ast.KindAsteriskAsteriskToken {
+					binary := candidate.AsBinaryExpression()
+					left, leftFailure := projectOperator(file, check, binary.Left, bindings)
+					right, rightFailure := projectOperator(file, check, binary.Right, bindings)
+					if leftFailure == nil && rightFailure == nil && left.Type == "i32" && right.Type == "i32" {
+						return true
+					}
+				}
 				projected, failure := projectOperator(file, check, expr, bindings)
 				return failure == nil && projected.Type == "i32"
 			}
