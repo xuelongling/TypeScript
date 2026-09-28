@@ -382,12 +382,13 @@ func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Nod
 			if operator == "<" || operator == "<=" || operator == ">" || operator == ">=" || operator == "===" || operator == "!==" || operator == "&&" || operator == "||" {
 				resultType = "bool"
 			}
-			valid := left.Type == "i32" && right.Type == "i32"
+			leftValid, rightValid := left.Type == "i32", right.Type == "i32"
 			if operator == "===" || operator == "!==" {
-				valid = left.Type == right.Type && (left.Type == "i32" || left.Type == "bool")
+				leftValid = left.Type == "i32" || left.Type == "bool"
+				rightValid = right.Type == left.Type
 			}
 			if operator == "&&" || operator == "||" {
-				valid = left.Type == "bool" && right.Type == "bool"
+				leftValid, rightValid = left.Type == "bool", right.Type == "bool"
 			}
 			floatOperation := false
 			switch operator {
@@ -400,14 +401,20 @@ func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Nod
 				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
 				return nil, &failure
 			}
-			if !valid {
+			if (operator == "&&" || operator == "||") && left.Type == right.Type && (left.Type == "i32" || left.Type == "f64") {
+				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+				return nil, &failure
+			}
+			if !leftValid || !rightValid {
 				code := "r01-d-scalar-type"
-				if operator == "<<" || operator == ">>" || operator == ">>>" {
-					if right.Type != "i32" {
+				invalid := binary.Left
+				if leftValid {
+					invalid = binary.Right
+					if operator == "<<" || operator == ">>" || operator == ">>>" {
 						code = "r01-d-shift-count-type"
 					}
 				}
-				failure := failAt(code, "error", file, binary.Right)
+				failure := failAt(code, "error", file, invalid)
 				return nil, &failure
 			}
 			kind := "binary"
