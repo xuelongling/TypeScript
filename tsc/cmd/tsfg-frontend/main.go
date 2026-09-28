@@ -216,11 +216,15 @@ func analyze(r request) response {
 		code  string
 	}{
 		{program.GetSyntacticDiagnostics(context.Background(), nil), "r02b-d-syntax"},
-		{program.GetSemanticDiagnostics(context.Background(), nil), "r01-d-scalar-type"},
-		{program.GetProgramDiagnostics(), "r01-d-scalar-type"},
-		{program.GetGlobalDiagnostics(context.Background()), "r01-d-scalar-type"},
+		{program.GetSemanticDiagnostics(context.Background(), nil), "r02b-d-type"},
+		{program.GetProgramDiagnostics(), "r02b-d-type"},
+		{program.GetGlobalDiagnostics(context.Background()), "r02b-d-type"},
 	} {
 		for _, d := range group.items {
+			code := group.code
+			if code == "r02b-d-type" && d.Code() == 2322 {
+				code = "r01-d-scalar-type"
+			}
 			name, where := r.RootFile, span{}
 			primaryLocation := primary{SourceID: name}
 			if d.File() != nil {
@@ -229,10 +233,10 @@ func analyze(r request) response {
 				primaryLocation = sourcePosition(d.File(), d.Pos(), d.End())
 			}
 			phase := "syntax"
-			if group.code == "r01-d-scalar-type" {
+			if code == "r01-d-scalar-type" || code == "r02b-d-type" {
 				phase = "types"
 			}
-			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: group.code, RuleID: "r01-ts-baseline", RuleIDs: []string{"r01-ts-baseline"},
+			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: code, RuleID: "r01-ts-baseline", RuleIDs: []string{"r01-ts-baseline"},
 				Category: "error", Phase: phase, Severity: "error", File: name, Range: where,
 				Primary: primaryLocation, UpstreamCode: d.Code()})
 		}
