@@ -532,44 +532,36 @@ func defaultI32LocalReturn(file *ast.SourceFile, check *checker.Checker, d *ast.
 			continue
 		}
 		defaults := map[*ast.Symbol]*big.Int{}
-		var walk func([]*ast.Node) (*big.Int, bool)
-		walk = func(items []*ast.Node) (*big.Int, bool) {
-			for _, item := range items {
-				if item.Kind == ast.KindBlock {
-					if value, ok := walk(item.AsBlock().Statements.Nodes); ok {
-						return value, true
-					}
+		var result *big.Int
+		if visitStatements(fn.Body.AsBlock().Statements.Nodes, func(item *ast.Node) bool {
+			for _, decl := range localDeclarations(item) {
+				if decl.Kind != ast.KindVariableDeclaration || decl.Name() == nil {
 					continue
 				}
-				for _, decl := range localDeclarations(item) {
-					if decl.Kind != ast.KindVariableDeclaration || decl.Name() == nil {
-						continue
-					}
-					local := decl.AsVariableDeclaration()
-					if local.Type != nil || local.Initializer == nil {
-						continue
-					}
-					if value, _, ok := exactInteger(file, local.Initializer); ok {
-						defaults[check.GetSymbolAtLocation(decl.Name())] = value
-					} else if local.Initializer.Kind == ast.KindIdentifier {
-						if value := defaults[check.GetSymbolAtLocation(local.Initializer)]; value != nil {
-							defaults[check.GetSymbolAtLocation(decl.Name())] = value
-						}
-					}
+				local := decl.AsVariableDeclaration()
+				if local.Type != nil || local.Initializer == nil {
+					continue
 				}
-				if item.Kind == ast.KindReturnStatement && d.Pos() >= item.Pos() && d.End() <= item.End() {
-					ret := item.AsReturnStatement().Expression
-					if ret != nil && ret.Kind == ast.KindIdentifier {
-						if value := defaults[check.GetSymbolAtLocation(ret)]; value != nil {
-							return value, true
-						}
+				if value, _, ok := exactInteger(file, local.Initializer); ok {
+					defaults[check.GetSymbolAtLocation(decl.Name())] = value
+				} else if local.Initializer.Kind == ast.KindIdentifier {
+					if value := defaults[check.GetSymbolAtLocation(local.Initializer)]; value != nil {
+						defaults[check.GetSymbolAtLocation(decl.Name())] = value
 					}
 				}
 			}
-			return nil, false
-		}
-		if value, ok := walk(fn.Body.AsBlock().Statements.Nodes); ok {
-			return value, true
+			if item.Kind == ast.KindReturnStatement && d.Pos() >= item.Pos() && d.End() <= item.End() {
+				ret := item.AsReturnStatement().Expression
+				if ret != nil && ret.Kind == ast.KindIdentifier {
+					if value := defaults[check.GetSymbolAtLocation(ret)]; value != nil {
+						result = value
+						return true
+					}
+				}
+			}
+			return false
+		}) {
+			return result, true
 		}
 	}
 	return nil, false
