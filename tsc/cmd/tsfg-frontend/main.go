@@ -154,8 +154,9 @@ func sourcePosition(file *ast.SourceFile, start, end int) primary {
 }
 
 func failAt(code, category string, file *ast.SourceFile, node *ast.Node) response {
-	result := fail(code, category, file.FileName(), offset(file, node))
-	result.Diagnostics[0].Primary = sourcePosition(file, node.Pos(), node.End())
+	start := scanner.SkipTrivia(file.Text(), node.Pos())
+	result := fail(code, category, file.FileName(), expressionOffset(file, node))
+	result.Diagnostics[0].Primary = sourcePosition(file, start, node.End())
 	return result
 }
 
@@ -257,6 +258,13 @@ func i32InRange(value *big.Int) bool {
 	return value.Cmp(big.NewInt(-2147483648)) >= 0 && value.Cmp(big.NewInt(2147483647)) <= 0
 }
 
+func integerLiteralOperand(expr *expression) bool {
+	for expr.Kind == "group" {
+		expr = expr.Operand
+	}
+	return expr.Kind == "integer"
+}
+
 func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Node, bindings map[*ast.Symbol]symbol) (*expression, *response) {
 	if value, literal, ok := exactInteger(file, node); ok {
 		if !i32InRange(value) {
@@ -303,7 +311,7 @@ func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Nod
 			if failure != nil {
 				return nil, failure
 			}
-			if operand.Type == "f64" && (operator == "+" || operator == "-") {
+			if operand.Type == "f64" && (operator == "+" || operator == "-" || operator == "!") {
 				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
 				return nil, &failure
 			}
@@ -381,7 +389,14 @@ func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Nod
 			if operator == "&&" || operator == "||" {
 				valid = left.Type == "bool" && right.Type == "bool"
 			}
-			if left.Type == "f64" && right.Type == "f64" && operator != "&&" && operator != "||" {
+			floatOperation := false
+			switch operator {
+			case "+", "-", "*", "/", "%", "<", "<=", ">", ">=", "===", "!==":
+				floatOperation = true
+			}
+			if floatOperation && ((left.Type == "f64" && right.Type == "f64") ||
+				(left.Type == "f64" && integerLiteralOperand(right)) ||
+				(right.Type == "f64" && integerLiteralOperand(left))) {
 				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
 				return nil, &failure
 			}
