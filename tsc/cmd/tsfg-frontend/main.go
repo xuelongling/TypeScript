@@ -108,10 +108,18 @@ type response struct {
 
 func fail(code, category, file string, location span) response {
 	phase := "syntax"
-	if code == "r01-d-scalar-type" {
+	rule := "r01-ts-baseline"
+	if code == "r01-d-scalar-type" || code == "r01-d-unresolved-name" || category == "prohibited" {
 		phase = "types"
+	} else if category == "unsupported" {
+		phase = "capability"
 	}
-	return response{Status: "error", Diagnostics: []diagnostic{{Code: code, RuleID: "r01-ts-baseline", RuleIDs: []string{"r01-ts-baseline"}, Category: category,
+	if category == "prohibited" || category == "input" {
+		rule = "r01-input-boundary"
+	} else if code == "r01-d-scalar-type" {
+		rule = "r01-bool"
+	}
+	return response{Status: "error", Diagnostics: []diagnostic{{Code: code, RuleID: rule, RuleIDs: []string{rule}, Category: category,
 		Phase: phase, Severity: "error", File: file, Range: location,
 		Primary: primary{SourceID: file, Start: location.Start, End: location.End}}}}
 }
@@ -197,6 +205,27 @@ func boolReturnMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.Dia
 	return false
 }
 
+func prohibitedNode(file *ast.SourceFile) *ast.Node {
+	var found *ast.Node
+	var visit func(*ast.Node) bool
+	visit = func(node *ast.Node) bool {
+		if node.Kind == ast.KindAnyKeyword {
+			found = node
+			return true
+		}
+		if node.Kind == ast.KindBinaryExpression {
+			operator := node.AsBinaryExpression().OperatorToken
+			if operator.Kind == ast.KindEqualsEqualsToken || operator.Kind == ast.KindExclamationEqualsToken {
+				found = operator
+				return true
+			}
+		}
+		return node.ForEachChild(visit)
+	}
+	file.ForEachChild(visit)
+	return found
+}
+
 func analyze(r request) response {
 	if !valid(r) {
 		return fail("r02b-d-input", "input", r.RootFile, span{})
@@ -246,11 +275,19 @@ func analyze(r request) response {
 	}
 	check, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
 	defer release()
+	if len(groups[0].items) == 0 {
+		if node := prohibitedNode(file); node != nil {
+			result.Diagnostics = append(result.Diagnostics,
+				failAt("r02b-d-prohibited", "prohibited", file, node).Diagnostics[0])
+		}
+	}
 	for _, group := range groups {
 		for _, d := range group.items {
 			code := group.code
 			if code == "r02b-d-type" && d.Code() == 2322 && boolReturnMismatch(file, check, d) {
 				code = "r01-d-scalar-type"
+			} else if code == "r02b-d-type" && (d.Code() == 2304 || d.Code() == 2552) {
+				code = "r01-d-unresolved-name"
 			}
 			name, where := r.RootFile, span{}
 			primaryLocation := primary{SourceID: name}
@@ -260,15 +297,31 @@ func analyze(r request) response {
 				primaryLocation = sourcePosition(d.File(), d.Pos(), d.End())
 			}
 			phase := "syntax"
-			if code == "r01-d-scalar-type" || code == "r02b-d-type" {
+			if code == "r01-d-scalar-type" || code == "r01-d-unresolved-name" || code == "r02b-d-type" {
 				phase = "types"
 			}
-			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: code, RuleID: "r01-ts-baseline", RuleIDs: []string{"r01-ts-baseline"},
+			rule := "r01-ts-baseline"
+			if code == "r01-d-scalar-type" {
+				rule = "r01-bool"
+			}
+			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: code, RuleID: rule, RuleIDs: []string{rule},
 				Category: "error", Phase: phase, Severity: "error", File: name, Range: where,
 				Primary: primaryLocation, UpstreamCode: d.Code()})
 		}
 	}
 	if len(result.Diagnostics) != 0 {
+		slices.SortFunc(result.Diagnostics, func(a, b diagnostic) int {
+			if order := strings.Compare(a.File, b.File); order != 0 {
+				return order
+			}
+			if a.Range.Start != b.Range.Start {
+				return a.Range.Start - b.Range.Start
+			}
+			if order := strings.Compare(a.Code, b.Code); order != 0 {
+				return order
+			}
+			return a.Range.End - b.Range.End
+		})
 		result.Status = "error"
 		return result
 	}
