@@ -267,6 +267,12 @@ func integerLiteralNode(file *ast.SourceFile, node *ast.Node) bool {
 }
 
 func explicitFloatOperand(file *ast.SourceFile, check *checker.Checker, node *ast.Node) bool {
+	for node.Kind == ast.KindParenthesizedExpression {
+		node = node.AsParenthesizedExpression().Expression
+	}
+	if node.Kind != ast.KindIdentifier && node.Kind != ast.KindNumericLiteral {
+		return false
+	}
 	return !integerLiteralNode(file, node) && scalar(check.GetTypeAtLocation(node)) == "f64"
 }
 
