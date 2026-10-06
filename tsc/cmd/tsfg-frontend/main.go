@@ -688,6 +688,37 @@ func operatorBindings(file *ast.SourceFile, check *checker.Checker, decl *ast.Fu
 	return bindings
 }
 
+func supportedOperatorLocal(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
+	if d.File() != file || d.Code() != 2322 {
+		return false
+	}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
+			continue
+		}
+		decl := node.AsFunctionDeclaration()
+		bindings := operatorBindings(file, check, decl)
+		if visitStatements(decl.Body.AsBlock().Statements.Nodes, func(item *ast.Node) bool {
+			for _, candidate := range localDeclarations(item) {
+				if candidate.Kind != ast.KindVariableDeclaration || candidate.Name() == nil || candidate.Name().Kind != ast.KindIdentifier ||
+					d.Pos() < candidate.Pos() || d.End() > candidate.End() {
+					continue
+				}
+				local := candidate.AsVariableDeclaration()
+				if local.Type == nil || scalar(check.GetTypeFromTypeNode(local.Type)) != "i32" || local.Initializer == nil {
+					continue
+				}
+				projected, failure := projectOperator(file, check, local.Initializer, bindings)
+				return failure == nil && projected.Type == "i32"
+			}
+			return false
+		}) {
+			return true
+		}
+	}
+	return false
+}
+
 func supportedOperatorAssignment(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
 	if d.File() != file || d.Code() != 2322 {
 		return false
@@ -1405,7 +1436,7 @@ func analyze(r request) response {
 			if isCall && code != "r01-d-integer-range" {
 				code = callCode
 			}
-			if supportedOperatorReturn(file, check, d) || supportedOperatorAssignment(file, check, d) {
+			if supportedOperatorReturn(file, check, d) || supportedOperatorAssignment(file, check, d) || supportedOperatorLocal(file, check, d) {
 				continue
 			}
 			if value, ok := i32LiteralReturn(file, check, d); ok {
