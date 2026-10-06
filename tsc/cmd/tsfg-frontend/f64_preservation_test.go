@@ -62,6 +62,28 @@ func TestIntegerFamilyOwnedLiteralNodeRanges(t *testing.T) {
 	}
 }
 
+func TestIntegerFamilyPreservesLegacyExpressionRangeContexts(t *testing.T) {
+	for _, source := range []string{
+		"export function entry(): i32 { return 42; }",
+		"export function entry(a: i32): i32 { return a; }",
+		"export function entry(a: i32, b: i32): i32 { return a / b; }",
+		"export function entry(a: i32): i32 { return -a; }",
+		"export function entry(a: i32): i32 { return (a); }",
+		"export function entry(): i32 { return -2147483648; }",
+		"export function entry(a: i32): i32 { return identity(a); } function identity(a: i32): i32 { return a; }",
+		"export function entry(a: i32): i32 { return identity(a) / 1; } function identity(a: i32): i32 { return a; }",
+		"export function entry(a: i32): i32 { return identity(a / 1); } function identity(a: i32): i32 { return a; }",
+		"export function entry(a: i32, b: i32): i32 { return -((a / b) + 1); }",
+	} {
+		t.Run(source, func(t *testing.T) {
+			prior, current := analyze(scalarRequest(source)), analyze(integerRequest(source))
+			if prior.Status != "ok" || current.Status != "ok" || !reflect.DeepEqual(prior.Functions, current.Functions) {
+				t.Fatalf("owned expression range context changed: prior=%+v current=%+v", prior, current)
+			}
+		})
+	}
+}
+
 func TestIntegerFamilyF64FactsPreserveOfficialNameError(t *testing.T) {
 	source := "export function answer(): i32 { return 42; } export function second(value: f64): f64 { return missing; }"
 	result := analyze(integerRequest(source))
