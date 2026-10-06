@@ -273,7 +273,7 @@ func TestIntegerFamilyTokenPrecisionAndNestedCalls(t *testing.T) {
 		t.Fatalf("nested call context rejected: %+v", result)
 	}
 	e := (*(*result.Functions[0].Body[0].Body[0].Initializer.Arguments)[0].Arguments)[0].Right
-	if e.Type != "u64" || e.Literal.Decimal != "18446744073709551615" || e.Literal.Token != "0xffff_ffff_ffff_ffff" || sourceText(t, source, e.Range) != e.Literal.Token {
+	if e.Type != "u64" || e.Literal.Decimal != "18446744073709551615" || e.Literal.Token != "0xffff_ffff_ffff_ffff" || strings.TrimSpace(sourceText(t, source, e.Range)) != e.Literal.Token {
 		t.Fatalf("token precision lost: %+v", e)
 	}
 	for _, value := range []string{"1.0", "1e0", "1.5"} {

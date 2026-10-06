@@ -147,6 +147,8 @@ func integerOperator(kind ast.Kind) string {
 
 func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node *ast.Node, expected string,
 	refs map[*ast.Symbol]symbol, functions map[*ast.Symbol]functionInfo, target *integerTarget) (*expression, *response) {
+	// Owned node spans retain node.Pos, including leading trivia. Exact literal
+	// spelling and diagnostic token anchors are computed separately.
 	failureAt := func(code, category string, at *ast.Node) (*expression, *response) {
 		if at == nil {
 			failure := fail(code, category, file.FileName(), span{})
@@ -178,7 +180,7 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		if !integerRange(value, kind, target) {
 			return failureAt("r01-d-integer-range", "error", node)
 		}
-		return &expression{Kind: "integer", Type: kind, Literal: literal, Range: expressionOffset(file, node)}, nil
+		return &expression{Kind: "integer", Type: kind, Literal: literal, Range: offset(file, node)}, nil
 	}
 	switch node.Kind {
 	case ast.KindNumericLiteral:
@@ -196,16 +198,16 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		if ref.Type == "f64" {
 			return finish(&expression{Kind: "reference", Type: ref.Type, Symbol: ref.ID, Range: offset(file, node)})
 		}
-		return finish(&expression{Kind: "reference", Type: ref.Type, Symbol: ref.ID, Range: expressionOffset(file, node)})
+		return finish(&expression{Kind: "reference", Type: ref.Type, Symbol: ref.ID, Range: offset(file, node)})
 	case ast.KindTrueKeyword, ast.KindFalseKeyword:
 		value := node.Kind == ast.KindTrueKeyword
-		return finish(&expression{Kind: "boolean", Type: "bool", Boolean: &value, Range: expressionOffset(file, node)})
+		return finish(&expression{Kind: "boolean", Type: "bool", Boolean: &value, Range: offset(file, node)})
 	case ast.KindParenthesizedExpression:
 		inner, failure := projectIntegerExpression(file, check, node.AsParenthesizedExpression().Expression, expected, refs, functions, target)
 		if failure != nil {
 			return nil, failure
 		}
-		return finish(&expression{Kind: "group", Type: inner.Type, Operand: inner, Range: expressionOffset(file, node)})
+		return finish(&expression{Kind: "group", Type: inner.Type, Operand: inner, Range: offset(file, node)})
 	case ast.KindCallExpression:
 		call := node.AsCallExpression()
 		if call.Expression.Kind != ast.KindIdentifier || call.QuestionDotToken != nil || call.TypeArguments != nil {
@@ -240,7 +242,7 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			return failureAt("r02b-d-unsupported", "unsupported", node)
 		}
 		sig := fn.Signature
-		return &expression{Kind: "call", Type: sig.ReturnType, Target: fn.ID, Signature: &sig, Arguments: &args, Range: expressionOffset(file, node)}, nil
+		return &expression{Kind: "call", Type: sig.ReturnType, Target: fn.ID, Signature: &sig, Arguments: &args, Range: offset(file, node)}, nil
 	case ast.KindPrefixUnaryExpression:
 		prefix := node.AsPrefixUnaryExpression()
 		operator, context := "", expected
@@ -276,7 +278,7 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		if operator != "!" && !integerKind(operand.Type) {
 			return failureAt("r01-d-scalar-type", "error", prefix.Operand)
 		}
-		return finish(&expression{Kind: "unary", Type: operand.Type, Operator: operator, Operand: operand, Range: expressionOffset(file, node)})
+		return finish(&expression{Kind: "unary", Type: operand.Type, Operator: operator, Operand: operand, Range: offset(file, node)})
 	case ast.KindBinaryExpression:
 		binary := node.AsBinaryExpression()
 		if binary.OperatorToken.Kind == ast.KindEqualsEqualsToken || binary.OperatorToken.Kind == ast.KindExclamationEqualsToken {
@@ -337,7 +339,7 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		if logical {
 			kind = "shortCircuit"
 		}
-		return finish(&expression{Kind: kind, Type: resultType, Operator: operator, Left: left, Right: right, Range: expressionOffset(file, node)})
+		return finish(&expression{Kind: kind, Type: resultType, Operator: operator, Left: left, Right: right, Range: offset(file, node)})
 	}
 	return failureAt("r02b-d-unsupported", "unsupported", node)
 }

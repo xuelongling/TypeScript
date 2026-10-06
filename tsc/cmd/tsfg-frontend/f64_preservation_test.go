@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"unicode/utf16"
 )
 
 func TestIntegerFamilyPreservesOfficialF64SignatureFacts(t *testing.T) {
@@ -35,14 +36,29 @@ func TestIntegerFamilyPreservesOfficialF64SignatureFacts(t *testing.T) {
 					t.Fatalf("official signature/statement anchors changed: current=%+v baseline=%+v", fn, old)
 				}
 				expr, prior := fn.Body[0].Expression, old.Body[0].Expression
-				if expr == nil || prior == nil || expr.Kind != prior.Kind || expr.Type != prior.Type || expr.Range.End != prior.Range.End || strings.TrimSpace(sourceText(t, source, expr.Range)) != strings.TrimSpace(sourceText(t, source, prior.Range)) || expr.Symbol != prior.Symbol || !reflect.DeepEqual(expr.Literal, prior.Literal) {
+				if expr == nil || prior == nil || !reflect.DeepEqual(expr, prior) {
 					t.Fatalf("official literal/reference facts changed: current=%+v baseline=%+v", expr, prior)
-				}
-				if expr.Type == "f64" && !reflect.DeepEqual(expr, prior) {
-					t.Fatalf("f64 reference facts changed: current=%+v baseline=%+v", expr, prior)
 				}
 			}
 		})
+	}
+}
+
+func TestIntegerFamilyOwnedLiteralNodeRanges(t *testing.T) {
+	for _, source := range []string{
+		"export function answer(): i32 { return 42; }",
+		"export function answer(): u64 { return /*😀*/ 0xffff_ffff_ffff_ffff; }",
+	} {
+		result := analyze(integerRequest(source))
+		if result.Status != "ok" {
+			t.Fatalf("checked literal facts rejected: %+v", result)
+		}
+		expr := result.Functions[0].Body[0].Expression
+		start := strings.Index(source, "return") + len("return")
+		end := len(utf16.Encode([]rune(source[:strings.Index(source, ";")])))
+		if expr.Range != (span{Start: start, End: end}) || expr.Literal == nil || strings.Contains(expr.Literal.Token, "/*") || strings.HasPrefix(expr.Literal.Token, " ") {
+			t.Fatalf("owned node.Pos span and exact lexical token were conflated: %+v", expr)
+		}
 	}
 }
 
