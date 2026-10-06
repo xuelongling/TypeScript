@@ -364,6 +364,14 @@ func integerContextBindings(file *ast.SourceFile, check *checker.Checker, decl *
 				projected, failure := projectIntegerExpression(file, check, local.Initializer, kind, refs, functions, target)
 				if failure == nil {
 					kind = projected.Type
+				} else if local.Type == nil && failure.Diagnostics[0].Code == "r01-d-integer-range" {
+					// Invalid values still have a nominal context. Keep that
+					// context for related checker diagnostics; the complete
+					// initializer projection emits the original range failure.
+					kind = integerHint(local.Initializer, check, refs, functions)
+					if kind == "" {
+						kind = "i32"
+					}
 				}
 			}
 			refs[check.GetSymbolAtLocation(candidate.Name())] = symbol{Type: kind}
