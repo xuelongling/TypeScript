@@ -31,9 +31,10 @@ type inputFile struct {
 }
 
 type request struct {
-	SourceRoot   string      `json:"sourceRoot"`
-	RootFile     string      `json:"rootFile"`
-	Files        []inputFile `json:"files"`
+	Target       *integerTarget `json:"target,omitempty"`
+	SourceRoot   string         `json:"sourceRoot"`
+	RootFile     string         `json:"rootFile"`
+	Files        []inputFile    `json:"files"`
 	Declarations struct {
 		Version string   `json:"version"`
 		Paths   []string `json:"paths"`
@@ -196,8 +197,11 @@ func failCallAt(code string, file *ast.SourceFile, node *ast.Node) response {
 }
 
 func valid(r request) bool {
+	if r.Declarations.Version == "minimal-integers-v3" && !validIntegerTarget(r.Target) {
+		return false
+	}
 	if r.SourceRoot == "" || !strings.HasPrefix(r.SourceRoot, "/") || path.Clean(r.SourceRoot) != r.SourceRoot || r.RootFile == "" ||
-		(r.Declarations.Version != "minimal-bool-v1" && r.Declarations.Version != "minimal-scalars-v2") || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS || len(r.Files) == 0 || len(r.Declarations.Paths) == 0 {
+		(r.Declarations.Version != "minimal-bool-v1" && r.Declarations.Version != "minimal-scalars-v2" && r.Declarations.Version != "minimal-integers-v3") || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS || len(r.Files) == 0 || len(r.Declarations.Paths) == 0 {
 		return false
 	}
 	seen := map[string]bool{}
@@ -235,8 +239,8 @@ func scalar(t *checker.Type) string {
 	if t != nil && t.IsBooleanLike() {
 		return "bool"
 	}
-	if t != nil && t.Alias() != nil && t.Alias().Symbol() != nil && t.Alias().Symbol().Name == "i32" {
-		return "i32"
+	if t != nil && t.Alias() != nil && t.Alias().Symbol() != nil && integerKind(t.Alias().Symbol().Name) {
+		return t.Alias().Symbol().Name
 	}
 	if t != nil && t.Flags()&checker.TypeFlagsNumberLike != 0 {
 		return "f64"
@@ -928,11 +932,12 @@ func scalarReturnMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.D
 }
 
 type projection struct {
-	file      *ast.SourceFile
-	check     *checker.Checker
-	result    *response
-	bindings  map[*ast.Symbol]symbol
-	functions map[*ast.Symbol]functionInfo
+	integerTarget *integerTarget
+	file          *ast.SourceFile
+	check         *checker.Checker
+	result        *response
+	bindings      map[*ast.Symbol]symbol
+	functions     map[*ast.Symbol]functionInfo
 }
 
 func (p *projection) addSymbol(node *ast.Node, kind, t string, writable bool) (symbol, bool) {
@@ -948,6 +953,13 @@ func (p *projection) addSymbol(node *ast.Node, kind, t string, writable bool) (s
 }
 
 func (p *projection) expr(node *ast.Node, expected string) (*expression, response) {
+	if p.integerTarget != nil {
+		projected, failure := projectIntegerExpression(p.file, p.check, node, expected, p.bindings, p.functions, p.integerTarget)
+		if failure != nil {
+			return nil, *failure
+		}
+		return projected, response{}
+	}
 	if node == nil {
 		return nil, fail("r02b-d-unsupported", "unsupported", p.file.FileName(), span{})
 	}
@@ -1488,6 +1500,9 @@ func analyze(r request) response {
 			}
 			decl := node.AsFunctionDeclaration()
 			bindings := operatorBindings(file, check, decl)
+			if r.Declarations.Version == "minimal-integers-v3" {
+				continue
+			}
 			for _, item := range decl.Body.AsBlock().Statements.Nodes {
 				if item.Kind != ast.KindReturnStatement || item.AsReturnStatement().Expression == nil {
 					continue
@@ -1508,47 +1523,62 @@ func analyze(r request) response {
 			if d.Code() == 6053 || d.Code() == 2688 || d.Code() == 2307 {
 				return fail("r02b-d-input", "input", r.RootFile, span{})
 			}
-			if value, ok := i32LiteralCallArgument(file, check, d); ok {
-				if i32InRange(value) {
+			if r.Declarations.Version == "minimal-integers-v3" {
+				if handled, failure := integerContextDiagnostic(file, check, d, contextFunctions, r.Target); handled {
+					if failure == nil {
+						continue
+					}
+					owned := failure.Diagnostics[0]
+					owned.Range = span{d.File().GetPositionMap().UTF8ToUTF16(d.Pos()), d.File().GetPositionMap().UTF8ToUTF16(d.End())}
+					owned.Primary = sourcePosition(d.File(), d.Pos(), d.End())
+					owned.UpstreamCode = d.Code()
+					result.Diagnostics = append(result.Diagnostics, owned)
 					continue
 				}
-				code = "r01-d-integer-range"
-			}
-			callCode, isCall := callDiagnostic(file, d)
-			if isCall && code != "r01-d-integer-range" {
-				code = callCode
-			}
-			if supportedOperatorReturn(file, check, d, contextFunctions) || supportedOperatorAssignment(file, check, d, contextFunctions) || supportedOperatorLocal(file, check, d, contextFunctions) || supportedOperatorCallArgument(file, check, d, contextFunctions) {
-				continue
-			}
-			if value, ok := i32LiteralReturn(file, check, d); ok {
-				if i32InRange(value) {
+			} else {
+				if value, ok := i32LiteralCallArgument(file, check, d); ok {
+					if i32InRange(value) {
+						continue
+					}
+					code = "r01-d-integer-range"
+				}
+				callCode, isCall := callDiagnostic(file, d)
+				if isCall && code != "r01-d-integer-range" {
+					code = callCode
+				}
+				if supportedOperatorReturn(file, check, d, contextFunctions) || supportedOperatorAssignment(file, check, d, contextFunctions) || supportedOperatorLocal(file, check, d, contextFunctions) || supportedOperatorCallArgument(file, check, d, contextFunctions) {
 					continue
 				}
-				code = "r01-d-integer-range"
-			}
-			if value, ok := defaultI32LocalReturn(file, check, d); ok {
-				if i32InRange(value) {
-					continue
+				if value, ok := i32LiteralReturn(file, check, d); ok {
+					if i32InRange(value) {
+						continue
+					}
+					code = "r01-d-integer-range"
 				}
-				code = "r01-d-integer-range"
-			}
-			if value, ok := contextualI32Local(file, check, d); ok {
-				if i32InRange(value) {
-					continue
+				if value, ok := defaultI32LocalReturn(file, check, d); ok {
+					if i32InRange(value) {
+						continue
+					}
+					code = "r01-d-integer-range"
 				}
-				code = "r01-d-integer-range"
-			}
-			if value, ok := contextualI32Assignment(file, check, d); ok {
-				if i32InRange(value) {
-					continue
+				if value, ok := contextualI32Local(file, check, d); ok {
+					if i32InRange(value) {
+						continue
+					}
+					code = "r01-d-integer-range"
 				}
-				code = "r01-d-integer-range"
+				if value, ok := contextualI32Assignment(file, check, d); ok {
+					if i32InRange(value) {
+						continue
+					}
+					code = "r01-d-integer-range"
+				}
+				if code == "r02b-d-type" && (scalarReturnMismatch(file, check, d) ||
+					scalarAssignmentMismatch(file, check, d) || scalarLocalMismatch(file, check, d)) {
+					code = "r01-d-scalar-type"
+				}
 			}
-			if code == "r02b-d-type" && (scalarReturnMismatch(file, check, d) ||
-				scalarAssignmentMismatch(file, check, d) || scalarLocalMismatch(file, check, d)) {
-				code = "r01-d-scalar-type"
-			}
+			_, isCall := callDiagnostic(file, d)
 			if code == "r02b-d-type" && (d.Code() == 2304 || d.Code() == 2552) {
 				code = "r01-d-unresolved-name"
 			}
@@ -1608,7 +1638,7 @@ func analyze(r request) response {
 			return failAt("r02b-d-unsupported", "unsupported", file, node)
 		}
 		returnType := scalar(check.GetTypeFromTypeNode(decl.Type))
-		if returnType == "" {
+		if returnType == "" || (r.Declarations.Version == "minimal-integers-v3" && returnType == "f64") {
 			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
 		}
 		parameters := make([]string, 0, len(decl.Parameters.Nodes))
@@ -1617,7 +1647,7 @@ func analyze(r request) response {
 				return failAt("r02b-d-unsupported", "unsupported", file, p)
 			}
 			t := scalar(check.GetTypeAtLocation(p.Name()))
-			if t == "" {
+			if t == "" || (r.Declarations.Version == "minimal-integers-v3" && t == "f64") {
 				return failAt("r02b-d-unsupported", "unsupported", file, p)
 			}
 			parameters = append(parameters, t)
@@ -1647,6 +1677,9 @@ func analyze(r request) response {
 			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
 		}
 		project := projection{file: file, check: check, result: &result, bindings: map[*ast.Symbol]symbol{}, functions: functions}
+		if r.Declarations.Version == "minimal-integers-v3" {
+			project.integerTarget = r.Target
+		}
 		for _, p := range decl.Parameters.Nodes {
 			if p.Name() == nil || p.Name().Kind != ast.KindIdentifier || p.AsParameterDeclaration().Type == nil || p.AsParameterDeclaration().Initializer != nil {
 				return failAt("r02b-d-unsupported", "unsupported", file, p)
