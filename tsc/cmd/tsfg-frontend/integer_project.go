@@ -276,6 +276,9 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		if failure != nil {
 			return nil, failure
 		}
+		if operand.Type == "f64" && (operator == "+" || operator == "-") {
+			return failureAt("r02b-d-unsupported", "unsupported", node)
+		}
 		if operator != "!" && !integerKind(operand.Type) {
 			return failureAt("r01-d-scalar-type", "error", prefix.Operand)
 		}

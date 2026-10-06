@@ -91,3 +91,47 @@ func TestIntegerFamilyF64FactsPreserveOfficialNameError(t *testing.T) {
 		t.Fatalf("signature capability hid or changed the official checker error: %+v", result)
 	}
 }
+
+func TestIntegerFamilyF64UnaryPreservesCapabilityDiagnostic(t *testing.T) {
+	for _, source := range []string{
+		"export function entry(a: f64): f64 { return +a; }",
+		"export function entry(a: f64): f64 { return -a; }",
+		"export function entry(a: f64): f64 { return +(a); }",
+		"export function entry(a: f64): f64 { return -(a); }",
+		"export function entry(): i32 { return 0; } function unused(a: f64): f64 { return +a; }",
+		"export function entry(): i32 { return 0; } function unused(a: f64): f64 { return -a; }",
+	} {
+		t.Run(source, func(t *testing.T) {
+			prior, current := analyze(scalarRequest(source)), analyze(integerRequest(source))
+			if prior.Status != "error" || len(prior.Diagnostics) != 1 {
+				t.Fatalf("official scalar capability baseline changed: %+v", prior)
+			}
+			want := prior.Diagnostics[0]
+			if want.Code != "r02b-d-unsupported" || want.RuleID != "r01-ts-baseline" || !reflect.DeepEqual(want.RuleIDs, []string{"r01-ts-baseline"}) || want.Category != "unsupported" || want.Phase != "capability" || want.Severity != "error" {
+				t.Fatalf("wrong baseline capability identity: %+v", want)
+			}
+			if current.Status != "error" || !reflect.DeepEqual(current.Diagnostics, prior.Diagnostics) {
+				t.Fatalf("legal f64 unary operation became a source type error: prior=%+v current=%+v", prior, current)
+			}
+			if strings.Contains(source, "entry(a:") && !strings.Contains(source, "(a)") && want.Range != (span{Start: 44, End: 46}) {
+				t.Fatalf("whole unary literal source anchor changed: %+v", want)
+			}
+		})
+	}
+}
+
+func TestIntegerFamilyF64UnaryKeepsStrictSourceErrors(t *testing.T) {
+	for _, item := range []struct{ source, code string }{
+		{"export function entry(a: bool): i32 { return +a; }", "r01-d-scalar-type"},
+		{"export function entry(a: bool): i32 { return -a; }", "r01-d-scalar-type"},
+		{"export function entry(a: f64): f64 { return +missing; }", "r01-d-unresolved-name"},
+		{"export function entry(a: u64): usize { return -a; }", "r01-d-scalar-type"},
+	} {
+		t.Run(item.source, func(t *testing.T) {
+			result := analyze(integerRequest(item.source))
+			if result.Status != "error" || len(result.Diagnostics) != 1 || result.Diagnostics[0].Code != item.code || result.Diagnostics[0].Category == "unsupported" {
+				t.Fatalf("unary capability admission masked strict source error: %+v", result)
+			}
+		})
+	}
+}
