@@ -197,3 +197,146 @@ func TestAnalyzeI32LocalInitializerKeepsPendingFormsRejected(t *testing.T) {
 		})
 	}
 }
+
+func TestAnalyzeRecursiveCallArithmeticInitializer(t *testing.T) {
+	source := "/*😀*/ export function entry(n: i32): i32 { if (n === 0) { return 1; } const next: i32 = n - 1; const result: i32 = n * entry(next); return result; }"
+	result := analyze(scalarRequest(source))
+	if result.Status != "ok" || len(result.Functions) != 1 || len(result.Functions[0].Body) != 4 {
+		t.Fatalf("recursive arithmetic initializer rejected: %+v", result)
+	}
+	fn := result.Functions[0]
+	product := fn.Body[2].Initializer
+	if product == nil || product.Kind != "binary" || product.Operator != "*" || product.Type != "i32" || product.Right == nil {
+		t.Fatalf("missing owned recursive arithmetic: %+v", product)
+	}
+	call := product.Right
+	if call.Kind != "call" || call.Target != fn.Symbol || call.Type != "i32" || call.Signature == nil || call.Signature.ReturnType != "i32" || len(call.Signature.Parameters) != 1 || call.Signature.Parameters[0] != "i32" || call.Arguments == nil || len(*call.Arguments) != 1 || (*call.Arguments)[0].Symbol != fn.Body[1].Symbol.ID || sourceText(t, source, call.Range) != "entry(next)" {
+		t.Fatalf("incorrect owned recursive call: %+v", call)
+	}
+}
+
+func TestAnalyzeRecursiveCallArithmeticReturnAndArgument(t *testing.T) {
+	source := "export function factorial(n: i32): i32 { if (n === 0) { return 1; } return n * factorial(n - 1); }"
+	result := analyze(scalarRequest(source))
+	if result.Status != "ok" || len(result.Functions) != 1 || len(result.Functions[0].Body) != 2 {
+		t.Fatalf("raw recursive arithmetic rejected: %+v", result)
+	}
+	fn := result.Functions[0]
+	product := fn.Body[1].Expression
+	if product == nil || product.Kind != "binary" || product.Operator != "*" || product.Type != "i32" || product.Right == nil {
+		t.Fatalf("missing recursive arithmetic result: %+v", product)
+	}
+	call := product.Right
+	if call.Kind != "call" || call.Target != fn.Symbol || call.Arguments == nil || len(*call.Arguments) != 1 {
+		t.Fatalf("missing recursive call argument: %+v", call)
+	}
+	argument := (*call.Arguments)[0]
+	if argument.Kind != "binary" || argument.Operator != "-" || argument.Type != "i32" || argument.Left == nil || argument.Left.Symbol != fn.Parameters[0].ID || argument.Right == nil || argument.Right.Literal == nil || argument.Right.Literal.Decimal != "1" || sourceText(t, source, argument.Range) != "n - 1" {
+		t.Fatalf("raw arithmetic argument was lost or folded: %+v", argument)
+	}
+}
+
+func TestAnalyzeRecursiveCallArithmeticReturnWithTypedLocal(t *testing.T) {
+	source := "export function entry(n: i32): i32 { if (n === 0) { return 1; } const next: i32 = n - 1; return n * entry(next); }"
+	result := analyze(scalarRequest(source))
+	if result.Status != "ok" || len(result.Functions) != 1 || len(result.Functions[0].Body) != 3 {
+		t.Fatalf("recursive arithmetic return with typed local rejected: %+v", result)
+	}
+	fn := result.Functions[0]
+	product := fn.Body[2].Expression
+	if product == nil || product.Right == nil || product.Right.Kind != "call" || product.Right.Target != fn.Symbol || product.Right.Arguments == nil || len(*product.Right.Arguments) != 1 || (*product.Right.Arguments)[0].Symbol != fn.Body[1].Symbol.ID {
+		t.Fatalf("typed local argument binding lost: %+v", product)
+	}
+}
+
+func TestAnalyzeCallArithmeticAssignment(t *testing.T) {
+	source := "export function entry(n: i32): i32 { let value: i32 = 0; value = value + identity(n - 1); return value; } function identity(n: i32): i32 { return n; }"
+	result := analyze(scalarRequest(source))
+	if result.Status != "ok" || len(result.Functions) != 2 || len(result.Functions[0].Body) != 3 {
+		t.Fatalf("arithmetic call assignment rejected: %+v", result)
+	}
+	assignment := result.Functions[0].Body[1]
+	if assignment.Kind != "assignment" || assignment.Value == nil || assignment.Value.Kind != "binary" || assignment.Value.Right == nil || assignment.Value.Right.Kind != "call" || assignment.Value.Right.Target != result.Functions[1].Symbol || sourceText(t, source, assignment.Value.Range) != "value + identity(n - 1)" {
+		t.Fatalf("missing owned assignment call facts: %+v", assignment)
+	}
+}
+
+func TestAnalyzeCallArithmeticContextsKeepOrderedOwnedFacts(t *testing.T) {
+	source := "/*😀*/ export function entry(n: i32): i32 { { const result: i32 = first(identity(n - 1), n / 0); return result; } } function first(a: i32, b: i32): i32 { return a; } function identity(n: i32): i32 { return n; }"
+	result := analyze(scalarRequest(source))
+	if result.Status != "ok" || len(result.Functions) != 3 || len(result.Functions[0].Body) != 1 || len(result.Functions[0].Body[0].Body) != 2 {
+		t.Fatalf("nested scalar call context rejected: %+v", result)
+	}
+	call := result.Functions[0].Body[0].Body[0].Initializer
+	if call == nil || call.Kind != "call" || call.Target != result.Functions[1].Symbol || call.Signature == nil || len(call.Signature.Parameters) != 2 || call.Signature.Parameters[0] != "i32" || call.Signature.Parameters[1] != "i32" || call.Arguments == nil || len(*call.Arguments) != 2 {
+		t.Fatalf("missing outer call identity or ordered arguments: %+v", call)
+	}
+	arguments := *call.Arguments
+	if arguments[0].Kind != "call" || arguments[0].Target != result.Functions[2].Symbol || arguments[0].Arguments == nil || len(*arguments[0].Arguments) != 1 || sourceText(t, source, arguments[0].Range) != "identity(n - 1)" || arguments[1].Kind != "binary" || arguments[1].Operator != "/" || arguments[1].Right == nil || arguments[1].Right.Literal == nil || arguments[1].Right.Literal.Decimal != "0" || sourceText(t, source, arguments[1].Range) != "n / 0" {
+		t.Fatalf("nested calls or trap-bearing argument reordered/folded: %+v", arguments)
+	}
+}
+
+func TestAnalyzeMutualCallArithmeticContexts(t *testing.T) {
+	source := "export function even(n: i32): i32 { if (n === 0) { return 1; } const result: i32 = 0 + odd(n - 1); return result; } function odd(n: i32): i32 { if (n === 0) { return 0; } return 0 + even(n - 1); }"
+	result := analyze(scalarRequest(source))
+	if result.Status != "ok" || len(result.Functions) != 2 {
+		t.Fatalf("mutual recursive arithmetic rejected: %+v", result)
+	}
+	even, odd := result.Functions[0], result.Functions[1]
+	if even.Body[1].Initializer == nil || even.Body[1].Initializer.Right == nil || even.Body[1].Initializer.Right.Target != odd.Symbol || odd.Body[1].Expression == nil || odd.Body[1].Expression.Right == nil || odd.Body[1].Expression.Right.Target != even.Symbol {
+		t.Fatalf("mutual call targets lost official symbol identities: %+v", result.Functions)
+	}
+}
+
+func TestAnalyzeCallArithmeticContextsRejectInvalidSources(t *testing.T) {
+	for _, tc := range []struct {
+		name, source string
+	}{
+		{"wrong argument type", "export function entry(n: i32): i32 { return n * identity(true); } function identity(n: i32): i32 { return n; }"},
+		{"wrong result type", "export function entry(n: i32): i32 { const v: i32 = n * flag(n - 1); return v; } function flag(n: i32): bool { return true; }"},
+		{"mixed f64 argument", "export function entry(n: i32): i32 { return identity(n + 1.5); } function identity(n: i32): i32 { return n; }"},
+		{"wrong arity", "export function entry(n: i32): i32 { const v: i32 = n * identity(n - 1, n); return v; } function identity(n: i32): i32 { return n; }"},
+		{"missing nested argument", "export function entry(n: i32): i32 { return identity(identity()); } function identity(n: i32): i32 { return n; }"},
+		{"argument out of range", "export function entry(n: i32): i32 { const v: i32 = identity(n + 2147483648); return v; } function identity(n: i32): i32 { return n; }"},
+		{"unresolved arithmetic name", "export function entry(n: i32): i32 { const v: i32 = identity(missing + 1); return v; } function identity(n: i32): i32 { return n; }"},
+		{"shadowed function symbol", "export function entry(n: i32): i32 { const identity: i32 = n; return identity(n - 1); } function identity(n: i32): i32 { return n; }"},
+		{"foreign callable symbol", "declare function foreign(n: i32): i32; export function entry(n: i32): i32 { return foreign(n - 1); }"},
+		{"optional call", "export function entry(n: i32): i32 { const v: i32 = identity?.(n - 1); return v; } function identity(n: i32): i32 { return n; }"},
+		{"optional parameter", "export function entry(n: i32): i32 { return identity(n - 1); } function identity(n?: i32): i32 { return 1; }"},
+		{"unrelated const write", "export function entry(n: i32): i32 { const v: i32 = identity(n - 1); n = v; v = n; return v; } function identity(n: i32): i32 { return n; }"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			result := analyze(scalarRequest(tc.source))
+			if result.Status != "error" || len(result.Diagnostics) == 0 || len(result.Functions) != 0 {
+				t.Fatalf("invalid scalar call context admitted: %+v", result)
+			}
+		})
+	}
+}
+
+func TestAnalyzeCallArithmeticContextsPreserveOfficialDiagnostics(t *testing.T) {
+	for _, tc := range []struct {
+		name, body, primary string
+		upstream            int32
+	}{
+		{"unrelated scalar mismatch", "const v: i32 = identity(n - 1); const bad: bool = 42; return v;", "bad", 2322},
+		{"unrelated unresolved name", "const v: i32 = identity(n - 1); const bad: i32 = missing; return v;", "missing", 2304},
+		{"unrelated immutable local", "const v: i32 = identity(n - 1); v = n; return v;", "v", 2588},
+		{"invalid argument operator", "const v: i32 = identity(n + true); return v;", "n + true", 2365},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			source := "/*😀*/ export function entry(n: i32): i32 { " + tc.body + " } function identity(n: i32): i32 { return n; }"
+			result := analyze(scalarRequest(source))
+			if result.Status != "error" || len(result.Functions) != 0 {
+				t.Fatalf("official error suppressed: %+v", result)
+			}
+			for _, d := range result.Diagnostics {
+				if d.UpstreamCode == tc.upstream && sourceText(t, source, d.Range) == tc.primary && d.File == "/src/main.ts" && d.Primary.SourceID == d.File && d.Primary.Start == d.Range.Start && d.Primary.End == d.Range.End && d.Category == "error" && d.Phase == "types" {
+					return
+				}
+			}
+			t.Fatalf("official diagnostic identity or range changed: %+v", result.Diagnostics)
+		})
+	}
+}

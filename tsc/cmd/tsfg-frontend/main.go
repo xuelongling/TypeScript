@@ -688,7 +688,52 @@ func operatorBindings(file *ast.SourceFile, check *checker.Checker, decl *ast.Fu
 	return bindings
 }
 
-func supportedOperatorLocal(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
+// Contextual diagnostic checks use the same owned scalar call signatures as
+// expression projection. Only complete, fixed-arity declarations in this source
+// participate; unrelated official diagnostics still run before owned projection.
+func operatorFunctions(file *ast.SourceFile, check *checker.Checker) map[*ast.Symbol]functionInfo {
+	functions := map[*ast.Symbol]functionInfo{}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Name().Kind != ast.KindIdentifier || node.Body() == nil || node.Body().Kind != ast.KindBlock {
+			continue
+		}
+		decl := node.AsFunctionDeclaration()
+		if decl.Type == nil || decl.TypeParameters != nil {
+			continue
+		}
+		resolved := check.GetSymbolAtLocation(node.Name())
+		if resolved == nil {
+			continue
+		}
+		signatures := check.GetSignaturesOfType(check.GetTypeOfSymbol(resolved), checker.SignatureKindCall)
+		if len(signatures) != 1 || signatures[0].Declaration() != node {
+			continue
+		}
+		checked := signatures[0]
+		returnType := scalar(check.GetReturnTypeOfSignature(checked))
+		if returnType == "" || len(checked.Parameters()) != len(decl.Parameters.Nodes) {
+			continue
+		}
+		parameters := make([]string, 0, len(checked.Parameters()))
+		for index, p := range decl.Parameters.Nodes {
+			param := p.AsParameterDeclaration()
+			if p.Name() == nil || p.Name().Kind != ast.KindIdentifier || param.Type == nil || param.Initializer != nil || param.QuestionToken != nil || param.DotDotDotToken != nil {
+				break
+			}
+			t := scalar(check.GetTypeOfSymbol(checked.Parameters()[index]))
+			if t == "" {
+				break
+			}
+			parameters = append(parameters, t)
+		}
+		if len(parameters) == len(decl.Parameters.Nodes) {
+			functions[resolved] = functionInfo{Signature: signature{Parameters: parameters, ReturnType: returnType}}
+		}
+	}
+	return functions
+}
+
+func supportedOperatorLocal(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic, functions map[*ast.Symbol]functionInfo) bool {
 	if d.File() != file || d.Code() != 2322 {
 		return false
 	}
@@ -708,7 +753,7 @@ func supportedOperatorLocal(file *ast.SourceFile, check *checker.Checker, d *ast
 				if local.Type == nil || scalar(check.GetTypeFromTypeNode(local.Type)) != "i32" || local.Initializer == nil {
 					continue
 				}
-				projected, failure := projectOperator(file, check, local.Initializer, bindings)
+				projected, failure := projectOperator(file, check, local.Initializer, bindings, functions)
 				return failure == nil && projected.Type == "i32"
 			}
 			return false
@@ -719,7 +764,7 @@ func supportedOperatorLocal(file *ast.SourceFile, check *checker.Checker, d *ast
 	return false
 }
 
-func supportedOperatorAssignment(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
+func supportedOperatorAssignment(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic, functions map[*ast.Symbol]functionInfo) bool {
 	if d.File() != file || d.Code() != 2322 {
 		return false
 	}
@@ -743,7 +788,7 @@ func supportedOperatorAssignment(file *ast.SourceFile, check *checker.Checker, d
 				scalar(check.GetTypeAtLocation(binary.Left)) != "i32" {
 				return false
 			}
-			projected, failure := projectOperator(file, check, binary.Right, bindings)
+			projected, failure := projectOperator(file, check, binary.Right, bindings, functions)
 			return failure == nil && projected.Type == "i32"
 		}) {
 			return true
@@ -1086,7 +1131,7 @@ func parameterBindings(check *checker.Checker, parameters []*ast.Node, projected
 	return bindings
 }
 
-func supportedOperatorReturn(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic) bool {
+func supportedOperatorReturn(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic, functions map[*ast.Symbol]functionInfo) bool {
 	if d.File() != file || d.Code() != 2322 {
 		return false
 	}
@@ -1111,17 +1156,53 @@ func supportedOperatorReturn(file *ast.SourceFile, check *checker.Checker, d *as
 				}
 				if candidate.Kind == ast.KindBinaryExpression && candidate.AsBinaryExpression().OperatorToken.Kind == ast.KindAsteriskAsteriskToken {
 					binary := candidate.AsBinaryExpression()
-					left, leftFailure := projectOperator(file, check, binary.Left, bindings)
-					right, rightFailure := projectOperator(file, check, binary.Right, bindings)
+					left, leftFailure := projectOperator(file, check, binary.Left, bindings, functions)
+					right, rightFailure := projectOperator(file, check, binary.Right, bindings, functions)
 					if leftFailure == nil && rightFailure == nil && left.Type == "i32" && right.Type == "i32" {
 						return true
 					}
 				}
-				projected, failure := projectOperator(file, check, expr, bindings)
+				projected, failure := projectOperator(file, check, expr, bindings, functions)
 				return failure == nil && projected.Type == "i32"
 			}
 			return false
 		}) {
+			return true
+		}
+	}
+	return false
+}
+
+func supportedOperatorCallArgument(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic, functions map[*ast.Symbol]functionInfo) bool {
+	if d.File() != file || d.Code() != 2345 {
+		return false
+	}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Body() == nil || node.Body().Kind != ast.KindBlock {
+			continue
+		}
+		bindings := operatorBindings(file, check, node.AsFunctionDeclaration())
+		var visit func(*ast.Node) bool
+		visit = func(candidate *ast.Node) bool {
+			if candidate.Kind == ast.KindCallExpression {
+				call := candidate.AsCallExpression()
+				if call.Expression.Kind == ast.KindIdentifier && call.QuestionDotToken == nil && call.TypeArguments == nil {
+					target, ok := functions[check.GetSymbolAtLocation(call.Expression)]
+					if ok && len(call.Arguments.Nodes) == len(target.Signature.Parameters) {
+						for index, argument := range call.Arguments.Nodes {
+							if target.Signature.Parameters[index] == "i32" && d.Pos() >= argument.Pos() && d.End() <= argument.End() {
+								projected, failure := projectExpression(file, check, argument, "i32", bindings, functions)
+								if failure == nil && projected.Type == "i32" {
+									return true
+								}
+							}
+						}
+					}
+				}
+			}
+			return candidate.ForEachChild(visit)
+		}
+		if node.Body().ForEachChild(visit) {
 			return true
 		}
 	}
@@ -1393,6 +1474,7 @@ func analyze(r request) response {
 	}
 	check, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
 	defer release()
+	contextFunctions := operatorFunctions(file, check)
 	if len(groups[0].items) == 0 {
 		if node := prohibitedNode(file); node != nil {
 			result.Diagnostics = append(result.Diagnostics, failAt("r02b-d-prohibited", "prohibited", file, node).Diagnostics[0])
@@ -1405,14 +1487,14 @@ func analyze(r request) response {
 				return failAt("r02b-d-unsupported", "unsupported", file, pending)
 			}
 			decl := node.AsFunctionDeclaration()
-			bindings := parameterBindings(check, decl.Parameters.Nodes, nil)
+			bindings := operatorBindings(file, check, decl)
 			for _, item := range decl.Body.AsBlock().Statements.Nodes {
 				if item.Kind != ast.KindReturnStatement || item.AsReturnStatement().Expression == nil {
 					continue
 				}
 				expr := item.AsReturnStatement().Expression
 				if expr.Kind == ast.KindBinaryExpression || expr.Kind == ast.KindPrefixUnaryExpression || expr.Kind == ast.KindParenthesizedExpression {
-					_, failure := projectOperator(file, check, expr, bindings)
+					_, failure := projectOperator(file, check, expr, bindings, contextFunctions)
 					if failure != nil && failure.Diagnostics[0].Category != "unsupported" {
 						return *failure
 					}
@@ -1436,7 +1518,7 @@ func analyze(r request) response {
 			if isCall && code != "r01-d-integer-range" {
 				code = callCode
 			}
-			if supportedOperatorReturn(file, check, d) || supportedOperatorAssignment(file, check, d) || supportedOperatorLocal(file, check, d) {
+			if supportedOperatorReturn(file, check, d, contextFunctions) || supportedOperatorAssignment(file, check, d, contextFunctions) || supportedOperatorLocal(file, check, d, contextFunctions) || supportedOperatorCallArgument(file, check, d, contextFunctions) {
 				continue
 			}
 			if value, ok := i32LiteralReturn(file, check, d); ok {
