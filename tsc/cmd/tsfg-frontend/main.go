@@ -1638,7 +1638,7 @@ func analyze(r request) response {
 			return failAt("r02b-d-unsupported", "unsupported", file, node)
 		}
 		returnType := scalar(check.GetTypeFromTypeNode(decl.Type))
-		if returnType == "" || (r.Declarations.Version == "minimal-integers-v3" && returnType == "f64") {
+		if returnType == "" {
 			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
 		}
 		parameters := make([]string, 0, len(decl.Parameters.Nodes))
@@ -1647,7 +1647,7 @@ func analyze(r request) response {
 				return failAt("r02b-d-unsupported", "unsupported", file, p)
 			}
 			t := scalar(check.GetTypeAtLocation(p.Name()))
-			if t == "" || (r.Declarations.Version == "minimal-integers-v3" && t == "f64") {
+			if t == "" {
 				return failAt("r02b-d-unsupported", "unsupported", file, p)
 			}
 			parameters = append(parameters, t)

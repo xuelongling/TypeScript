@@ -236,7 +236,6 @@ func TestIntegerFamilyTargetAdmissionAndUnsupported(t *testing.T) {
 	for _, source := range []string{
 		"export function entry(): f64 { return 1.5; }",
 		"export function entry(a: f64): f64 { return a + a; }",
-		"export function entry(a: f64): i32 { return 0; }",
 		"export function entry(a: u8): u8 { return a ** a; }",
 		"export function entry(): bool { return !1; }",
 		"export function entry(a: u64): bool { return !a; }",

@@ -191,8 +191,10 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		if !ok || ref.Type == "" {
 			return failureAt("r02b-d-type", "error", node)
 		}
-		if ref.Type == "f64" && (expected == "" || expected == "f64") {
-			return failureAt("r02b-d-unsupported", "unsupported", node)
+		// Preserve officially checked scalar reference facts. Unsupported
+		// f64 signatures are still rejected by the owned HIR capability seam.
+		if ref.Type == "f64" {
+			return finish(&expression{Kind: "reference", Type: ref.Type, Symbol: ref.ID, Range: offset(file, node)})
 		}
 		return finish(&expression{Kind: "reference", Type: ref.Type, Symbol: ref.ID, Range: expressionOffset(file, node)})
 	case ast.KindTrueKeyword, ast.KindFalseKeyword:
