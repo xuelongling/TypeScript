@@ -51,6 +51,18 @@ func TestConversionSpellingDoesNotOwnOrdinaryFunction(t *testing.T) {
 	}
 }
 
+func TestGlobalConversionSpellingWithBodyRemainsOrdinary(t *testing.T) {
+	source := "function checked_i8_from_f64(value: f64): i8 { return 42; } function entry(value: f64): i8 { return checked_i8_from_f64(value); }"
+	got := analyze(conversionRequest(t, source))
+	if got.Status != "ok" {
+		t.Fatalf("valid global ordinary body rejected: %+v", got.Diagnostics)
+	}
+	e := got.Functions[1].Body[0].Expression
+	if e.Kind != "call" || e.Conversion != nil || e.Target != got.Functions[0].Symbol {
+		t.Fatalf("global user body became intrinsic: %+v", e)
+	}
+}
+
 func TestConversionRejectsUnownedAndInvalidNominalInputs(t *testing.T) {
 	for _, source := range []string{
 		"export function entry(x: f64): i8 { return checked_i8_from_f64(); }",

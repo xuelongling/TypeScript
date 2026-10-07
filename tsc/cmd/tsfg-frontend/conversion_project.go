@@ -85,6 +85,7 @@ func admittedConversions(r request, program *compiler.Program, check *checker.Ch
 	if brandFailure != nil {
 		return nil, brandFailure
 	}
+	entryCount := 0
 	for _, node := range file.Statements.Nodes {
 		if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil {
 			continue
@@ -99,6 +100,22 @@ func admittedConversions(r request, program *compiler.Program, check *checker.Ch
 		if symbol == nil {
 			failure := failAt("r01-d-conversion-entry", "error", file, node)
 			return nil, &failure
+		}
+		entryCount++
+		// A valid global user implementation can share the ambient symbol. It
+		// owns an ordinary function body and never gains intrinsic conversion
+		// status. Unrelated ambient/foreign declaration merging remains invalid.
+		if len(symbol.Declarations) == 2 {
+			var implementation *ast.Node
+			for _, other := range symbol.Declarations {
+				if other != node && other.Kind == ast.KindFunctionDeclaration &&
+					ast.GetSourceFileOfNode(other).FileName() == r.RootFile && other.AsFunctionDeclaration().Body != nil {
+					implementation = other
+				}
+			}
+			if implementation != nil {
+				continue
+			}
 		}
 		signatures := check.GetSignaturesOfType(check.GetTypeOfSymbol(symbol), checker.SignatureKindCall)
 		if symbol == nil || len(symbol.Declarations) != 1 || symbol.Declarations[0] != node || len(signatures) != 1 || signatures[0].Declaration() != node || decl.Body != nil || decl.TypeParameters != nil || len(decl.Parameters.Nodes) != 1 || len(signatures[0].Parameters()) != 1 || scalar(check.GetTypeOfSymbol(signatures[0].Parameters()[0])) != from || scalar(check.GetReturnTypeOfSignature(signatures[0])) != to {
@@ -126,7 +143,7 @@ func admittedConversions(r request, program *compiler.Program, check *checker.Ch
 		}
 		facts.Functions[symbol] = functionInfo{Signature: signature{Parameters: []string{from}, ReturnType: to}, Declaration: node, Conversion: &conversionOrigin{DeclarationPath: declarationPath, DeclarationRange: location, DeclarationSHA256: conversionDeclarationHash, EntryID: id, Version: conversionVersion, BrandRefs: refs}}
 	}
-	if len(facts.Functions) != 286 || len(facts.Types) != 12 || len(facts.Brands) != 11 {
+	if entryCount != 286 || len(facts.Types) != 12 || len(facts.Brands) != 11 {
 		failure := fail("r02b-d-input", "input", declarationPath, span{})
 		return nil, &failure
 	}
