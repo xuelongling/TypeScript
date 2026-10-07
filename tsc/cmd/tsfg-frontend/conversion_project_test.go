@@ -53,7 +53,7 @@ func TestConversionSpellingDoesNotOwnOrdinaryFunction(t *testing.T) {
 }
 
 func TestConversionExpressionAnchorExcludesTriviaInUTF16(t *testing.T) {
-	for _, trivia := range []string{" ", " /*😀*/ ", "\n /* comment */ "} {
+	for _, trivia := range []string{" ", " /*😀*/ ", "\t /* comment */ "} {
 		call := "checked_i8_from_f64(value)"
 		source := "/*😀*/ export function entry(value: f64): i8 { return" + trivia + call + "; }"
 		got := analyze(conversionRequest(t, source))
