@@ -72,3 +72,24 @@ func TestFloatNominalContexts(t *testing.T) {
 		}
 	}
 }
+
+func TestFloatOverflowAnchors(t *testing.T) {
+	for _, source := range []string{
+		"function entry(): f32 { return (1e1000); }",
+		"function entry(): f32 { const value: f32 = 1e1000; return value; }",
+		"function entry(): f32 { let value: f32 = 0.0; value = 1e1000; return value; }",
+		"function entry(): f32 { return consume(1e1000); } function consume(a: f32): f32 { return a; }",
+	} {
+		result := analyze(floatRequest(source))
+		if result.Status != "error" || len(result.Diagnostics) == 0 {
+			t.Fatalf("overflow accepted: %+v", result)
+		}
+		diagnostic := result.Diagnostics[0]
+		if diagnostic.Code != "r01-d-float-range" || diagnostic.RuleID != "r01-literals" || diagnostic.Phase != "types" {
+			t.Fatalf("overflow identity: %+v", diagnostic)
+		}
+		if source[diagnostic.Primary.Start:diagnostic.Primary.End] != "1e1000" {
+			t.Fatalf("overflow literal anchor: %+v", diagnostic)
+		}
+	}
+}

@@ -1533,8 +1533,12 @@ func analyze(r request) response {
 						continue
 					}
 					owned := failure.Diagnostics[0]
-					owned.Range = span{d.File().GetPositionMap().UTF8ToUTF16(d.Pos()), d.File().GetPositionMap().UTF8ToUTF16(d.End())}
-					owned.Primary = sourcePosition(d.File(), d.Pos(), d.End())
+					// Float overflow is a token fact from exact rounding. Keep its
+					// literal anchor rather than the checker's wider assignment span.
+					if owned.Code != "r01-d-float-range" {
+						owned.Range = span{d.File().GetPositionMap().UTF8ToUTF16(d.Pos()), d.File().GetPositionMap().UTF8ToUTF16(d.End())}
+						owned.Primary = sourcePosition(d.File(), d.Pos(), d.End())
+					}
 					owned.UpstreamCode = d.Code()
 					result.Diagnostics = append(result.Diagnostics, owned)
 					continue
