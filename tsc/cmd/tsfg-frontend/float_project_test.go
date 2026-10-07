@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"unicode/utf16"
 )
 
 func floatRequest(source string) request {
@@ -16,6 +17,72 @@ func floatRequest(source string) request {
 	r.Declarations.Version = "minimal-floats-v4"
 	r.Declarations.Paths = []string{r.Files[1].Path}
 	return r
+}
+
+func TestFloatNestedDefaultContexts(t *testing.T) {
+	for index, row := range []struct{ source, kind string }{
+		{"function entry():f64{const a=0.1+0.2;return a;}", "f64"},
+		{"function entry():f64{const a=(0.1)+(0.2);return a;}", "f64"},
+		{"function entry():f64{const a=-(0.1);return a;}", "f64"},
+		{"function entry():f64{const a=+((1e0));return a;}", "f64"},
+		{"function entry():f64{const a=((1e0))+((2e0));return a;}", "f64"},
+		{"function entry():f64{const a=-((1e0)+(2.0));return a;}", "f64"},
+		{"function entry():f64{const a=((1)+(2))+((3e0));return a;}", "f64"},
+		{"function entry():bool{const a=(0.1+0.2)===(0.3+0.0);return a;}", "bool"},
+		{"function entry():bool{const a=((1e0)<(2e0))===((2.0)>(1.0));return a;}", "bool"},
+		{"function entry(a:f32):f32{const b=(1.0)+(a);return b;}", "f32"},
+		{"function entry(a:f32):f32{const b=-((1.0)+(a));return b;}", "f32"},
+		{"function entry():f32{const a:f32=((1.0)+(2.0));return a;}", "f32"},
+	} {
+		t.Run(fmt.Sprint(index), func(t *testing.T) {
+			result := analyze(floatRequest(row.source))
+			if result.Status != "ok" {
+				t.Fatalf("nested source rejected: %+v", result)
+			}
+			local := result.Functions[0].Body[0]
+			if local.Symbol == nil || local.Symbol.Type != row.kind || local.Initializer == nil || local.Initializer.Type != row.kind {
+				t.Fatalf("default/context type: %+v", local)
+			}
+		})
+	}
+}
+
+func TestFloatNestedContextPrecedenceAndFirstFailure(t *testing.T) {
+	for index, row := range []struct {
+		source, code, anchor string
+		offset, length       int
+	}{
+		{"function entry():i32{const a:i32=(0.1)+(0.2);return a;}", "r01-d-scalar-type", "const a", 6, 1},
+		{"function entry(a:i32):i32{const b=(0.1)+(a);return b;}", "r02b-d-type", "return", 0, 6},
+		{"function entry(a:f32,b:f64):f32{const c=((a))+((b));return c;}", "r02b-d-type", "return", 0, 6},
+		{"function entry():f32{const a=(1.0)+(2.0);return(a);}", "r01-d-scalar-type", "return", 0, 6},
+		{"function entry(a:f32):f64{const b=(1e1000)+(a);return(b);}", "r01-d-float-range", "1e1000", 0, 6},
+		{"function entry(a:f32,b:f64):f32{return((b)+(1e1000));}", "r01-d-scalar-type", "return", 0, 6},
+		{"/*😀*/function entry():i32{const a:i32=(0.1)+(1e1000);return(a);}", "r01-d-scalar-type", "const a", 6, 1},
+	} {
+		t.Run(fmt.Sprint(index), func(t *testing.T) {
+			result := analyze(floatRequest(row.source))
+			if result.Status != "error" || len(result.Diagnostics) == 0 {
+				t.Fatalf("typed conversion or invalid source accepted: %+v", result)
+			}
+			diagnostic := result.Diagnostics[0]
+			phase, rule := "types", "r01-literals"
+			if row.code == "r02b-d-type" {
+				phase, rule = "syntax", "r01-ts-baseline"
+			}
+			if diagnostic.Code != row.code || diagnostic.Phase != phase || diagnostic.RuleID != rule || diagnostic.Category != "error" || diagnostic.Severity != "error" {
+				t.Fatalf("first diagnostic identity: %+v", diagnostic)
+			}
+			// Preserve official declaration/return diagnostic spans. Exact
+			// finite overflow alone retains its narrower owned literal span.
+			position := strings.Index(row.source, row.anchor)
+			start := len(utf16.Encode([]rune(row.source[:position]))) + row.offset
+			end := start + row.length
+			if diagnostic.Primary.Start != start || diagnostic.Primary.End != end {
+				t.Fatalf("first diagnostic UTF16 anchor: %+v, expected %d..%d", diagnostic, start, end)
+			}
+		})
+	}
 }
 
 func TestFloatDirectRounding(t *testing.T) {

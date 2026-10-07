@@ -152,8 +152,30 @@ func floatingNode(file *ast.SourceFile, node *ast.Node) (string, bool) {
 	return sign + file.Text()[start:operand.End()], true
 }
 
-// Default decimal/exponent literals have f64 context; integer spellings keep i32.
+// Literal defaults propagate through numeric expression structure only. Typed
+// reference/call hints and an explicit enclosing context take precedence.
 func floatDefaultHint(file *ast.SourceFile, node *ast.Node) string {
+	if node == nil {
+		return ""
+	}
+	switch node.Kind {
+	case ast.KindParenthesizedExpression:
+		return floatDefaultHint(file, node.AsParenthesizedExpression().Expression)
+	case ast.KindPrefixUnaryExpression:
+		prefix := node.AsPrefixUnaryExpression()
+		if prefix.Operator == ast.KindPlusToken || prefix.Operator == ast.KindMinusToken {
+			return floatDefaultHint(file, prefix.Operand)
+		}
+	case ast.KindBinaryExpression:
+		binary := node.AsBinaryExpression()
+		switch integerOperator(binary.OperatorToken.Kind) {
+		case "+", "-", "*", "/", "%":
+			if hint := floatDefaultHint(file, binary.Left); hint != "" {
+				return hint
+			}
+			return floatDefaultHint(file, binary.Right)
+		}
+	}
 	if token, ok := floatingNode(file, node); ok && strings.ContainsAny(token, ".eE") && !strings.ContainsAny(token, "xX") {
 		return "f64"
 	}
