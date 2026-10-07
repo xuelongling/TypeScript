@@ -84,20 +84,21 @@ type symbol struct {
 }
 
 type expression struct {
-	Kind      string          `json:"kind"`
-	Type      string          `json:"type"`
-	Operator  string          `json:"operator,omitempty"`
-	Left      *expression     `json:"left,omitempty"`
-	Right     *expression     `json:"right,omitempty"`
-	Operand   *expression     `json:"operand,omitempty"`
-	Symbol    string          `json:"symbol,omitempty"`
-	Target    string          `json:"target,omitempty"`
-	Arguments *[]expression   `json:"arguments,omitempty"`
-	Signature *signature      `json:"signature,omitempty"`
-	Boolean   *bool           `json:"boolean,omitempty"`
-	Literal   *integerLiteral `json:"literal,omitempty"`
-	Float     *floatLiteral   `json:"float,omitempty"`
-	Range     span            `json:"range"`
+	Conversion *conversionOrigin `json:"conversion,omitempty"`
+	Kind       string            `json:"kind"`
+	Type       string            `json:"type"`
+	Operator   string            `json:"operator,omitempty"`
+	Left       *expression       `json:"left,omitempty"`
+	Right      *expression       `json:"right,omitempty"`
+	Operand    *expression       `json:"operand,omitempty"`
+	Symbol     string            `json:"symbol,omitempty"`
+	Target     string            `json:"target,omitempty"`
+	Arguments  *[]expression     `json:"arguments,omitempty"`
+	Signature  *signature        `json:"signature,omitempty"`
+	Boolean    *bool             `json:"boolean,omitempty"`
+	Literal    *integerLiteral   `json:"literal,omitempty"`
+	Float      *floatLiteral     `json:"float,omitempty"`
+	Range      span              `json:"range"`
 }
 
 type signature struct {
@@ -134,8 +135,10 @@ type function struct {
 }
 
 type functionInfo struct {
-	ID        string
-	Signature signature
+	Declaration *ast.Node
+	Conversion  *conversionOrigin
+	ID          string
+	Signature   signature
 }
 
 type response struct {
@@ -198,11 +201,11 @@ func failCallAt(code string, file *ast.SourceFile, node *ast.Node) response {
 }
 
 func valid(r request) bool {
-	if (r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4") && !validIntegerTarget(r.Target) {
+	if (r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" || r.Declarations.Version == conversionVersion) && !validIntegerTarget(r.Target) {
 		return false
 	}
 	if r.SourceRoot == "" || !strings.HasPrefix(r.SourceRoot, "/") || path.Clean(r.SourceRoot) != r.SourceRoot || r.RootFile == "" ||
-		(r.Declarations.Version != "minimal-bool-v1" && r.Declarations.Version != "minimal-scalars-v2" && r.Declarations.Version != "minimal-integers-v3" && r.Declarations.Version != "minimal-floats-v4") || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS || len(r.Files) == 0 || len(r.Declarations.Paths) == 0 {
+		(r.Declarations.Version != "minimal-bool-v1" && r.Declarations.Version != "minimal-scalars-v2" && r.Declarations.Version != "minimal-integers-v3" && r.Declarations.Version != "minimal-floats-v4" && r.Declarations.Version != conversionVersion) || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS || len(r.Files) == 0 || len(r.Declarations.Paths) == 0 {
 		return false
 	}
 	seen := map[string]bool{}
@@ -1444,7 +1447,7 @@ func analyze(r request) response {
 		return fail("r02b-d-input", "input", r.RootFile, span{})
 	}
 	if r.Target != nil {
-		r.Target.floats = r.Declarations.Version == "minimal-floats-v4"
+		r.Target.floats = r.Declarations.Version == "minimal-floats-v4" || r.Declarations.Version == conversionVersion
 	}
 	contents := map[string]string{}
 	for _, file := range r.Files {
@@ -1491,6 +1494,20 @@ func analyze(r request) response {
 	check, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
 	defer release()
 	contextFunctions := operatorFunctions(file, check)
+	var conversions *conversionFacts
+	if r.Declarations.Version == conversionVersion {
+		var failure *response
+		conversions, failure = admittedConversions(r, program, check)
+		if failure != nil {
+			return *failure
+		}
+		if failure = verifyConversionNominals(file, check, conversions); failure != nil {
+			return *failure
+		}
+		for symbol, info := range conversions.Functions {
+			contextFunctions[symbol] = info
+		}
+	}
 	if len(groups[0].items) == 0 {
 		if node := prohibitedNode(file); node != nil {
 			result.Diagnostics = append(result.Diagnostics, failAt("r02b-d-prohibited", "prohibited", file, node).Diagnostics[0])
@@ -1504,7 +1521,7 @@ func analyze(r request) response {
 			}
 			decl := node.AsFunctionDeclaration()
 			bindings := operatorBindings(file, check, decl)
-			if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" {
+			if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" || r.Declarations.Version == conversionVersion {
 				continue
 			}
 			for _, item := range decl.Body.AsBlock().Statements.Nodes {
@@ -1527,7 +1544,7 @@ func analyze(r request) response {
 			if d.Code() == 6053 || d.Code() == 2688 || d.Code() == 2307 {
 				return fail("r02b-d-input", "input", r.RootFile, span{})
 			}
-			if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" {
+			if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" || r.Declarations.Version == conversionVersion {
 				if handled, failure := integerContextDiagnostic(file, check, d, contextFunctions, r.Target); handled {
 					if failure == nil {
 						continue
@@ -1637,6 +1654,11 @@ func analyze(r request) response {
 		return result
 	}
 	functions := map[*ast.Symbol]functionInfo{}
+	if conversions != nil {
+		for symbol, info := range conversions.Functions {
+			functions[symbol] = info
+		}
+	}
 	for _, node := range file.Statements.Nodes {
 		if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Body() == nil {
 			return failAt("r02b-d-unsupported", "unsupported", file, node)
@@ -1685,7 +1707,7 @@ func analyze(r request) response {
 			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
 		}
 		project := projection{file: file, check: check, result: &result, bindings: map[*ast.Symbol]symbol{}, functions: functions}
-		if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" {
+		if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" || r.Declarations.Version == conversionVersion {
 			project.integerTarget = r.Target
 		}
 		for _, p := range decl.Parameters.Nodes {

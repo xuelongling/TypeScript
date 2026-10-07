@@ -241,6 +241,12 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			failure := failCallAt("r02b-d-type", file, node)
 			return nil, &failure
 		}
+		if fn.Conversion != nil {
+			resolved := check.GetResolvedSignature(node)
+			if resolved == nil || resolved.Declaration() != fn.Declaration {
+				return failureAt("r01-d-conversion-entry", "error", node)
+			}
+		}
 		args := make([]expression, 0, len(call.Arguments.Nodes))
 		for index, arg := range call.Arguments.Nodes {
 			projected, failure := projectIntegerExpression(file, check, arg, fn.Signature.Parameters[index], refs, functions, target)
@@ -255,6 +261,9 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		}
 		if fn.Signature.ReturnType == "f64" && !target.floats {
 			return failureAt("r02b-d-unsupported", "unsupported", node)
+		}
+		if fn.Conversion != nil {
+			return &expression{Kind: "conversion", Type: fn.Signature.ReturnType, Operand: &args[0], Conversion: fn.Conversion, Range: offset(file, node)}, nil
 		}
 		sig := fn.Signature
 		return &expression{Kind: "call", Type: sig.ReturnType, Target: fn.ID, Signature: &sig, Arguments: &args, Range: offset(file, node)}, nil
