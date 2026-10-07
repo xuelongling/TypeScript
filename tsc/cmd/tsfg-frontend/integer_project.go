@@ -16,6 +16,7 @@ type integerTarget struct {
 	Triple         string `json:"triple"`
 	LLVMDataLayout string `json:"llvmDataLayout"`
 	PointerBits    string `json:"pointerBits"`
+	floats         bool
 }
 
 func validIntegerTarget(t *integerTarget) bool {
@@ -170,6 +171,19 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 	if len(operatorContext) != 0 && operatorContext[0] {
 		valueRange = expressionOffset(file, node)
 	}
+	if target != nil && target.floats {
+		if token, ok := floatingNode(file, node); ok && (floatKind(expected) || expected == "" && floatDefaultHint(file, node) != "") {
+			kind := expected
+			if kind == "" {
+				kind = "f64"
+			}
+			bits, finite := exactFloatBits(token, kind)
+			if !finite {
+				return failureAt("r01-d-float-range", "error", node)
+			}
+			return &expression{Kind: "floating", Type: kind, Float: &floatLiteral{Token: token, Bits: bits}, Range: valueRange}, nil
+		}
+	}
 	if value, literal, ok := exactInteger(file, node); ok {
 		kind := expected
 		if kind == "" {
@@ -239,7 +253,7 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			}
 			args = append(args, *projected)
 		}
-		if fn.Signature.ReturnType == "f64" {
+		if fn.Signature.ReturnType == "f64" && !target.floats {
 			return failureAt("r02b-d-unsupported", "unsupported", node)
 		}
 		sig := fn.Signature
@@ -263,6 +277,11 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		if context == "" || (context == "bool" && operator != "!") {
 			context = integerHint(prefix.Operand, check, refs, functions)
 			if context == "" {
+				if target.floats {
+					context = floatDefaultHint(file, prefix.Operand)
+				}
+			}
+			if context == "" {
 				context = "i32"
 			}
 		}
@@ -276,10 +295,10 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		if failure != nil {
 			return nil, failure
 		}
-		if operand.Type == "f64" && (operator == "+" || operator == "-") {
+		if operand.Type == "f64" && (operator == "+" || operator == "-") && !target.floats {
 			return failureAt("r02b-d-unsupported", "unsupported", node)
 		}
-		if operator != "!" && !integerKind(operand.Type) {
+		if operator != "!" && !integerKind(operand.Type) && !(target.floats && floatKind(operand.Type) && (operator == "+" || operator == "-")) {
 			return failureAt("r01-d-scalar-type", "error", prefix.Operand)
 		}
 		return finish(&expression{Kind: "unary", Type: operand.Type, Operator: operator, Operand: operand, Range: expressionOffset(file, node)})
@@ -302,6 +321,14 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 				context = integerHint(binary.Right, check, refs, functions)
 			}
 			if context == "" {
+				if target.floats {
+					context = floatDefaultHint(file, binary.Left)
+					if context == "" {
+						context = floatDefaultHint(file, binary.Right)
+					}
+				}
+			}
+			if context == "" {
 				context = "i32"
 			}
 		}
@@ -315,7 +342,7 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			}
 			context = "bool"
 		}
-		if context == "f64" {
+		if context == "f64" && !target.floats {
 			return failureAt("r02b-d-unsupported", "unsupported", node)
 		}
 		left, failure := projectIntegerExpression(file, check, binary.Left, context, refs, functions, target, true)
@@ -333,7 +360,8 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			}
 			return nil, failure
 		}
-		if !logical && !integerKind(left.Type) && !(left.Type == "bool" && (operator == "===" || operator == "!==")) {
+		floatOperation := target.floats && floatKind(left.Type) && (comparison || operator == "+" || operator == "-" || operator == "*" || operator == "/" || operator == "%")
+		if !logical && !integerKind(left.Type) && !floatOperation && !(left.Type == "bool" && (operator == "===" || operator == "!==")) {
 			return failureAt("r01-d-scalar-type", "error", binary.Left)
 		}
 		resultType, kind := left.Type, "binary"
@@ -446,7 +474,7 @@ func integerContextDiagnostic(file *ast.SourceFile, check *checker.Checker, d *a
 					}
 				}
 			}
-			if expr == nil || (!integerKind(expected) && expected != "bool" && expected != "f64") {
+			if expr == nil || (!integerKind(expected) && expected != "bool" && !floatKind(expected)) {
 				return false
 			}
 			_, failure = projectIntegerExpression(file, check, expr, expected, refs, functions, target)

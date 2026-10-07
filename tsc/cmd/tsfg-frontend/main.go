@@ -96,6 +96,7 @@ type expression struct {
 	Signature *signature      `json:"signature,omitempty"`
 	Boolean   *bool           `json:"boolean,omitempty"`
 	Literal   *integerLiteral `json:"literal,omitempty"`
+	Float     *floatLiteral   `json:"float,omitempty"`
 	Range     span            `json:"range"`
 }
 
@@ -147,13 +148,13 @@ type response struct {
 
 func fail(code, category, file string, location span) response {
 	phase := "syntax"
-	if code == "r01-d-scalar-type" || code == "r01-d-integer-range" || code == "r01-d-shift-count-type" {
+	if code == "r01-d-scalar-type" || code == "r01-d-integer-range" || code == "r01-d-float-range" || code == "r01-d-shift-count-type" {
 		phase = "types"
 	} else if category == "unsupported" {
 		phase = "capability"
 	}
 	rule := "r01-ts-baseline"
-	if code == "r01-d-integer-range" || code == "r01-d-scalar-type" {
+	if code == "r01-d-integer-range" || code == "r01-d-float-range" || code == "r01-d-scalar-type" {
 		rule = "r01-literals"
 	}
 	if code == "r01-d-shift-count-type" {
@@ -197,11 +198,11 @@ func failCallAt(code string, file *ast.SourceFile, node *ast.Node) response {
 }
 
 func valid(r request) bool {
-	if r.Declarations.Version == "minimal-integers-v3" && !validIntegerTarget(r.Target) {
+	if (r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4") && !validIntegerTarget(r.Target) {
 		return false
 	}
 	if r.SourceRoot == "" || !strings.HasPrefix(r.SourceRoot, "/") || path.Clean(r.SourceRoot) != r.SourceRoot || r.RootFile == "" ||
-		(r.Declarations.Version != "minimal-bool-v1" && r.Declarations.Version != "minimal-scalars-v2" && r.Declarations.Version != "minimal-integers-v3") || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS || len(r.Files) == 0 || len(r.Declarations.Paths) == 0 {
+		(r.Declarations.Version != "minimal-bool-v1" && r.Declarations.Version != "minimal-scalars-v2" && r.Declarations.Version != "minimal-integers-v3" && r.Declarations.Version != "minimal-floats-v4") || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS || len(r.Files) == 0 || len(r.Declarations.Paths) == 0 {
 		return false
 	}
 	seen := map[string]bool{}
@@ -239,7 +240,7 @@ func scalar(t *checker.Type) string {
 	if t != nil && t.IsBooleanLike() {
 		return "bool"
 	}
-	if t != nil && t.Alias() != nil && t.Alias().Symbol() != nil && integerKind(t.Alias().Symbol().Name) {
+	if t != nil && t.Alias() != nil && t.Alias().Symbol() != nil && (integerKind(t.Alias().Symbol().Name) || floatKind(t.Alias().Symbol().Name)) {
 		return t.Alias().Symbol().Name
 	}
 	if t != nil && t.Flags()&checker.TypeFlagsNumberLike != 0 {
@@ -1442,6 +1443,9 @@ func analyze(r request) response {
 	if !valid(r) {
 		return fail("r02b-d-input", "input", r.RootFile, span{})
 	}
+	if r.Target != nil {
+		r.Target.floats = r.Declarations.Version == "minimal-floats-v4"
+	}
 	contents := map[string]string{}
 	for _, file := range r.Files {
 		contents[file.Path] = file.Content
@@ -1500,7 +1504,7 @@ func analyze(r request) response {
 			}
 			decl := node.AsFunctionDeclaration()
 			bindings := operatorBindings(file, check, decl)
-			if r.Declarations.Version == "minimal-integers-v3" {
+			if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" {
 				continue
 			}
 			for _, item := range decl.Body.AsBlock().Statements.Nodes {
@@ -1523,7 +1527,7 @@ func analyze(r request) response {
 			if d.Code() == 6053 || d.Code() == 2688 || d.Code() == 2307 {
 				return fail("r02b-d-input", "input", r.RootFile, span{})
 			}
-			if r.Declarations.Version == "minimal-integers-v3" {
+			if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" {
 				if handled, failure := integerContextDiagnostic(file, check, d, contextFunctions, r.Target); handled {
 					if failure == nil {
 						continue
@@ -1677,7 +1681,7 @@ func analyze(r request) response {
 			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
 		}
 		project := projection{file: file, check: check, result: &result, bindings: map[*ast.Symbol]symbol{}, functions: functions}
-		if r.Declarations.Version == "minimal-integers-v3" {
+		if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" {
 			project.integerTarget = r.Target
 		}
 		for _, p := range decl.Parameters.Nodes {
