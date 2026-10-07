@@ -71,6 +71,7 @@ func TestConversionRejectsUnownedAndInvalidNominalInputs(t *testing.T) {
 		"export function entry(x: i16): i8 { return checked_i8_from_f64(x); }",
 		"export function entry(x: f64): i8 { return reinterpret_i8_from_f64(x); }",
 		"declare const brand: unique symbol; type i8 = number & { readonly [brand]: true }; export function entry(x: f64): i8 { return checked_i8_from_f64(x); }",
+		"declare const brand: unique symbol; type f64 = number & { readonly [brand]: true }; export function entry(x: f64): i8 { return checked_i8_from_f64(x); }",
 	} {
 		got := analyze(conversionRequest(t, source))
 		if got.Status != "error" || len(got.Diagnostics) == 0 {

@@ -160,6 +160,11 @@ func verifyConversionNominals(file *ast.SourceFile, check *checker.Checker, fact
 			reference := node.AsTypeReferenceNode()
 			t := check.GetTypeFromTypeNode(node)
 			kind := scalar(t)
+			if kind == "f64" && t.Flags()&checker.TypeFlagsNumber == 0 {
+				result := failAt("r01-d-conversion-type", "error", file, node)
+				failure = &result
+				return true
+			}
 			if integerKind(kind) || kind == "f32" {
 				symbol := check.GetSymbolAtLocation(reference.TypeName)
 				if facts.Types[symbol] != kind || t.Alias() == nil || facts.Types[t.Alias().Symbol()] != kind {
