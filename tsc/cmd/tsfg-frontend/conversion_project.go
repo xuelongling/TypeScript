@@ -18,15 +18,22 @@ const conversionVersion = "minimal-conversions-v5"
 const conversionDeclarationHash = "sha256:60974c1fa82cc549da3a9268f5d82ab10b58f52e2612a377ee4577f05af52c86"
 
 type conversionOrigin struct {
-	DeclarationPath   string `json:"declarationPath"`
-	DeclarationRange  span   `json:"declarationRange"`
-	DeclarationSHA256 string `json:"declarationSha256"`
-	EntryID           string `json:"entryId"`
-	Version           string `json:"version"`
+	DeclarationPath   string            `json:"declarationPath"`
+	DeclarationRange  span              `json:"declarationRange"`
+	DeclarationSHA256 string            `json:"declarationSha256"`
+	EntryID           string            `json:"entryId"`
+	Version           string            `json:"version"`
+	BrandRefs         []conversionBrand `json:"brandRefs"`
+}
+type conversionBrand struct {
+	Role    string `json:"role"`
+	Nominal string `json:"nominal"`
+	Range   span   `json:"range"`
 }
 type conversionFacts struct {
 	Functions map[*ast.Symbol]functionInfo
 	Types     map[*ast.Symbol]string
+	Brands    map[string]span
 }
 
 // Admission is checked against the exact source bytes and official declaration
@@ -44,7 +51,7 @@ func admittedConversions(r request, program *compiler.Program, check *checker.Ch
 		failure := fail("r02b-d-input", "input", declarationPath, span{})
 		return nil, &failure
 	}
-	facts := &conversionFacts{Functions: map[*ast.Symbol]functionInfo{}, Types: map[*ast.Symbol]string{}}
+	facts := &conversionFacts{Functions: map[*ast.Symbol]functionInfo{}, Types: map[*ast.Symbol]string{}, Brands: map[string]span{}}
 	for _, node := range file.Statements.Nodes {
 		if node.Kind == ast.KindTypeAliasDeclaration && node.Name() != nil {
 			name := node.Name().Text()
@@ -67,6 +74,9 @@ func admittedConversions(r request, program *compiler.Program, check *checker.Ch
 				failure := failAt("r01-d-conversion-entry", "error", file, node)
 				brandFailure = &failure
 				return true
+			}
+			if symbol.Declarations[0].Name() == node {
+				facts.Brands[strings.TrimPrefix(node.Text(), "__tsfg_")] = expressionOffset(file, node)
 			}
 		}
 		return node.ForEachChild(brands)
@@ -98,9 +108,25 @@ func admittedConversions(r request, program *compiler.Program, check *checker.Ch
 		id := fmt.Sprintf("sha256:%x", sha256.Sum256([]byte("tsfg.conversion\x00"+conversionVersion+"\x00"+mode+"\x00"+from+"\x00"+to+"\x00"+conversionDeclarationHash)))
 		// Exclude surrounding trivia from the owned admitted declaration range.
 		location := expressionOffset(file, node)
-		facts.Functions[symbol] = functionInfo{Signature: signature{Parameters: []string{from}, ReturnType: to}, Declaration: node, Conversion: &conversionOrigin{DeclarationPath: declarationPath, DeclarationRange: location, DeclarationSHA256: conversionDeclarationHash, EntryID: id, Version: conversionVersion}}
+		refs := []conversionBrand{}
+		for index, nominal := range []string{from, to} {
+			if nominal == "f64" {
+				continue
+			}
+			brandRange, exists := facts.Brands[nominal]
+			if !exists {
+				failure := failAt("r01-d-conversion-entry", "error", file, node)
+				return nil, &failure
+			}
+			role := "source"
+			if index == 1 {
+				role = "target"
+			}
+			refs = append(refs, conversionBrand{Role: role, Nominal: nominal, Range: brandRange})
+		}
+		facts.Functions[symbol] = functionInfo{Signature: signature{Parameters: []string{from}, ReturnType: to}, Declaration: node, Conversion: &conversionOrigin{DeclarationPath: declarationPath, DeclarationRange: location, DeclarationSHA256: conversionDeclarationHash, EntryID: id, Version: conversionVersion, BrandRefs: refs}}
 	}
-	if len(facts.Functions) != 286 || len(facts.Types) != 12 {
+	if len(facts.Functions) != 286 || len(facts.Types) != 12 || len(facts.Brands) != 11 {
 		failure := fail("r02b-d-input", "input", declarationPath, span{})
 		return nil, &failure
 	}
