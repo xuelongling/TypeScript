@@ -263,7 +263,7 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			return failureAt("r02b-d-unsupported", "unsupported", node)
 		}
 		if fn.Conversion != nil {
-			return &expression{Kind: "conversion", Type: fn.Signature.ReturnType, Operand: &args[0], Conversion: fn.Conversion, Range: offset(file, node)}, nil
+			return &expression{Kind: "conversion", Type: fn.Signature.ReturnType, Operand: &args[0], Conversion: fn.Conversion, Range: expressionOffset(file, node)}, nil
 		}
 		sig := fn.Signature
 		return &expression{Kind: "call", Type: sig.ReturnType, Target: fn.ID, Signature: &sig, Arguments: &args, Range: offset(file, node)}, nil

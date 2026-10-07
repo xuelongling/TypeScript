@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"unicode/utf16"
 )
 
 func conversionRequest(t *testing.T, source string) request {
@@ -48,6 +49,22 @@ func TestConversionSpellingDoesNotOwnOrdinaryFunction(t *testing.T) {
 	e := got.Functions[1].Body[0].Expression
 	if e.Kind != "call" || e.Conversion != nil || e.Target != got.Functions[0].Symbol {
 		t.Fatalf("ordinary function became intrinsic: %+v", e)
+	}
+}
+
+func TestConversionExpressionAnchorExcludesTriviaInUTF16(t *testing.T) {
+	for _, trivia := range []string{" ", " /*😀*/ ", "\n /* comment */ "} {
+		call := "checked_i8_from_f64(value)"
+		source := "/*😀*/ export function entry(value: f64): i8 { return" + trivia + call + "; }"
+		got := analyze(conversionRequest(t, source))
+		if got.Status != "ok" {
+			t.Fatalf("valid conversion rejected: %+v", got.Diagnostics)
+		}
+		e := got.Functions[0].Body[0].Expression
+		start := len(utf16.Encode([]rune(source[:strings.Index(source, call)])))
+		if e.Kind != "conversion" || e.Range.Start != start || e.Range.End != start+len(call) || sourceText(t, source, e.Range) != call {
+			t.Fatalf("conversion anchor contains trivia or loses expression: %+v", e.Range)
+		}
 	}
 }
 
