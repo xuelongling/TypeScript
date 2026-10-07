@@ -163,6 +163,9 @@ func fail(code, category, file string, location span) response {
 	if code == "r01-d-shift-count-type" {
 		rule = "r01-shifts"
 	}
+	if code == "r01-d-conversion-entry" || code == "r01-d-conversion-type" {
+		phase, rule = "types", "r01-conversions"
+	}
 	if category == "prohibited" {
 		phase, rule = "types", "r01-input-boundary"
 	} else if category == "input" {

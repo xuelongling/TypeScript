@@ -77,6 +77,10 @@ func TestConversionRejectsUnownedAndInvalidNominalInputs(t *testing.T) {
 		if got.Status != "error" || len(got.Diagnostics) == 0 {
 			t.Fatalf("invalid input accepted: %s %+v", source, got)
 		}
+		if strings.HasPrefix(got.Diagnostics[0].Code, "r01-d-conversion-") &&
+			(got.Diagnostics[0].RuleID != "r01-conversions" || got.Diagnostics[0].Phase != "types") {
+			t.Fatalf("conversion diagnostic machine identity differs: %+v", got.Diagnostics[0])
+		}
 	}
 	r := conversionRequest(t, "export function entry(x: f64): i8 { return checked_i8_from_f64(x); }")
 	r.Files[1].Content += "\n"
