@@ -54,6 +54,9 @@ func expressionPresence(value *expression) *presenceFlow {
 	if value == nil {
 		return nil
 	}
+	if value.Kind == "write" && (value.Operator == "&&=" || value.Operator == "||=") {
+		return value.PresenceFlow
+	}
 	if value.Kind == "group" {
 		return expressionPresence(value.Operand)
 	}

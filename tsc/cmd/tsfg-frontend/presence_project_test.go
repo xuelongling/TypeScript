@@ -4,6 +4,48 @@ package main
 
 import "testing"
 
+func TestPresenceBooleanLogicalAssignmentFacts(t *testing.T) {
+	for _, source := range []string{
+		"export function entry(value?: bool): bool { if (value === undefined) { value = false; } value ||= true; return value; }",
+		"export function entry(value?: bool): bool { if (value === undefined) { return false; } value &&= false; return value; }",
+		"export function entry(value?: bool): bool { value ||= true; return value; }",
+		"export function entry(value?: bool): bool { value &&= false; if (value === undefined) { return true; } return value; }",
+		"export function entry(value: bool | null = null): bool { value &&= true; if (value === null) { return true; } return value; }",
+	} {
+		result := analyze(integerRequest(source))
+		if result.Status != "ok" {
+			t.Fatalf("official logical presence source rejected: %s: %+v", source, result.Diagnostics)
+		}
+	}
+	source := "export function entry(value?: bool): bool { value &&= false; if (value === undefined) { return true; } return value; }"
+	result := analyze(integerRequest(source))
+	write := result.Functions[0].Body[0].Expression
+	if write.Left.PresenceFlow == nil || !write.Left.PresenceFlow.Undefined || write.PresenceFlow == nil || !write.PresenceFlow.Undefined || write.PresenceFlow.Null {
+		t.Fatalf("lost actual declared target or whole expression presence: %+v", write)
+	}
+}
+
+func TestPresenceBooleanLogicalResultDoesNotEraseOfficialErrors(t *testing.T) {
+	for _, tc := range []struct {
+		source string
+		code   int32
+	}{
+		{"export function entry(value?: bool): bool { return value &&= false; }", 2322},
+		{"export function entry(value: bool | null): bool { return value &&= true; }", 2322},
+		{"export function entry(value?: bool): bool { value ||= 0; return value; }", 2322},
+		{"export function entry(): bool { const value: bool = false; value ||= true; return value; }", 2588},
+	} {
+		result := analyze(integerRequest(tc.source))
+		found := false
+		for _, diagnostic := range result.Diagnostics {
+			found = found || diagnostic.UpstreamCode == tc.code
+		}
+		if result.Status != "error" || !found {
+			t.Fatalf("lost official logical error %d: %+v", tc.code, result.Diagnostics)
+		}
+	}
+}
+
 func TestPresenceParenthesizedLocalTargets(t *testing.T) {
 	for _, source := range []string{
 		"export function entry(): i32 { let value: i32; ((value)) ??= 7; return (value)++; }",

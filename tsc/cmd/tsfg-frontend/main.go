@@ -1078,7 +1078,15 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 		case ast.KindExpressionStatement:
 			expr := node.AsExpressionStatement().Expression
 			if expr.Kind != ast.KindBinaryExpression || expr.AsBinaryExpression().OperatorToken.Kind != ast.KindEqualsToken || p.integerTarget != nil && expr.AsBinaryExpression().Left.Kind == ast.KindParenthesizedExpression {
-				value, failure := p.expr(expr, "")
+				var discardedPresence *parameterPresence
+				candidate := ast.SkipParentheses(expr)
+				if p.integerTarget != nil && candidate.Kind == ast.KindBinaryExpression && (candidate.AsBinaryExpression().OperatorToken.Kind == ast.KindAmpersandAmpersandEqualsToken || candidate.AsBinaryExpression().OperatorToken.Kind == ast.KindBarBarEqualsToken) {
+					leaf := ast.SkipParentheses(candidate.AsBinaryExpression().Left)
+					if leaf.Kind == ast.KindIdentifier {
+						discardedPresence = p.bindings[p.check.GetSymbolAtLocation(leaf)].Presence
+					}
+				}
+				value, failure := p.expr(expr, "", discardedPresence)
 				if failure.Status != "" {
 					return nil, failure
 				}

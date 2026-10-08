@@ -406,6 +406,7 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			}
 		}
 		if operator := ordinaryAssignmentOperator(binary.OperatorToken.Kind); operator != "" {
+			logical := operator == "&&=" || operator == "||="
 			leaf := ast.SkipParentheses(binary.Left)
 			if leaf.Kind != ast.KindIdentifier {
 				return failureAt("r02b-d-unsupported", "unsupported", binary.Left)
@@ -414,7 +415,7 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			if !ok || !binding.Writable {
 				return failureAt("r01-d-scalar-type", "error", binary.Left)
 			}
-			left, failure := projectIntegerExpression(file, check, binary.Left, binding.Type, refs, functions, target, true, operator == "=" || operator == "??=")
+			left, failure := projectIntegerExpression(file, check, binary.Left, binding.Type, refs, functions, target, true, operator == "=" || operator == "??=" || logical)
 			if failure != nil {
 				return nil, failure
 			}
@@ -422,11 +423,11 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			if operator == "<<=" || operator == ">>=" || operator == ">>>=" {
 				rightType = "i32"
 			}
-			right, failure := projectIntegerExpression(file, check, binary.Right, rightType, refs, functions, target, true, (operator == "=" || operator == "??=") && binding.Presence != nil && (binding.Presence.Undefined || binding.Presence.Null))
+			right, failure := projectIntegerExpression(file, check, binary.Right, rightType, refs, functions, target, true, (operator == "=" || operator == "??=" || logical) && binding.Presence != nil && (binding.Presence.Undefined || binding.Presence.Null))
 			if failure != nil {
 				return nil, failure
 			}
-			if (operator == "=" || operator == "??=") && !permittedPresence(right, binding.Presence) {
+			if (operator == "=" || operator == "??=" || logical) && !permittedPresence(right, binding.Presence) {
 				return failureAt("r01-d-scalar-type", "error", binary.Right)
 			}
 			if operator == "&&=" || operator == "||=" {
@@ -439,7 +440,15 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 					return failureAt("r01-d-scalar-type", "error", binary.Left)
 				}
 			}
-			return finish(&expression{Kind: "write", Type: binding.Type, Operator: operator, Left: left, Right: right, Range: expressionOffset(file, node)})
+			projected := &expression{Kind: "write", Type: binding.Type, Operator: operator, Left: left, Right: right, Range: expressionOffset(file, node)}
+			if logical {
+				payload, u, n, valid := finitePresence(check.GetTypeAtLocation(node))
+				if !valid || payload != "" && payload != binding.Type {
+					return failureAt("r01-d-scalar-type", "error", node)
+				}
+				projected.PresenceFlow = &presenceFlow{Undefined: u, Null: n}
+			}
+			return finish(projected)
 		}
 		operator := integerOperator(binary.OperatorToken.Kind)
 		if operator == "" {
