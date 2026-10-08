@@ -58,6 +58,12 @@ func expressionPresence(value *expression) *presenceFlow {
 		return expressionPresence(value.Operand)
 	}
 	if value.Kind == "write" {
+		if value.Operator == "??=" {
+			left := expressionPresence(value.Left)
+			if left == nil || !left.Undefined && !left.Null {
+				return nil
+			}
+		}
 		return expressionPresence(value.Right)
 	}
 	if value.Kind == "absence" {
@@ -206,7 +212,7 @@ func scalarAssignmentContexts(file *ast.SourceFile, check *checker.Checker, func
 		if node.Kind == ast.KindVariableDeclaration {
 			left, right, flow = node.Name(), node.AsVariableDeclaration().Initializer, node
 		}
-		if node.Kind == ast.KindBinaryExpression && node.AsBinaryExpression().OperatorToken.Kind == ast.KindEqualsToken {
+		if node.Kind == ast.KindBinaryExpression && (node.AsBinaryExpression().OperatorToken.Kind == ast.KindEqualsToken || node.AsBinaryExpression().OperatorToken.Kind == ast.KindQuestionQuestionEqualsToken) {
 			left, right = node.AsBinaryExpression().Left, node.AsBinaryExpression().Right
 			flow = left
 		}

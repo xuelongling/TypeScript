@@ -34,6 +34,8 @@ func ordinaryAssignmentOperator(kind ast.Kind) string {
 		return "&&="
 	case ast.KindBarBarEqualsToken:
 		return "||="
+	case ast.KindQuestionQuestionEqualsToken:
+		return "??="
 	}
 	return ""
 }

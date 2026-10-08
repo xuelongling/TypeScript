@@ -69,3 +69,70 @@ func TestPresenceLocalAssignmentUsesOfficialNarrowedType(t *testing.T) {
 		t.Fatalf("actual GetTypeAtLocation flow failed to narrow: local=%+v read=%+v", local, read)
 	}
 }
+
+func TestPresenceNullishAssignmentOfficialFacts(t *testing.T) {
+	for _, source := range []string{
+		"export function entry(value?: i32): i32 { return value ??= 4; }",
+		"export function entry(): i32 { let value: i32 | null = null; value ??= 5; return value; }",
+		"export function entry(value: bool | null): bool { return value ??= false; }",
+	} {
+		result := analyze(integerRequest(source))
+		if result.Status != "ok" {
+			t.Fatalf("official nullish assignment rejected: %s: %+v", source, result.Diagnostics)
+		}
+		body := result.Functions[0].Body
+		var write *expression
+		if body[0].Kind == "return" {
+			write = body[0].Expression
+		} else {
+			write = body[1].Expression
+		}
+		if write == nil || write.Kind != "write" || write.Operator != "??=" || write.Left.PresenceFlow == nil {
+			t.Fatalf("official nullish write facts lost: %+v", body)
+		}
+	}
+}
+
+func TestPresenceNullishAssignmentBareLocalsAndTargetType(t *testing.T) {
+	for _, source := range []string{
+		"export function entry(): i32 { let value: i32; return value ??= 7; }",
+		"export function entry(): i32 { let value: i32 | null; return value ??= 7; }",
+		"export function entry(): i32 { let value: i32 | undefined; return value ??= 7; }",
+		"export function entry(flag: bool): i32 { let value: i32; if (flag) { value = 8; } value ??= 7; return value; }",
+		"function choose(value: i32 = 7): i32 { return value ??= 9; } export function entry(): i32 { return choose(); }",
+		"function choose(value: i32 | undefined = 7): i32 { return value ??= 9; } export function entry(): i32 { return choose(); }",
+	} {
+		result := analyze(integerRequest(source))
+		if result.Status != "ok" {
+			t.Fatalf("official definite nullish target rejected: %s: %+v", source, result.Diagnostics)
+		}
+	}
+	source := "export function entry(): i32 { let value: i32 | undefined = 0; value ??= 7; return value; }"
+	result := analyze(integerRequest(source))
+	if result.Status != "ok" {
+		t.Fatalf("official nullish flow rejected: %+v", result.Diagnostics)
+	}
+	write, read := result.Functions[0].Body[1].Expression, result.Functions[0].Body[2].Expression
+	if write.Left.PresenceFlow == nil || !write.Left.PresenceFlow.Undefined || read.PresenceFlow == nil || read.PresenceFlow.Undefined || read.PresenceFlow.Null {
+		t.Fatalf("official definite target/read distinction lost: target=%+v read=%+v", write.Left, read)
+	}
+}
+
+func TestPresenceNullishDoesNotEraseUninitializedReadDiagnostics(t *testing.T) {
+	for _, source := range []string{
+		"export function entry(): i32 { let value: i32; return value; }",
+		"export function entry(): i32 { let value: i32; return value += 7; }",
+		"export function entry(): i32 { let value: i32 | null; if (value === null) { return 2; } return value; }",
+	} {
+		result := analyze(integerRequest(source))
+		found := false
+		for _, diagnostic := range result.Diagnostics {
+			if diagnostic.UpstreamCode == 2454 {
+				found = true
+			}
+		}
+		if result.Status != "error" || !found {
+			t.Fatalf("official uninitialized read diagnostic missing: %s: %+v", source, result.Diagnostics)
+		}
+	}
+}

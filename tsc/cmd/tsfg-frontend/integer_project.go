@@ -412,7 +412,7 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			if !ok || !binding.Writable {
 				return failureAt("r01-d-scalar-type", "error", binary.Left)
 			}
-			left, failure := projectIntegerExpression(file, check, binary.Left, binding.Type, refs, functions, target, true, operator == "=")
+			left, failure := projectIntegerExpression(file, check, binary.Left, binding.Type, refs, functions, target, true, operator == "=" || operator == "??=")
 			if failure != nil {
 				return nil, failure
 			}
@@ -420,18 +420,18 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			if operator == "<<=" || operator == ">>=" || operator == ">>>=" {
 				rightType = "i32"
 			}
-			right, failure := projectIntegerExpression(file, check, binary.Right, rightType, refs, functions, target, true, operator == "=" && binding.Presence != nil && (binding.Presence.Undefined || binding.Presence.Null))
+			right, failure := projectIntegerExpression(file, check, binary.Right, rightType, refs, functions, target, true, (operator == "=" || operator == "??=") && binding.Presence != nil && (binding.Presence.Undefined || binding.Presence.Null))
 			if failure != nil {
 				return nil, failure
 			}
-			if operator == "=" && !permittedPresence(right, binding.Presence) {
+			if (operator == "=" || operator == "??=") && !permittedPresence(right, binding.Presence) {
 				return failureAt("r01-d-scalar-type", "error", binary.Right)
 			}
 			if operator == "&&=" || operator == "||=" {
 				if binding.Type != "bool" {
 					return failureAt("r01-d-scalar-type", "error", binary.Left)
 				}
-			} else if operator != "=" {
+			} else if operator != "=" && operator != "??=" {
 				floatOperation := operator == "+=" || operator == "-=" || operator == "*=" || operator == "/=" || operator == "%="
 				if !integerKind(binding.Type) && !(target.floats && floatKind(binding.Type) && floatOperation) {
 					return failureAt("r01-d-scalar-type", "error", binary.Left)
