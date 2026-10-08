@@ -581,6 +581,7 @@ type Checker struct {
 	id                                          uint32
 	program                                     Program
 	compilerOptions                             *core.CompilerOptions
+	tsfgScalarAssignments                       map[*ast.Node]*Type
 	files                                       []*ast.SourceFile
 	fileIndexMap                                map[*ast.SourceFile]int
 	compareSymbols                              func(*ast.Symbol, *ast.Symbol) int

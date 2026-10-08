@@ -75,35 +75,40 @@ type primary struct {
 }
 
 type symbol struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Kind     string `json:"kind"`
-	Type     string `json:"type"`
-	Writable bool   `json:"writable"`
-	Range    span   `json:"range"`
+	ID       string             `json:"id"`
+	Name     string             `json:"name"`
+	Kind     string             `json:"kind"`
+	Type     string             `json:"type"`
+	Writable bool               `json:"writable"`
+	Range    span               `json:"range"`
+	Presence *parameterPresence `json:"presence,omitempty"`
 }
 
 type expression struct {
-	Conversion *conversionOrigin `json:"conversion,omitempty"`
-	Kind       string            `json:"kind"`
-	Type       string            `json:"type"`
-	Operator   string            `json:"operator,omitempty"`
-	Left       *expression       `json:"left,omitempty"`
-	Right      *expression       `json:"right,omitempty"`
-	Operand    *expression       `json:"operand,omitempty"`
-	Symbol     string            `json:"symbol,omitempty"`
-	Target     string            `json:"target,omitempty"`
-	Arguments  *[]expression     `json:"arguments,omitempty"`
-	Signature  *signature        `json:"signature,omitempty"`
-	Boolean    *bool             `json:"boolean,omitempty"`
-	Literal    *integerLiteral   `json:"literal,omitempty"`
-	Float      *floatLiteral     `json:"float,omitempty"`
-	Range      span              `json:"range"`
+	Conversion   *conversionOrigin `json:"conversion,omitempty"`
+	Kind         string            `json:"kind"`
+	Type         string            `json:"type"`
+	Operator     string            `json:"operator,omitempty"`
+	Prefix       *bool             `json:"prefix,omitempty"`
+	Absence      string            `json:"absence,omitempty"`
+	PresenceFlow *presenceFlow     `json:"presenceFlow,omitempty"`
+	Left         *expression       `json:"left,omitempty"`
+	Right        *expression       `json:"right,omitempty"`
+	Operand      *expression       `json:"operand,omitempty"`
+	Symbol       string            `json:"symbol,omitempty"`
+	Target       string            `json:"target,omitempty"`
+	Arguments    *[]expression     `json:"arguments,omitempty"`
+	Signature    *signature        `json:"signature,omitempty"`
+	Boolean      *bool             `json:"boolean,omitempty"`
+	Literal      *integerLiteral   `json:"literal,omitempty"`
+	Float        *floatLiteral     `json:"float,omitempty"`
+	Range        span              `json:"range"`
 }
 
 type signature struct {
-	Parameters []string `json:"parameters"`
-	ReturnType string   `json:"returnType"`
+	Parameters []string             `json:"parameters"`
+	ReturnType string               `json:"returnType"`
+	Presence   []*parameterPresence `json:"presence,omitempty"`
 }
 
 type integerLiteral struct {
@@ -126,12 +131,13 @@ type statement struct {
 }
 
 type function struct {
-	Name       string      `json:"name"`
-	Symbol     string      `json:"symbol"`
-	Parameters []symbol    `json:"parameters"`
-	ReturnType string      `json:"returnType"`
-	Body       []statement `json:"body"`
-	Range      span        `json:"range"`
+	Name                  string        `json:"name"`
+	Symbol                string        `json:"symbol"`
+	Parameters            []symbol      `json:"parameters"`
+	ReturnType            string        `json:"returnType"`
+	Body                  []statement   `json:"body"`
+	Range                 span          `json:"range"`
+	ParameterInitializers []*expression `json:"parameterInitializers,omitempty"`
 }
 
 type functionInfo struct {
@@ -680,7 +686,7 @@ func contextualI32Assignment(file *ast.SourceFile, check *checker.Checker, d *as
 }
 
 func operatorBindings(file *ast.SourceFile, check *checker.Checker, decl *ast.FunctionDeclaration) map[*ast.Symbol]symbol {
-	bindings := parameterBindings(check, decl.Parameters.Nodes, nil)
+	bindings := parameterBindings(file, check, decl.Parameters.Nodes, nil)
 	visitStatements(decl.Body.AsBlock().Statements.Nodes, func(item *ast.Node) bool {
 		for _, local := range localDeclarations(item) {
 			if local.Name() == nil || local.Name().Kind != ast.KindIdentifier {
@@ -726,19 +732,27 @@ func operatorFunctions(file *ast.SourceFile, check *checker.Checker) map[*ast.Sy
 			continue
 		}
 		parameters := make([]string, 0, len(checked.Parameters()))
+		presence := make([]*parameterPresence, 0, len(checked.Parameters()))
+		hasPresence := false
 		for index, p := range decl.Parameters.Nodes {
 			param := p.AsParameterDeclaration()
-			if p.Name() == nil || p.Name().Kind != ast.KindIdentifier || param.Type == nil || param.Initializer != nil || param.QuestionToken != nil || param.DotDotDotToken != nil {
+			if p.Name() == nil || p.Name().Kind != ast.KindIdentifier || param.Type == nil || param.DotDotDotToken != nil {
 				break
 			}
-			t := scalar(check.GetTypeOfSymbol(checked.Parameters()[index]))
-			if t == "" {
+			t, shape, valid := checkedParameter(file, check, p)
+			ownedType, _, _, validType := finitePresence(check.GetTypeOfSymbol(checked.Parameters()[index]))
+			if !valid || !validType || ownedType != t {
 				break
 			}
 			parameters = append(parameters, t)
+			presence = append(presence, shape)
+			hasPresence = hasPresence || shape != nil
 		}
 		if len(parameters) == len(decl.Parameters.Nodes) {
-			functions[resolved] = functionInfo{Signature: signature{Parameters: parameters, ReturnType: returnType}}
+			if !hasPresence {
+				presence = nil
+			}
+			functions[resolved] = functionInfo{Declaration: node, Signature: signature{Parameters: parameters, ReturnType: returnType, Presence: presence}}
 		}
 	}
 	return functions
@@ -873,29 +887,11 @@ func scalarLocalMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.Di
 func pendingLocalForm(nodes []*ast.Node) *ast.Node {
 	var walk func(*ast.Node) *ast.Node
 	walk = func(node *ast.Node) *ast.Node {
-		if node.Kind == ast.KindVariableDeclaration && node.AsVariableDeclaration().Initializer == nil {
+		if node.Kind == ast.KindVariableDeclaration && node.AsVariableDeclaration().Initializer == nil && node.AsVariableDeclaration().Type == nil {
 			return node
 		}
-		if node.Kind == ast.KindBinaryExpression && ast.IsCompoundAssignment(node.AsBinaryExpression().OperatorToken.Kind) {
+		if node.Kind == ast.KindBinaryExpression && ast.IsCompoundAssignment(node.AsBinaryExpression().OperatorToken.Kind) && ordinaryAssignmentOperator(node.AsBinaryExpression().OperatorToken.Kind) == "" {
 			return node
-		}
-		if node.Kind == ast.KindExpressionStatement {
-			expr := node.AsExpressionStatement().Expression
-			if expr.Kind == ast.KindBinaryExpression && expr.AsBinaryExpression().OperatorToken.Kind != ast.KindEqualsToken {
-				return expr
-			}
-		}
-		if node.Kind == ast.KindPostfixUnaryExpression {
-			operator := node.AsPostfixUnaryExpression().Operator
-			if operator == ast.KindPlusPlusToken || operator == ast.KindMinusMinusToken {
-				return node
-			}
-		}
-		if node.Kind == ast.KindPrefixUnaryExpression {
-			operator := node.AsPrefixUnaryExpression().Operator
-			if operator == ast.KindPlusPlusToken || operator == ast.KindMinusMinusToken {
-				return node
-			}
 		}
 		for child := range node.IterChildren() {
 			if found := walk(child); found != nil {
@@ -959,11 +955,18 @@ func (p *projection) addSymbol(node *ast.Node, kind, t string, writable bool) (s
 	return s, true
 }
 
-func (p *projection) expr(node *ast.Node, expected string) (*expression, response) {
+func (p *projection) expr(node *ast.Node, expected string, presence ...*parameterPresence) (*expression, response) {
 	if p.integerTarget != nil {
-		projected, failure := projectIntegerExpression(p.file, p.check, node, expected, p.bindings, p.functions, p.integerTarget)
+		var shape *parameterPresence
+		if len(presence) != 0 {
+			shape = presence[0]
+		}
+		projected, failure := projectIntegerExpression(p.file, p.check, node, expected, p.bindings, p.functions, p.integerTarget, false, shape != nil && (shape.Undefined || shape.Null))
 		if failure != nil {
 			return nil, *failure
+		}
+		if !permittedPresence(projected, shape) {
+			return nil, failAt("r01-d-scalar-type", "error", p.file, node)
 		}
 		return projected, response{}
 	}
@@ -1034,19 +1037,25 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 					return nil, failAt("r02b-d-unsupported", "unsupported", p.file, decl)
 				}
 				local := decl.AsVariableDeclaration()
-				if local.Initializer == nil {
+				if local.Initializer == nil && local.Type == nil {
 					return nil, failAt("r02b-d-unsupported", "unsupported", p.file, decl)
 				}
 				t := ""
+				var shape *parameterPresence
 				if local.Type != nil {
-					t = scalar(p.check.GetTypeFromTypeNode(local.Type))
-					if t == "" {
+					var valid bool
+					t, shape, valid = checkedLocalPresence(p.file, p.check, decl)
+					if !valid {
 						return nil, failAt("r02b-d-unsupported", "unsupported", p.file, local.Type)
 					}
 				}
-				init, failure := p.expr(local.Initializer, t)
-				if failure.Status != "" {
-					return nil, failure
+				var init *expression
+				if local.Initializer != nil {
+					var failure response
+					init, failure = p.expr(local.Initializer, t, shape)
+					if failure.Status != "" {
+						return nil, failure
+					}
 				}
 				if t == "" {
 					t = init.Type
@@ -1059,26 +1068,36 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 				if !ok {
 					return nil, failAt("r02b-d-type", "error", p.file, decl.Name())
 				}
+				if shape != nil {
+					s.Presence = shape
+					p.result.Symbols[len(p.result.Symbols)-1] = s
+					p.bindings[p.check.GetSymbolAtLocation(decl.Name())] = s
+				}
 				out = append(out, statement{Kind: "variable", Symbol: &s, Initializer: init, Range: offset(p.file, decl)})
 			}
 		case ast.KindExpressionStatement:
 			expr := node.AsExpressionStatement().Expression
 			if expr.Kind != ast.KindBinaryExpression || expr.AsBinaryExpression().OperatorToken.Kind != ast.KindEqualsToken {
-				return nil, failAt("r02b-d-unsupported", "unsupported", p.file, node)
+				value, failure := p.expr(expr, "")
+				if failure.Status != "" {
+					return nil, failure
+				}
+				out = append(out, statement{Kind: "expression", Expression: value, Range: offset(p.file, node)})
+				continue
 			}
 			binary := expr.AsBinaryExpression()
 			if binary.Left.Kind != ast.KindIdentifier {
 				return nil, failAt("r02b-d-unsupported", "unsupported", p.file, binary.Left)
 			}
-			target, failure := p.expr(binary.Left, "")
+			s := p.bindings[p.check.GetSymbolAtLocation(binary.Left)]
+			target, failure := p.expr(binary.Left, "", s.Presence)
 			if failure.Status != "" {
 				return nil, failure
 			}
-			s := p.bindings[p.check.GetSymbolAtLocation(binary.Left)]
 			if !s.Writable {
 				return nil, failAt("r01-d-scalar-type", "error", p.file, binary.Left)
 			}
-			value, failure := p.expr(binary.Right, target.Type)
+			value, failure := p.expr(binary.Right, target.Type, s.Presence)
 			if failure.Status != "" {
 				return nil, failure
 			}
@@ -1131,7 +1150,7 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 	return out, response{}
 }
 
-func parameterBindings(check *checker.Checker, parameters []*ast.Node, projected []symbol) map[*ast.Symbol]symbol {
+func parameterBindings(file *ast.SourceFile, check *checker.Checker, parameters []*ast.Node, projected []symbol) map[*ast.Symbol]symbol {
 	bindings := map[*ast.Symbol]symbol{}
 	for i, parameter := range parameters {
 		if parameter.Name() == nil {
@@ -1141,7 +1160,8 @@ func parameterBindings(check *checker.Checker, parameters []*ast.Node, projected
 		if resolved == nil {
 			continue
 		}
-		binding := symbol{Type: scalar(check.GetTypeAtLocation(parameter.Name()))}
+		payload, shape, _ := checkedParameter(file, check, parameter)
+		binding := symbol{Type: payload, Writable: true, Presence: shape}
 		if i < len(projected) {
 			binding = projected[i]
 		}
@@ -1485,6 +1505,28 @@ func analyze(r request) response {
 	}
 	slices.Sort(consumed)
 	result := response{Status: "ok", Inputs: consumed, Functions: []function{}, Symbols: []symbol{}}
+	check, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
+	contextFunctions := operatorFunctions(file, check)
+	var conversions *conversionFacts
+	if r.Declarations.Version == conversionVersion {
+		var failure *response
+		conversions, failure = admittedConversions(r, program, check)
+		if failure != nil {
+			release()
+			return *failure
+		}
+		if failure = verifyConversionNominals(file, check, conversions); failure != nil {
+			release()
+			return *failure
+		}
+		for symbol, info := range conversions.Functions {
+			contextFunctions[symbol] = info
+		}
+	}
+	if r.Target != nil {
+		check.SetTSFGScalarAssignments(scalarAssignmentContexts(file, check, contextFunctions, r.Target))
+	}
+	release()
 	groups := []struct {
 		items []*ast.Diagnostic
 		code  string
@@ -1494,22 +1536,11 @@ func analyze(r request) response {
 		{program.GetProgramDiagnostics(), "r02b-d-type"},
 		{program.GetGlobalDiagnostics(context.Background()), "r02b-d-type"},
 	}
-	check, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
+	configured := check
+	check, release = program.GetTypeCheckerForFileExclusive(context.Background(), file)
 	defer release()
-	contextFunctions := operatorFunctions(file, check)
-	var conversions *conversionFacts
-	if r.Declarations.Version == conversionVersion {
-		var failure *response
-		conversions, failure = admittedConversions(r, program, check)
-		if failure != nil {
-			return *failure
-		}
-		if failure = verifyConversionNominals(file, check, conversions); failure != nil {
-			return *failure
-		}
-		for symbol, info := range conversions.Functions {
-			contextFunctions[symbol] = info
-		}
+	if check != configured {
+		return fail("r02b-d-input", "input", r.RootFile, span{})
 	}
 	if len(groups[0].items) == 0 {
 		if node := prohibitedNode(file); node != nil {
@@ -1675,15 +1706,16 @@ func analyze(r request) response {
 			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
 		}
 		parameters := make([]string, 0, len(decl.Parameters.Nodes))
+		presence := make([]*parameterPresence, 0, len(decl.Parameters.Nodes))
+		hasPresence := false
 		for _, p := range decl.Parameters.Nodes {
-			if p.Name() == nil || p.AsParameterDeclaration().Type == nil || p.AsParameterDeclaration().Initializer != nil {
-				return failAt("r02b-d-unsupported", "unsupported", file, p)
-			}
-			t := scalar(check.GetTypeAtLocation(p.Name()))
-			if t == "" {
+			t, shape, valid := checkedParameter(file, check, p)
+			if !valid {
 				return failAt("r02b-d-unsupported", "unsupported", file, p)
 			}
 			parameters = append(parameters, t)
+			presence = append(presence, shape)
+			hasPresence = hasPresence || shape != nil
 		}
 		resolved := check.GetSymbolAtLocation(node.Name())
 		if resolved == nil {
@@ -1692,7 +1724,10 @@ func analyze(r request) response {
 		s := symbol{ID: fmt.Sprintf("s%d", len(result.Symbols)+1), Name: node.Name().Text(),
 			Kind: "function", Type: returnType, Range: offset(file, node.Name())}
 		result.Symbols = append(result.Symbols, s)
-		functions[resolved] = functionInfo{ID: s.ID, Signature: signature{Parameters: parameters, ReturnType: returnType}}
+		if !hasPresence {
+			presence = nil
+		}
+		functions[resolved] = functionInfo{ID: s.ID, Declaration: node, Signature: signature{Parameters: parameters, ReturnType: returnType, Presence: presence}}
 	}
 	for _, node := range file.Statements.Nodes {
 		if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Body() == nil {
@@ -1714,18 +1749,31 @@ func analyze(r request) response {
 			project.integerTarget = r.Target
 		}
 		for _, p := range decl.Parameters.Nodes {
-			if p.Name() == nil || p.Name().Kind != ast.KindIdentifier || p.AsParameterDeclaration().Type == nil || p.AsParameterDeclaration().Initializer != nil {
-				return failAt("r02b-d-unsupported", "unsupported", file, p)
-			}
-			t := scalar(check.GetTypeAtLocation(p.Name()))
-			if t == "" {
+			t, shape, valid := checkedParameter(file, check, p)
+			if !valid {
 				return failAt("r02b-d-unsupported", "unsupported", file, p)
 			}
 			s, ok := project.addSymbol(p.Name(), "parameter", t, true)
 			if !ok {
 				return failAt("r02b-d-type", "error", file, p.Name())
 			}
+			s.Presence = shape
+			result.Symbols[len(result.Symbols)-1] = s
+			project.bindings[check.GetSymbolAtLocation(p.Name())] = s
 			fn.Parameters = append(fn.Parameters, s)
+		}
+		if info.Signature.Presence != nil {
+			fn.ParameterInitializers = make([]*expression, len(decl.Parameters.Nodes))
+			for index, p := range decl.Parameters.Nodes {
+				if p.AsParameterDeclaration().Initializer == nil {
+					continue
+				}
+				value, failure := project.expr(p.AsParameterDeclaration().Initializer, fn.Parameters[index].Type, checkedInitializerPresence(check, p))
+				if failure.Status != "" {
+					return failure
+				}
+				fn.ParameterInitializers[index] = value
+			}
 		}
 		projected, failure := project.statements(body, fn.ReturnType)
 		if failure.Status != "" {

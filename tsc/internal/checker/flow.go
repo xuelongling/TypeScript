@@ -274,6 +274,12 @@ func (c *Checker) getTypeAtFlowAssignment(f *FlowState, flow *ast.FlowNode) Flow
 }
 
 func (c *Checker) getInitialOrAssignedType(f *FlowState, flow *ast.FlowNode) *Type {
+	// The TSFG producer registers only complete expressions already checked
+	// in their admitted nominal scalar context, using this checker's actual
+	// AST node and type identities. Upstream clients leave this table nil.
+	if contextual := c.tsfgScalarAssignments[flow.Node]; contextual != nil {
+		return contextual
+	}
 	if ast.IsVariableDeclaration(flow.Node) || ast.IsBindingElement(flow.Node) {
 		return c.getNarrowableTypeForReference(c.getInitialType(flow.Node), f.reference, CheckModeNormal)
 	}

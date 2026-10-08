@@ -6,6 +6,18 @@ import (
 	"github.com/microsoft/typescript-go/internal/diagnostics"
 )
 
+// SetTSFGScalarAssignments installs the producer's finite scalar-context facts
+// before semantic checking. Keys and values belong to this checker; source
+// spelling, hashes and labels do not identify a flow node or a nominal type.
+func (c *Checker) SetTSFGScalarAssignments(assignments map[*ast.Node]*Type) {
+	c.tsfgScalarAssignments = make(map[*ast.Node]*Type, len(assignments))
+	for node, value := range assignments {
+		if node != nil && value != nil {
+			c.tsfgScalarAssignments[node] = value
+		}
+	}
+}
+
 func (c *Checker) GetStringType() *Type {
 	return c.stringType
 }

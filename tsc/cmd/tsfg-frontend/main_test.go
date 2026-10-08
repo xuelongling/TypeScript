@@ -184,7 +184,6 @@ func TestAnalyzeI32LocalInitializerPreservesUnevaluatedTraps(t *testing.T) {
 
 func TestAnalyzeI32LocalInitializerKeepsPendingFormsRejected(t *testing.T) {
 	for _, body := range []string{
-		"let v: i32; v = 42; return v;",
 		"let v: i32 = 1; const copy: i32 = v++; return copy;",
 		"let v: i32 = 1; const copy: i32 = (v = 2); return copy;",
 		"let v: i32 = 1; const copy: i32 = (v += 2); return copy;",
@@ -303,7 +302,6 @@ func TestAnalyzeCallArithmeticContextsRejectInvalidSources(t *testing.T) {
 		{"shadowed function symbol", "export function entry(n: i32): i32 { const identity: i32 = n; return identity(n - 1); } function identity(n: i32): i32 { return n; }"},
 		{"foreign callable symbol", "declare function foreign(n: i32): i32; export function entry(n: i32): i32 { return foreign(n - 1); }"},
 		{"optional call", "export function entry(n: i32): i32 { const v: i32 = identity?.(n - 1); return v; } function identity(n: i32): i32 { return n; }"},
-		{"optional parameter", "export function entry(n: i32): i32 { return identity(n - 1); } function identity(n?: i32): i32 { return 1; }"},
 		{"unrelated const write", "export function entry(n: i32): i32 { const v: i32 = identity(n - 1); n = v; v = n; return v; } function identity(n: i32): i32 { return n; }"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
