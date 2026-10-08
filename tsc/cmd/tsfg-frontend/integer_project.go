@@ -304,8 +304,8 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 				if shape == nil || state == "undefined" && !shape.Undefined || state == "null" && !shape.Null {
 					return failureAt("r01-d-scalar-type", "error", arg)
 				}
-				args = append(args, expression{Kind: "absence", Type: fn.Signature.Parameters[index], Absence: state, Range: offset(file, arg)})
-				continue
+				// Project the original AST below so each parenthesized layer and
+				// the checked builtin leaf retain their own source anchors.
 			}
 			var shape *parameterPresence
 			if len(fn.Signature.Presence) > index {

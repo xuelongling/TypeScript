@@ -4,6 +4,48 @@ package main
 
 import "testing"
 
+func TestPresenceParenthesizedCallArguments(t *testing.T) {
+	for _, tc := range []struct{ parameter, body, argument, state string }{
+		{"value: i32 = 7", "return value;", "(undefined)", "undefined"},
+		{"value?: i32", "if (value === undefined) { return 7; } return value;", "((undefined))", "undefined"},
+		{"value: i32 | null", "if (value === null) { return 8; } return value;", "(null)", "null"},
+		{"value: i32 | null = 7", "if (value === null) { return 8; } return value;", "((null))", "null"},
+	} {
+		source := "function take(" + tc.parameter + "): i32 { " + tc.body + " } export function entry(): i32 { return take(" + tc.argument + "); }"
+		result := analyze(integerRequest(source))
+		if result.Status != "ok" {
+			t.Fatalf("official grouped call rejected: %s: %+v", source, result.Diagnostics)
+		}
+		arg := (*result.Functions[1].Body[0].Expression.Arguments)[0]
+		if arg.Kind != "group" || sourceText(t, source, arg.Range) != tc.argument {
+			t.Fatalf("grouped call lost whole AST anchor: %+v", arg)
+		}
+		leaf := &arg
+		for leaf.Kind == "group" {
+			leaf = leaf.Operand
+		}
+		if leaf.Kind != "absence" || leaf.Absence != tc.state || sourceText(t, source, leaf.Range) != tc.state {
+			t.Fatalf("grouped call lost checked builtin leaf anchor: %+v", leaf)
+		}
+	}
+}
+
+func TestPresenceParenthesizedCallArgumentsRetainOfficialErrors(t *testing.T) {
+	for _, source := range []string{
+		"function take(value: i32): i32 { return value; } export function entry(): i32 { return take((undefined)); }",
+		"function take(value: i32 = 7): i32 { return value; } export function entry(): i32 { return take((null)); }",
+	} {
+		result := analyze(integerRequest(source))
+		found := false
+		for _, diagnostic := range result.Diagnostics {
+			found = found || diagnostic.UpstreamCode == 2345
+		}
+		if result.Status != "error" || !found {
+			t.Fatalf("grouped call erased official argument error: %s: %+v", source, result.Diagnostics)
+		}
+	}
+}
+
 func TestPresenceParenthesizedGuards(t *testing.T) {
 	for _, tc := range []struct{ parameter, guard string }{
 		{"value?: i32", "(value) === undefined"},
