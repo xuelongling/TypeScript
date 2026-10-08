@@ -241,11 +241,12 @@ func missingState(check *checker.Checker, node *ast.Node) string {
 		return ""
 	}
 	t := check.GetTypeAtLocation(node)
-	if node.Kind == ast.KindNullKeyword && t.Flags()&checker.TypeFlagsNull != 0 {
+	leaf := ast.SkipParentheses(node)
+	if leaf.Kind == ast.KindNullKeyword && t.Flags()&checker.TypeFlagsNull != 0 {
 		return "null"
 	}
-	if node.Kind == ast.KindIdentifier && node.Text() == "undefined" && t.Flags()&checker.TypeFlagsUndefined != 0 {
-		if resolved := check.GetSymbolAtLocation(node); resolved == nil || len(resolved.Declarations) != 0 {
+	if leaf.Kind == ast.KindIdentifier && leaf.Text() == "undefined" && t.Flags()&checker.TypeFlagsUndefined != 0 {
+		if resolved := check.GetSymbolAtLocation(leaf); resolved == nil || len(resolved.Declarations) != 0 {
 			return ""
 		}
 		return "undefined"

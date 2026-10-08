@@ -4,6 +4,45 @@ package main
 
 import "testing"
 
+func TestPresenceParenthesizedGuards(t *testing.T) {
+	for _, tc := range []struct{ parameter, guard string }{
+		{"value?: i32", "(value) === undefined"},
+		{"value?: i32", "value === (undefined)"},
+		{"value?: i32", "((undefined)) === ((value))"},
+		{"value: i32 | null", "(value) === null"},
+		{"value: i32 | null", "value === (null)"},
+		{"value: i32 | null", "((null)) === ((value))"},
+	} {
+		source := "export function entry(" + tc.parameter + "): i32 { if (" + tc.guard + ") { return 8; } return value; }"
+		result := analyze(integerRequest(source))
+		if result.Status != "ok" || result.Functions[0].Body[0].Condition.Kind != "presenceTest" {
+			t.Fatalf("official grouped guard rejected: %s: %+v", source, result.Diagnostics)
+		}
+	}
+	source := "export function entry(value?: i32): i32 { if (((value)) === ((undefined))) { return 8; } return value; }"
+	result := analyze(integerRequest(source))
+	guard := result.Functions[0].Body[0].Condition
+	if guard.Left.Kind != "group" || guard.Right.Kind != "group" || sourceText(t, source, guard.Left.Range) != "((value))" || sourceText(t, source, guard.Right.Range) != "((undefined))" {
+		t.Fatalf("grouped guard lost whole AST anchors: %+v", guard)
+	}
+}
+
+func TestPresenceParenthesizedGuardsRetainOfficialErrors(t *testing.T) {
+	for _, source := range []string{
+		"export function entry(value?: i32): i32 { if ((value) === (undefined)) { return value; } return 8; }",
+		"export function entry(value?: i32): i32 { const undefined: i32 = 7; if (value === (undefined)) { return 8; } return value; }",
+	} {
+		result := analyze(integerRequest(source))
+		found := false
+		for _, diagnostic := range result.Diagnostics {
+			found = found || diagnostic.UpstreamCode == 2322
+		}
+		if result.Status != "error" || !found {
+			t.Fatalf("grouped guard erased official unsafe read: %s: %+v", source, result.Diagnostics)
+		}
+	}
+}
+
 func TestPresenceBooleanLogicalAssignmentFacts(t *testing.T) {
 	for _, source := range []string{
 		"export function entry(value?: bool): bool { if (value === undefined) { value = false; } value ||= true; return value; }",

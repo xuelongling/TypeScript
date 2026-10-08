@@ -202,7 +202,7 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		valueRange = expressionOffset(file, node)
 	}
 	if len(operatorContext) > 1 && operatorContext[1] && expected != "" {
-		if state := missingState(check, node); state != "" {
+		if state := missingState(check, node); state != "" && node.Kind != ast.KindParenthesizedExpression {
 			return &expression{Kind: "absence", Type: expected, Absence: state, Range: valueRange}, nil
 		}
 	}
@@ -388,8 +388,9 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 				reference, sentinel = binary.Right, binary.Left
 				reversed = true
 			}
-			if state := missingState(check, sentinel); state != "" && reference.Kind == ast.KindIdentifier {
-				binding, ok := refs[check.GetSymbolAtLocation(reference)]
+			leaf := ast.SkipParentheses(reference)
+			if state := missingState(check, sentinel); state != "" && leaf.Kind == ast.KindIdentifier {
+				binding, ok := refs[check.GetSymbolAtLocation(leaf)]
 				if !ok || binding.Presence == nil || !binding.Presence.Undefined && !binding.Presence.Null {
 					return failureAt("r02b-d-unsupported", "unsupported", node)
 				}
@@ -397,7 +398,10 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 				if failure != nil {
 					return nil, failure
 				}
-				absent := &expression{Kind: "absence", Type: binding.Type, Absence: state, Range: expressionOffset(file, sentinel)}
+				absent, failure := projectIntegerExpression(file, check, sentinel, binding.Type, refs, functions, target, true, true)
+				if failure != nil {
+					return nil, failure
+				}
 				left, right := owned, absent
 				if reversed {
 					left, right = absent, owned
