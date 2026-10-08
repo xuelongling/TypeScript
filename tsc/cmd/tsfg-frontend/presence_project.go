@@ -213,8 +213,9 @@ func scalarAssignmentContexts(file *ast.SourceFile, check *checker.Checker, func
 			left, right, flow = node.Name(), node.AsVariableDeclaration().Initializer, node
 		}
 		if node.Kind == ast.KindBinaryExpression && (node.AsBinaryExpression().OperatorToken.Kind == ast.KindEqualsToken || node.AsBinaryExpression().OperatorToken.Kind == ast.KindQuestionQuestionEqualsToken) {
-			left, right = node.AsBinaryExpression().Left, node.AsBinaryExpression().Right
-			flow = left
+			left, right = ast.SkipParentheses(node.AsBinaryExpression().Left), node.AsBinaryExpression().Right
+			// Binder retains the whole parenthesized target as Flow.Node.
+			flow = node.AsBinaryExpression().Left
 		}
 		if left != nil && left.Kind == ast.KindIdentifier && right != nil && !containsCarrier(right) {
 			resolved := check.GetSymbolAtLocation(left)

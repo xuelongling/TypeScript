@@ -1077,7 +1077,7 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 			}
 		case ast.KindExpressionStatement:
 			expr := node.AsExpressionStatement().Expression
-			if expr.Kind != ast.KindBinaryExpression || expr.AsBinaryExpression().OperatorToken.Kind != ast.KindEqualsToken {
+			if expr.Kind != ast.KindBinaryExpression || expr.AsBinaryExpression().OperatorToken.Kind != ast.KindEqualsToken || p.integerTarget != nil && expr.AsBinaryExpression().Left.Kind == ast.KindParenthesizedExpression {
 				value, failure := p.expr(expr, "")
 				if failure.Status != "" {
 					return nil, failure

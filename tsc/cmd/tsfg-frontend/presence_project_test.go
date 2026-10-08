@@ -4,6 +4,44 @@ package main
 
 import "testing"
 
+func TestPresenceParenthesizedLocalTargets(t *testing.T) {
+	for _, source := range []string{
+		"export function entry(): i32 { let value: i32; ((value)) ??= 7; return (value)++; }",
+		"export function entry(): i32 { let value: i32 | undefined; ((value)) = 7; return ++(value); }",
+		"export function entry(): i32 { let value: i32 = 3; (value) += ((value) = 4); return value; }",
+	} {
+		result := analyze(integerRequest(source))
+		if result.Status != "ok" {
+			t.Fatalf("official parenthesized local target rejected: %s: %+v", source, result.Diagnostics)
+		}
+	}
+	source := "export function entry(): i32 { let value: i32; ((value)) ??= 7; return (value)++; }"
+	result := analyze(integerRequest(source))
+	write := result.Functions[0].Body[1].Expression
+	if write.Kind != "write" || write.Left.Kind != "group" || write.Left.Operand.Kind != "group" || write.Left.Operand.Operand.Kind != "reference" || sourceText(t, source, write.Left.Range) != "((value))" {
+		t.Fatalf("parenthesized target lost its whole and leaf AST facts: %+v", write)
+	}
+}
+
+func TestPresenceParenthesizedTargetsRetainOfficialReadErrors(t *testing.T) {
+	for _, tc := range []struct {
+		source string
+		code   int32
+	}{
+		{"export function entry(): i32 { let value: i32; return (value)++; }", 2454},
+		{"export function entry(): i32 { const value: i32 = 1; (value)++; return value; }", 2588},
+	} {
+		result := analyze(integerRequest(tc.source))
+		found := false
+		for _, diagnostic := range result.Diagnostics {
+			found = found || diagnostic.UpstreamCode == tc.code
+		}
+		if result.Status != "error" || !found {
+			t.Fatalf("lost official read error %d: %+v", tc.code, result.Diagnostics)
+		}
+	}
+}
+
 func TestPresenceOfficialParameterAndFlowFacts(t *testing.T) {
 	source := "function choose(value: i32 | null = 7): i32 { if (value === null) { return 3; } return value; } export function entry(): i32 { return choose(undefined) + choose(null) + choose(0) + choose(); }"
 	result := analyze(integerRequest(source))

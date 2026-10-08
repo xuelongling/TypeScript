@@ -179,10 +179,11 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		updateOperand, updateOperator = node.AsPostfixUnaryExpression().Operand, node.AsPostfixUnaryExpression().Operator
 	}
 	if updateOperator == ast.KindPlusPlusToken || updateOperator == ast.KindMinusMinusToken {
-		if updateOperand.Kind != ast.KindIdentifier {
+		leaf := ast.SkipParentheses(updateOperand)
+		if leaf.Kind != ast.KindIdentifier {
 			return failureAt("r02b-d-unsupported", "unsupported", updateOperand)
 		}
-		binding, ok := refs[check.GetSymbolAtLocation(updateOperand)]
+		binding, ok := refs[check.GetSymbolAtLocation(leaf)]
 		if !ok || !binding.Writable || !integerKind(binding.Type) && !(target.floats && floatKind(binding.Type)) {
 			return failureAt("r01-d-scalar-type", "error", updateOperand)
 		}
@@ -405,10 +406,11 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			}
 		}
 		if operator := ordinaryAssignmentOperator(binary.OperatorToken.Kind); operator != "" {
-			if binary.Left.Kind != ast.KindIdentifier {
+			leaf := ast.SkipParentheses(binary.Left)
+			if leaf.Kind != ast.KindIdentifier {
 				return failureAt("r02b-d-unsupported", "unsupported", binary.Left)
 			}
-			binding, ok := refs[check.GetSymbolAtLocation(binary.Left)]
+			binding, ok := refs[check.GetSymbolAtLocation(leaf)]
 			if !ok || !binding.Writable {
 				return failureAt("r01-d-scalar-type", "error", binary.Left)
 			}
