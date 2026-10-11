@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 	"unicode/utf16"
@@ -20,6 +21,7 @@ func floatRequest(source string) request {
 }
 
 func TestFloatNestedDefaultContexts(t *testing.T) {
+	t.Parallel()
 	for index, row := range []struct{ source, kind string }{
 		{"function entry():f64{const a=0.1+0.2;return a;}", "f64"},
 		{"function entry():f64{const a=(0.1)+(0.2);return a;}", "f64"},
@@ -34,7 +36,8 @@ func TestFloatNestedDefaultContexts(t *testing.T) {
 		{"function entry(a:f32):f32{const b=-((1.0)+(a));return b;}", "f32"},
 		{"function entry():f32{const a:f32=((1.0)+(2.0));return a;}", "f32"},
 	} {
-		t.Run(fmt.Sprint(index), func(t *testing.T) {
+		t.Run(strconv.Itoa(index), func(t *testing.T) {
+			t.Parallel()
 			result := analyze(floatRequest(row.source))
 			if result.Status != "ok" {
 				t.Fatalf("nested source rejected: %+v", result)
@@ -48,6 +51,7 @@ func TestFloatNestedDefaultContexts(t *testing.T) {
 }
 
 func TestFloatNestedContextPrecedenceAndFirstFailure(t *testing.T) {
+	t.Parallel()
 	for index, row := range []struct {
 		source, code, anchor string
 		offset, length       int
@@ -60,7 +64,8 @@ func TestFloatNestedContextPrecedenceAndFirstFailure(t *testing.T) {
 		{"function entry(a:f32,b:f64):f32{return((b)+(1e1000));}", "r01-d-scalar-type", "return", 0, 6},
 		{"/*😀*/function entry():i32{const a:i32=(0.1)+(1e1000);return(a);}", "r01-d-scalar-type", "const a", 6, 1},
 	} {
-		t.Run(fmt.Sprint(index), func(t *testing.T) {
+		t.Run(strconv.Itoa(index), func(t *testing.T) {
+			t.Parallel()
 			result := analyze(floatRequest(row.source))
 			if result.Status != "error" || len(result.Diagnostics) == 0 {
 				t.Fatalf("typed conversion or invalid source accepted: %+v", result)
@@ -86,6 +91,7 @@ func TestFloatNestedContextPrecedenceAndFirstFailure(t *testing.T) {
 }
 
 func TestFloatDirectRounding(t *testing.T) {
+	t.Parallel()
 	for _, row := range []struct{ kind, token, bits string }{
 		{"f32", "1.000000059604644775390625", "3f800000"},
 		{"f32", "1.000000059604644775390625000000000001", "3f800001"},
@@ -97,6 +103,7 @@ func TestFloatDirectRounding(t *testing.T) {
 		{"f64", "5e-324", "0000000000000001"},
 	} {
 		t.Run(row.kind+row.token, func(t *testing.T) {
+			t.Parallel()
 			source := fmt.Sprintf("export function entry(): %s { return %s; }", row.kind, row.token)
 			result := analyze(floatRequest(source))
 			if result.Status != "ok" {
@@ -111,6 +118,7 @@ func TestFloatDirectRounding(t *testing.T) {
 }
 
 func TestFloatNominalContexts(t *testing.T) {
+	t.Parallel()
 	for _, kind := range []string{"f32", "f64"} {
 		for _, op := range []string{"+", "-", "*", "/", "%", "<", "<=", ">", ">=", "===", "!=="} {
 			ret := kind
@@ -141,6 +149,7 @@ func TestFloatNominalContexts(t *testing.T) {
 }
 
 func TestFloatOverflowAnchors(t *testing.T) {
+	t.Parallel()
 	for _, source := range []string{
 		"function entry(): f32 { return (1e1000); }",
 		"function entry(): f32 { const value: f32 = 1e1000; return value; }",

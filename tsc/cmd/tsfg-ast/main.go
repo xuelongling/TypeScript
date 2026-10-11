@@ -6,17 +6,20 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"sort"
+
+	"github.com/microsoft/typescript-go/internal/json"
+	"github.com/microsoft/typescript-go/internal/tspath"
+
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/compiler"
 	"github.com/microsoft/typescript-go/internal/core"
 	"github.com/microsoft/typescript-go/internal/locale"
 	"github.com/microsoft/typescript-go/internal/tsoptions"
-	"github.com/microsoft/typescript-go/internal/vfs/iovfs"
-	"os"
-	"path/filepath"
-	"sort"
+	"github.com/microsoft/typescript-go/internal/vfs"
 )
 
 type statement struct {
@@ -44,34 +47,18 @@ func observeDiagnostics(diagnostics []*ast.Diagnostic) []diagnosticObservation {
 	for _, d := range diagnostics {
 		name := ""
 		if d.File() != nil {
-			name = filepath.Base(d.File().FileName())
+			name = tspath.GetBaseFileName(d.File().FileName())
 		}
 		result = append(result, diagnosticObservation{d.Code(), d.Category().Name(), d.Localize(locale.Default), name, d.Pos(), d.End()})
 	}
 	return result
 }
 
-func main() {
-	if len(os.Args) != 2 || filepath.Ext(os.Args[1]) != ".ts" {
-		fmt.Fprintln(os.Stderr, "expected one TypeScript source file")
-		os.Exit(2)
-	}
-	cwd, err := os.Getwd()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(2)
-	}
-	relative, err := filepath.Rel(cwd, os.Args[1])
-	if err != nil {
-		panic(err)
-	}
-	name := "/" + filepath.ToSlash(relative)
+func runProbe(fs vfs.FS, name string, output io.Writer) error {
 	libs := []string{"/internal/bundled/libs/lib.es5.d.ts", "/internal/bundled/libs/lib.decorators.d.ts", "/internal/bundled/libs/lib.decorators.legacy.d.ts"}
-	fs := iovfs.From(os.DirFS(cwd), true)
 	for _, input := range append([]string{name}, libs...) {
 		if !fs.FileExists(input) {
-			fmt.Fprintln(os.Stderr, "missing required input:", input)
-			os.Exit(2)
+			return fmt.Errorf("missing required input: %s", input)
 		}
 	}
 	program := compiler.NewProgram(compiler.ProgramOptions{
@@ -90,21 +77,18 @@ func main() {
 	for _, source := range program.GetSourceFiles() {
 		input := source.FileName()
 		if !approved[input] {
-			fmt.Fprintln(os.Stderr, "unapproved Program input:", input)
-			os.Exit(2)
+			return fmt.Errorf("unapproved Program input: %s", input)
 		}
 		delete(approved, input)
 		sourceFiles = append(sourceFiles, input)
 	}
 	if len(approved) != 0 {
-		fmt.Fprintln(os.Stderr, "Program omitted required inputs")
-		os.Exit(2)
+		return errors.New("Program omitted required inputs")
 	}
 	sort.Strings(sourceFiles)
 	file := program.GetSourceFile(name)
 	if file == nil {
-		fmt.Fprintln(os.Stderr, "source was not parsed")
-		os.Exit(2)
+		return errors.New("source was not parsed")
 	}
 	statements := []statement{}
 	for _, node := range file.Statements.Nodes {
@@ -143,8 +127,5 @@ func main() {
 		GlobalDiagnostics    []diagnosticObservation `json:"globalDiagnostics"`
 		SourceFiles          []string                `json:"sourceFiles"`
 	}{file.AsNode().Kind.String(), statements, identifiers, len(file.Diagnostics()), types, syntax, semantic, programDiagnostics, global, sourceFiles}
-	if err := json.NewEncoder(os.Stdout).Encode(result); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(2)
-	}
+	return json.NewLegacyEncoder(output).Encode(result)
 }

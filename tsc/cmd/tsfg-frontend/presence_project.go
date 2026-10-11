@@ -91,8 +91,10 @@ func checkedParameter(file *ast.SourceFile, check *checker.Checker, node *ast.No
 		return "", nil, false
 	}
 	optional, hasDefault := p.QuestionToken != nil, p.Initializer != nil
-	return payload, &parameterPresence{Undefined: undefined || optional || hasDefault, Null: null, Optional: optional || hasDefault,
-		Default: hasDefault, Range: offset(file, node), Annotation: expressionOffset(file, p.Type)}, true
+	return payload, &parameterPresence{
+		Undefined: undefined || optional || hasDefault, Null: null, Optional: optional || hasDefault,
+		Default: hasDefault, Range: offset(file, node), Annotation: expressionOffset(file, p.Type),
+	}, true
 }
 
 // The incoming parameter admits undefined for default selection, but the

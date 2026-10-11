@@ -11,11 +11,13 @@ import (
 )
 
 func TestIntegerFamilyPreservesOfficialF64SignatureFacts(t *testing.T) {
+	t.Parallel()
 	for _, source := range []string{
 		"export function answer(value: f64): i32 { return 42; }",
 		"export function answer(): i32 { return 42; } export function second(value: f64): f64 { return value; }",
 	} {
 		t.Run(source, func(t *testing.T) {
+			t.Parallel()
 			baseline := analyze(scalarRequest(source))
 			if baseline.Status != "ok" || len(baseline.Diagnostics) != 0 {
 				t.Fatalf("existing officially checked scalar facts rejected: %+v", baseline)
@@ -45,6 +47,7 @@ func TestIntegerFamilyPreservesOfficialF64SignatureFacts(t *testing.T) {
 }
 
 func TestIntegerFamilyOwnedLiteralNodeRanges(t *testing.T) {
+	t.Parallel()
 	for _, source := range []string{
 		"export function answer(): i32 { return 42; }",
 		"export function answer(): u64 { return /*😀*/ 0xffff_ffff_ffff_ffff; }",
@@ -63,6 +66,7 @@ func TestIntegerFamilyOwnedLiteralNodeRanges(t *testing.T) {
 }
 
 func TestIntegerFamilyPreservesLegacyExpressionRangeContexts(t *testing.T) {
+	t.Parallel()
 	for _, source := range []string{
 		"export function entry(): i32 { return 42; }",
 		"export function entry(a: i32): i32 { return a; }",
@@ -76,6 +80,7 @@ func TestIntegerFamilyPreservesLegacyExpressionRangeContexts(t *testing.T) {
 		"export function entry(a: i32, b: i32): i32 { return -((a / b) + 1); }",
 	} {
 		t.Run(source, func(t *testing.T) {
+			t.Parallel()
 			prior, current := analyze(scalarRequest(source)), analyze(integerRequest(source))
 			if prior.Status != "ok" || current.Status != "ok" || !reflect.DeepEqual(prior.Functions, current.Functions) {
 				t.Fatalf("owned expression range context changed: prior=%+v current=%+v", prior, current)
@@ -85,6 +90,7 @@ func TestIntegerFamilyPreservesLegacyExpressionRangeContexts(t *testing.T) {
 }
 
 func TestIntegerFamilyF64FactsPreserveOfficialNameError(t *testing.T) {
+	t.Parallel()
 	source := "export function answer(): i32 { return 42; } export function second(value: f64): f64 { return missing; }"
 	result := analyze(integerRequest(source))
 	if result.Status != "error" || len(result.Diagnostics) != 1 || result.Diagnostics[0].Code != "r01-d-unresolved-name" || result.Diagnostics[0].UpstreamCode != 2304 || sourceText(t, source, result.Diagnostics[0].Range) != "missing" {
@@ -93,6 +99,7 @@ func TestIntegerFamilyF64FactsPreserveOfficialNameError(t *testing.T) {
 }
 
 func TestIntegerFamilyF64UnaryPreservesCapabilityDiagnostic(t *testing.T) {
+	t.Parallel()
 	for _, source := range []string{
 		"export function entry(a: f64): f64 { return +a; }",
 		"export function entry(a: f64): f64 { return -a; }",
@@ -102,6 +109,7 @@ func TestIntegerFamilyF64UnaryPreservesCapabilityDiagnostic(t *testing.T) {
 		"export function entry(): i32 { return 0; } function unused(a: f64): f64 { return -a; }",
 	} {
 		t.Run(source, func(t *testing.T) {
+			t.Parallel()
 			prior, current := analyze(scalarRequest(source)), analyze(integerRequest(source))
 			if prior.Status != "error" || len(prior.Diagnostics) != 1 {
 				t.Fatalf("official scalar capability baseline changed: %+v", prior)
@@ -121,6 +129,7 @@ func TestIntegerFamilyF64UnaryPreservesCapabilityDiagnostic(t *testing.T) {
 }
 
 func TestIntegerFamilyF64UnaryKeepsStrictSourceErrors(t *testing.T) {
+	t.Parallel()
 	for _, item := range []struct{ source, code string }{
 		{"export function entry(a: bool): i32 { return +a; }", "r01-d-scalar-type"},
 		{"export function entry(a: bool): i32 { return -a; }", "r01-d-scalar-type"},
@@ -128,6 +137,7 @@ func TestIntegerFamilyF64UnaryKeepsStrictSourceErrors(t *testing.T) {
 		{"export function entry(a: u64): usize { return -a; }", "r01-d-scalar-type"},
 	} {
 		t.Run(item.source, func(t *testing.T) {
+			t.Parallel()
 			result := analyze(integerRequest(item.source))
 			if result.Status != "error" || len(result.Diagnostics) != 1 || result.Diagnostics[0].Code != item.code || result.Diagnostics[0].Category == "unsupported" {
 				t.Fatalf("unary capability admission masked strict source error: %+v", result)

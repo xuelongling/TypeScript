@@ -6,6 +6,7 @@ package main
 import "testing"
 
 func TestDefaultIntegerContextRange(t *testing.T) {
+	t.Parallel()
 	for name, source := range map[string]string{
 		"bare":       "export function entry(): i32 { let a = 2147483648; return a; }",
 		"group":      "export function entry(): i32 { let a = (2147483648); return a; }",
@@ -17,6 +18,7 @@ func TestDefaultIntegerContextRange(t *testing.T) {
 		"unused":     "export function entry(): i32 { let a = 2147483648; return 0; }",
 	} {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			result := analyze(integerRequest(source))
 			if result.Status != "error" || len(result.Diagnostics) != 1 {
 				t.Fatalf("default integer range must reject: %+v", result)
@@ -30,8 +32,10 @@ func TestDefaultIntegerContextRange(t *testing.T) {
 }
 
 func TestDefaultIntegerContextFits(t *testing.T) {
+	t.Parallel()
 	for _, expression := range []string{"2147483647", "-2147483648", "(2147483647)", "2147483647 + 0"} {
 		t.Run(expression, func(t *testing.T) {
+			t.Parallel()
 			result := analyze(integerRequest("export function entry(): i32 { let a = " + expression + "; let b = a; return b; }"))
 			if result.Status != "ok" || len(result.Diagnostics) != 0 || len(result.Symbols) != 3 || result.Symbols[1].Type != "i32" || result.Symbols[2].Type != "i32" {
 				t.Fatalf("valid default integer lost nominal i32 context: %+v", result)
@@ -41,6 +45,7 @@ func TestDefaultIntegerContextFits(t *testing.T) {
 }
 
 func TestDefaultIntegerContextKeepsOtherErrors(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		name, source, code string
 		upstream           int32
@@ -52,6 +57,7 @@ func TestDefaultIntegerContextKeepsOtherErrors(t *testing.T) {
 		{"default-no-conversion", "export function entry(): u64 { let a = 42; return a; }", "r01-d-scalar-type", 2322},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			result := analyze(integerRequest(tc.source))
 			if result.Status != "error" || len(result.Diagnostics) != 1 || result.Diagnostics[0].Code != tc.code || result.Diagnostics[0].UpstreamCode != tc.upstream {
 				t.Fatalf("unrelated official diagnostic changed: %+v", result)

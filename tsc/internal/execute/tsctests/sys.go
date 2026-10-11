@@ -456,6 +456,24 @@ var (
 )
 
 func (o *outputSanitizer) addOutputLine(s string) {
+	// Help lays out its compiler title before we replace the real version with
+	// the stable test version. Compensate only that title's existing padding,
+	// preserving the terminal width and leaving every other output line intact.
+	for _, lang := range []locale.Locale{locale.Default, czech} {
+		version := diagnostics.Version_0.Localize(lang, core.Version())
+		header := diagnostics.X_tsc_Colon_The_TypeScript_Compiler.Localize(lang) + " - " + version
+		if !strings.HasPrefix(s, header) {
+			continue
+		}
+		padding := s[len(header):]
+		icon := strings.TrimLeft(padding, " ")
+		paddingWidth := len(padding) - len(icon)
+		growth := len(diagnostics.Version_0.Localize(lang, harnessutil.FakeTSVersion)) - len(version)
+		if paddingWidth > 0 && (icon == "" || icon == "\x1b[44m     \x1b[39;49m") && paddingWidth >= growth {
+			s = header + strings.Repeat(" ", paddingWidth-growth) + icon
+		}
+	}
+
 	s = strings.ReplaceAll(s, fmt.Sprintf("'%s'", core.Version()), fmt.Sprintf("'%s'", harnessutil.FakeTSVersion))
 	s = strings.ReplaceAll(s, englishVersion, fakeEnglishVersion)
 	s = strings.ReplaceAll(s, czechVersion, fakeCzechVersion)

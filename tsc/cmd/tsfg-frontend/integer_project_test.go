@@ -26,23 +26,28 @@ var integerOracle = []struct {
 
 func integerRequest(source string) request {
 	r := scalarRequest(source)
-	declarations := scalarDeclarations
+	var declarations strings.Builder
+	declarations.WriteString(scalarDeclarations)
 	for _, tc := range integerOracle {
 		if tc.kind != "i32" {
-			declarations += fmt.Sprintf("declare const __tsfg_%s: unique symbol;\ntype %s = number & { readonly [__tsfg_%s]: true };\n", tc.kind, tc.kind, tc.kind)
+			fmt.Fprintf(&declarations, "declare const __tsfg_%s: unique symbol;\ntype %s = number & { readonly [__tsfg_%s]: true };\n", tc.kind, tc.kind, tc.kind)
 		}
 	}
-	r.Files[1] = inputFile{Path: "/src/minimal-integers-v3.d.ts", Content: declarations}
+	r.Files[1] = inputFile{Path: "/src/minimal-integers-v3.d.ts", Content: declarations.String()}
 	r.Declarations.Version = "minimal-integers-v3"
 	r.Declarations.Paths = []string{r.Files[1].Path}
-	r.Target = &integerTarget{Target: "windows-x86_64-msvc", Triple: "x86_64-pc-windows-msvc",
-		LLVMDataLayout: "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128", PointerBits: "64"}
+	r.Target = &integerTarget{
+		Target: "windows-x86_64-msvc", Triple: "x86_64-pc-windows-msvc",
+		LLVMDataLayout: "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128", PointerBits: "64",
+	}
 	return r
 }
 
 func TestIntegerFamilyExactMathematicalOracle(t *testing.T) {
+	t.Parallel()
 	for _, tc := range integerOracle {
 		t.Run(tc.kind, func(t *testing.T) {
+			t.Parallel()
 			for _, value := range []string{tc.minimum, tc.maximum} {
 				source := fmt.Sprintf("export function entry(): %s { return %s; }", tc.kind, value)
 				result := analyze(integerRequest(source))
@@ -69,8 +74,10 @@ func TestIntegerFamilyExactMathematicalOracle(t *testing.T) {
 }
 
 func TestIntegerFamilyContextsAndOperators(t *testing.T) {
+	t.Parallel()
 	for _, tc := range integerOracle {
 		t.Run(tc.kind, func(t *testing.T) {
+			t.Parallel()
 			for _, operator := range []string{"+", "-", "*", "/", "%", "&", "|", "^", "<<", ">>", ">>>"} {
 				countType := tc.kind
 				if operator == "<<" || operator == ">>" || operator == ">>>" {
@@ -105,8 +112,10 @@ func TestIntegerFamilyContextsAndOperators(t *testing.T) {
 }
 
 func TestIntegerFamilyBoundaryContextMatrix(t *testing.T) {
+	t.Parallel()
 	for _, tc := range integerOracle {
 		t.Run(tc.kind, func(t *testing.T) {
+			t.Parallel()
 			for _, value := range []string{tc.minimum, tc.maximum, tc.below, tc.above} {
 				for _, body := range []string{
 					"const v: %s = %s; return v;",
@@ -137,8 +146,10 @@ func TestIntegerFamilyBoundaryContextMatrix(t *testing.T) {
 }
 
 func TestIntegerFamilyNoImplicitConversion(t *testing.T) {
+	t.Parallel()
 	for _, tc := range integerOracle {
 		t.Run(tc.kind, func(t *testing.T) {
+			t.Parallel()
 			other := "i32"
 			if tc.kind == "i32" {
 				other = "u32"
@@ -171,8 +182,10 @@ func TestIntegerFamilyNoImplicitConversion(t *testing.T) {
 }
 
 func TestIntegerFamilyShiftCountsAndMIN(t *testing.T) {
+	t.Parallel()
 	for _, tc := range integerOracle {
 		t.Run(tc.kind, func(t *testing.T) {
+			t.Parallel()
 			for _, count := range []string{"1", "-1", "32", "64"} {
 				result := analyze(integerRequest(fmt.Sprintf("export function entry(a: %s): %s { return a << %s; }", tc.kind, tc.kind, count)))
 				if result.Status != "ok" || result.Functions[0].Body[0].Expression.Right.Type != "i32" {
@@ -194,6 +207,7 @@ func TestIntegerFamilyShiftCountsAndMIN(t *testing.T) {
 }
 
 func TestIntegerFamilyIndependentOfficialDiagnostics(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		body, text, code string
 		upstream         int32
@@ -205,6 +219,7 @@ func TestIntegerFamilyIndependentOfficialDiagnostics(t *testing.T) {
 		{"return identity(a, a);", "a", "r02b-d-type", 2554},
 	} {
 		t.Run(tc.code+tc.text, func(t *testing.T) {
+			t.Parallel()
 			source := "/*😀*/ export function entry(a: u8): u8 { " + tc.body + " } function identity(a: u8): u8 { return a; }"
 			result := analyze(integerRequest(source))
 			found := false
@@ -221,6 +236,7 @@ func TestIntegerFamilyIndependentOfficialDiagnostics(t *testing.T) {
 }
 
 func TestIntegerFamilyTargetAdmissionAndUnsupported(t *testing.T) {
+	t.Parallel()
 	for _, mutation := range []func(*request){
 		func(r *request) { r.Target = nil }, func(r *request) { r.Target.PointerBits = "32" },
 		func(r *request) { r.Target.LLVMDataLayout += "-p:32:32" }, func(r *request) { r.Target.Triple = "i386-pc-windows-msvc" },
@@ -267,6 +283,7 @@ func TestIntegerFamilyTargetAdmissionAndUnsupported(t *testing.T) {
 }
 
 func TestIntegerFamilyTokenPrecisionAndNestedCalls(t *testing.T) {
+	t.Parallel()
 	source := "export function entry(a: u64): u64 { { const v: u64 = identity(identity(a + 0xffff_ffff_ffff_ffff)); return v; } } function identity(a: u64): u64 { return a; }"
 	result := analyze(integerRequest(source))
 	if result.Status != "ok" {

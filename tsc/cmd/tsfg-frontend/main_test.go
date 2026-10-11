@@ -37,6 +37,7 @@ func scalarRequest(source string) request {
 }
 
 func TestAnalyzeI32LocalInitializerOriginalFailures(t *testing.T) {
+	t.Parallel()
 	for _, body := range []string{
 		"const seed: i32 = 20 + 1; const copy: i32 = seed; return seed + copy;",
 		"const a: i32 = 6; const b: i32 = 7; let value: i32 = a * b; value = value + 0; return value;",
@@ -44,6 +45,7 @@ func TestAnalyzeI32LocalInitializerOriginalFailures(t *testing.T) {
 		"let value: i32 = 1 / 0; value = 42; return value;",
 	} {
 		t.Run(body, func(t *testing.T) {
+			t.Parallel()
 			result := analyze(scalarRequest("export function answer(): i32 { " + body + " }"))
 			if result.Status != "ok" {
 				t.Fatalf("checked i32 initializer rejected: %+v", result.Diagnostics)
@@ -65,6 +67,7 @@ func sourceText(t *testing.T, source string, location span) string {
 }
 
 func TestAnalyzeI32LocalInitializerOwnedFacts(t *testing.T) {
+	t.Parallel()
 	source := "/*😀*/ export function answer(seed: i32): i32 { const a: i32 = (seed + 1), b: i32 = -a; let c: i32 = ~b, d: i32 = c * 2; return d; }"
 	result := analyze(scalarRequest(source))
 	if result.Status != "ok" || len(result.Functions) != 1 {
@@ -136,6 +139,7 @@ func TestAnalyzeI32LocalInitializerOwnedFacts(t *testing.T) {
 }
 
 func TestAnalyzeI32LocalInitializerRejectsInvalidSources(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		name, body, code, rule, phase, primary string
 		upstream                               int32
@@ -151,6 +155,7 @@ func TestAnalyzeI32LocalInitializerRejectsInvalidSources(t *testing.T) {
 		{"foreign symbol", "const v: i32 = __tsfg_i32; return v;", "r02b-d-type", "r01-ts-baseline", "types", "v", 2322},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			source := "export function answer(): i32 { " + tc.body + " }"
 			result := analyze(scalarRequest(source))
 			if result.Status != "error" || len(result.Diagnostics) != 1 || len(result.Functions) != 0 {
@@ -165,6 +170,7 @@ func TestAnalyzeI32LocalInitializerRejectsInvalidSources(t *testing.T) {
 }
 
 func TestAnalyzeI32LocalInitializerPreservesUnevaluatedTraps(t *testing.T) {
+	t.Parallel()
 	source := "export function answer(): i32 { const unused: i32 = 1 / 0; let value: i32 = 1 % 0; value = 42; return value; }"
 	result := analyze(scalarRequest(source))
 	if result.Status != "ok" || len(result.Functions) != 1 || len(result.Functions[0].Body) != 4 {
@@ -183,12 +189,14 @@ func TestAnalyzeI32LocalInitializerPreservesUnevaluatedTraps(t *testing.T) {
 }
 
 func TestAnalyzeI32LocalInitializerKeepsPendingFormsRejected(t *testing.T) {
+	t.Parallel()
 	for _, body := range []string{
 		"let v: i32 = 1; const copy: i32 = v++; return copy;",
 		"let v: i32 = 1; const copy: i32 = (v = 2); return copy;",
 		"let v: i32 = 1; const copy: i32 = (v += 2); return copy;",
 	} {
 		t.Run(body, func(t *testing.T) {
+			t.Parallel()
 			result := analyze(scalarRequest("export function answer(): i32 { " + body + " }"))
 			if result.Status != "error" || len(result.Diagnostics) == 0 || len(result.Functions) != 0 {
 				t.Fatalf("pending initializer form admitted: %+v", result)
@@ -198,6 +206,7 @@ func TestAnalyzeI32LocalInitializerKeepsPendingFormsRejected(t *testing.T) {
 }
 
 func TestAnalyzeRecursiveCallArithmeticInitializer(t *testing.T) {
+	t.Parallel()
 	source := "/*😀*/ export function entry(n: i32): i32 { if (n === 0) { return 1; } const next: i32 = n - 1; const result: i32 = n * entry(next); return result; }"
 	result := analyze(scalarRequest(source))
 	if result.Status != "ok" || len(result.Functions) != 1 || len(result.Functions[0].Body) != 4 {
@@ -215,6 +224,7 @@ func TestAnalyzeRecursiveCallArithmeticInitializer(t *testing.T) {
 }
 
 func TestAnalyzeRecursiveCallArithmeticReturnAndArgument(t *testing.T) {
+	t.Parallel()
 	source := "export function factorial(n: i32): i32 { if (n === 0) { return 1; } return n * factorial(n - 1); }"
 	result := analyze(scalarRequest(source))
 	if result.Status != "ok" || len(result.Functions) != 1 || len(result.Functions[0].Body) != 2 {
@@ -236,6 +246,7 @@ func TestAnalyzeRecursiveCallArithmeticReturnAndArgument(t *testing.T) {
 }
 
 func TestAnalyzeRecursiveCallArithmeticReturnWithTypedLocal(t *testing.T) {
+	t.Parallel()
 	source := "export function entry(n: i32): i32 { if (n === 0) { return 1; } const next: i32 = n - 1; return n * entry(next); }"
 	result := analyze(scalarRequest(source))
 	if result.Status != "ok" || len(result.Functions) != 1 || len(result.Functions[0].Body) != 3 {
@@ -249,6 +260,7 @@ func TestAnalyzeRecursiveCallArithmeticReturnWithTypedLocal(t *testing.T) {
 }
 
 func TestAnalyzeCallArithmeticAssignment(t *testing.T) {
+	t.Parallel()
 	source := "export function entry(n: i32): i32 { let value: i32 = 0; value = value + identity(n - 1); return value; } function identity(n: i32): i32 { return n; }"
 	result := analyze(scalarRequest(source))
 	if result.Status != "ok" || len(result.Functions) != 2 || len(result.Functions[0].Body) != 3 {
@@ -261,6 +273,7 @@ func TestAnalyzeCallArithmeticAssignment(t *testing.T) {
 }
 
 func TestAnalyzeCallArithmeticContextsKeepOrderedOwnedFacts(t *testing.T) {
+	t.Parallel()
 	source := "/*😀*/ export function entry(n: i32): i32 { { const result: i32 = first(identity(n - 1), n / 0); return result; } } function first(a: i32, b: i32): i32 { return a; } function identity(n: i32): i32 { return n; }"
 	result := analyze(scalarRequest(source))
 	if result.Status != "ok" || len(result.Functions) != 3 || len(result.Functions[0].Body) != 1 || len(result.Functions[0].Body[0].Body) != 2 {
@@ -277,6 +290,7 @@ func TestAnalyzeCallArithmeticContextsKeepOrderedOwnedFacts(t *testing.T) {
 }
 
 func TestAnalyzeMutualCallArithmeticContexts(t *testing.T) {
+	t.Parallel()
 	source := "export function even(n: i32): i32 { if (n === 0) { return 1; } const result: i32 = 0 + odd(n - 1); return result; } function odd(n: i32): i32 { if (n === 0) { return 0; } return 0 + even(n - 1); }"
 	result := analyze(scalarRequest(source))
 	if result.Status != "ok" || len(result.Functions) != 2 {
@@ -289,6 +303,7 @@ func TestAnalyzeMutualCallArithmeticContexts(t *testing.T) {
 }
 
 func TestAnalyzeCallArithmeticContextsRejectInvalidSources(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		name, source string
 	}{
@@ -305,6 +320,7 @@ func TestAnalyzeCallArithmeticContextsRejectInvalidSources(t *testing.T) {
 		{"unrelated const write", "export function entry(n: i32): i32 { const v: i32 = identity(n - 1); n = v; v = n; return v; } function identity(n: i32): i32 { return n; }"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			result := analyze(scalarRequest(tc.source))
 			if result.Status != "error" || len(result.Diagnostics) == 0 || len(result.Functions) != 0 {
 				t.Fatalf("invalid scalar call context admitted: %+v", result)
@@ -314,6 +330,7 @@ func TestAnalyzeCallArithmeticContextsRejectInvalidSources(t *testing.T) {
 }
 
 func TestAnalyzeCallArithmeticContextsPreserveOfficialDiagnostics(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		name, body, primary string
 		upstream            int32
@@ -324,6 +341,7 @@ func TestAnalyzeCallArithmeticContextsPreserveOfficialDiagnostics(t *testing.T) 
 		{"invalid argument operator", "const v: i32 = identity(n + true); return v;", "n + true", 2365},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			source := "/*😀*/ export function entry(n: i32): i32 { " + tc.body + " } function identity(n: i32): i32 { return n; }"
 			result := analyze(scalarRequest(source))
 			if result.Status != "error" || len(result.Functions) != 0 {

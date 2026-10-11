@@ -24,6 +24,7 @@ func conversionRequest(t *testing.T, source string) request {
 }
 
 func TestAdmittedConversionHasOwnedOriginAndOneOperand(t *testing.T) {
+	t.Parallel()
 	source := "export function entry(value: f64): i8 { return checked_i8_from_f64(value); }"
 	r := conversionRequest(t, source)
 	got := analyze(r)
@@ -41,6 +42,7 @@ func TestAdmittedConversionHasOwnedOriginAndOneOperand(t *testing.T) {
 }
 
 func TestConversionSpellingDoesNotOwnOrdinaryFunction(t *testing.T) {
+	t.Parallel()
 	source := "function checked_i8_from_f64(value: f64): i8 { return 42; } export function entry(value: f64): i8 { return checked_i8_from_f64(value); }"
 	got := analyze(conversionRequest(t, source))
 	if got.Status != "ok" {
@@ -53,6 +55,7 @@ func TestConversionSpellingDoesNotOwnOrdinaryFunction(t *testing.T) {
 }
 
 func TestConversionExpressionAnchorExcludesTriviaInUTF16(t *testing.T) {
+	t.Parallel()
 	for _, trivia := range []string{" ", " /*😀*/ ", "\t /* comment */ "} {
 		call := "checked_i8_from_f64(value)"
 		source := "/*😀*/ export function entry(value: f64): i8 { return" + trivia + call + "; }"
@@ -69,6 +72,7 @@ func TestConversionExpressionAnchorExcludesTriviaInUTF16(t *testing.T) {
 }
 
 func TestGlobalConversionSpellingWithBodyRemainsOrdinary(t *testing.T) {
+	t.Parallel()
 	source := "function checked_i8_from_f64(value: f64): i8 { return 42; } function entry(value: f64): i8 { return checked_i8_from_f64(value); }"
 	got := analyze(conversionRequest(t, source))
 	if got.Status != "ok" {
@@ -81,6 +85,7 @@ func TestGlobalConversionSpellingWithBodyRemainsOrdinary(t *testing.T) {
 }
 
 func TestConversionRejectsUnownedAndInvalidNominalInputs(t *testing.T) {
+	t.Parallel()
 	for _, source := range []string{
 		"export function entry(x: f64): i8 { return checked_i8_from_f64(); }",
 		"export function entry(x: f64): i8 { return checked_i8_from_f64(x,x); }",

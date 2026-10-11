@@ -6,16 +6,19 @@ package main
 import (
 	"crypto/sha256"
 	"fmt"
-	"path"
 	"strings"
+
+	"github.com/microsoft/typescript-go/internal/tspath"
 
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/checker"
 	"github.com/microsoft/typescript-go/internal/compiler"
 )
 
-const conversionVersion = "minimal-conversions-v5"
-const conversionDeclarationHash = "sha256:60974c1fa82cc549da3a9268f5d82ab10b58f52e2612a377ee4577f05af52c86"
+const (
+	conversionVersion         = "minimal-conversions-v5"
+	conversionDeclarationHash = "sha256:60974c1fa82cc549da3a9268f5d82ab10b58f52e2612a377ee4577f05af52c86"
+)
 
 type conversionOrigin struct {
 	DeclarationPath   string            `json:"declarationPath"`
@@ -39,7 +42,7 @@ type conversionFacts struct {
 // Admission is checked against the exact source bytes and official declaration
 // and brand symbols. Text is a usability label, never proof of ownership.
 func admittedConversions(r request, program *compiler.Program, check *checker.Checker) (*conversionFacts, *response) {
-	declarationPath := path.Join(r.SourceRoot, "minimal-conversions-v5.d.ts")
+	declarationPath := tspath.CombinePaths(r.SourceRoot, "minimal-conversions-v5.d.ts")
 	content := ""
 	for _, input := range r.Files {
 		if input.Path == declarationPath {

@@ -147,7 +147,8 @@ func integerOperator(kind ast.Kind) string {
 }
 
 func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node *ast.Node, expected string,
-	refs map[*ast.Symbol]symbol, functions map[*ast.Symbol]functionInfo, target *integerTarget, operatorContext ...bool) (*expression, *response) {
+	refs map[*ast.Symbol]symbol, functions map[*ast.Symbol]functionInfo, target *integerTarget, operatorContext ...bool,
+) (*expression, *response) {
 	// Direct values/calls retain node.Pos. Legacy operator operands use token
 	// starts; literal spelling and diagnostic anchors remain independent.
 	failureAt := func(code, category string, at *ast.Node) (*expression, *response) {
@@ -503,7 +504,7 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		right, failure := projectIntegerExpression(file, check, binary.Right, rightContext, refs, functions, target, true)
 		if failure != nil {
 			if shift && failure.Diagnostics[0].Code == "r01-d-scalar-type" {
-				failure = responsePointer(failAt("r01-d-shift-count-type", "error", file, binary.Right))
+				failure = new(failAt("r01-d-shift-count-type", "error", file, binary.Right))
 			}
 			return nil, failure
 		}
@@ -523,10 +524,9 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 	return failureAt("r02b-d-unsupported", "unsupported", node)
 }
 
-func responsePointer(r response) *response { return &r }
-
 func integerContextBindings(file *ast.SourceFile, check *checker.Checker, decl *ast.FunctionDeclaration,
-	functions map[*ast.Symbol]functionInfo, target *integerTarget) map[*ast.Symbol]symbol {
+	functions map[*ast.Symbol]functionInfo, target *integerTarget,
+) map[*ast.Symbol]symbol {
 	refs := parameterBindings(file, check, decl.Parameters.Nodes, nil)
 	visitStatements(decl.Body.AsBlock().Statements.Nodes, func(item *ast.Node) bool {
 		for _, candidate := range localDeclarations(item) {
@@ -564,7 +564,8 @@ func integerContextBindings(file *ast.SourceFile, check *checker.Checker, decl *
 // that expression. Other official errors (name, const write, syntax, arity,
 // operator legality) retain their original upstream identity and source span.
 func integerContextDiagnostic(file *ast.SourceFile, check *checker.Checker, d *ast.Diagnostic,
-	functions map[*ast.Symbol]functionInfo, target *integerTarget) (bool, *response) {
+	functions map[*ast.Symbol]functionInfo, target *integerTarget,
+) (bool, *response) {
 	if d.File() != file || (d.Code() != 2322 && d.Code() != 2345) {
 		return false, nil
 	}
@@ -636,7 +637,7 @@ func integerContextDiagnostic(file *ast.SourceFile, check *checker.Checker, d *a
 			projected, projectionFailure := projectIntegerExpression(file, check, expr, expected, refs, functions, target, false, shape != nil && (shape.Undefined || shape.Null))
 			failure = projectionFailure
 			if failure == nil && !permittedPresence(projected, shape) {
-				failure = responsePointer(failAt("r01-d-scalar-type", "error", file, expr))
+				failure = new(failAt("r01-d-scalar-type", "error", file, expr))
 			}
 			matched = true
 			return true

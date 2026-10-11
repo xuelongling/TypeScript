@@ -7,13 +7,15 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"io"
+	"maps"
 	"math/big"
-	"os"
-	"path"
 	"slices"
 	"strings"
+
+	"github.com/microsoft/typescript-go/internal/json"
+	"github.com/microsoft/typescript-go/internal/tspath"
 
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/checker"
@@ -155,6 +157,26 @@ type response struct {
 	Diagnostics []diagnostic `json:"diagnostics,omitempty"`
 }
 
+// canonicalProjectPath validates the protocol's absolute, slash-delimited
+// virtual paths. Backslashes remain literal filename characters, as in the
+// original path.Clean validation; they are not native path separators here.
+func canonicalProjectPath(name string) string {
+	parts := []string{"/"}
+	for part := range strings.SplitSeq(name, "/") {
+		switch part {
+		case "", ".":
+			continue
+		case "..":
+			if len(parts) > 1 {
+				parts = parts[:len(parts)-1]
+			}
+		default:
+			parts = append(parts, part)
+		}
+	}
+	return tspath.GetPathFromPathComponents(parts)
+}
+
 func fail(code, category, file string, location span) response {
 	phase := "syntax"
 	if code == "r01-d-scalar-type" || code == "r01-d-integer-range" || code == "r01-d-float-range" || code == "r01-d-shift-count-type" {
@@ -177,9 +199,11 @@ func fail(code, category, file string, location span) response {
 	} else if category == "input" {
 		rule = "r01-input-boundary"
 	}
-	return response{Status: "error", Diagnostics: []diagnostic{{Code: code, RuleID: rule, RuleIDs: []string{rule}, Category: category,
+	return response{Status: "error", Diagnostics: []diagnostic{{
+		Code: code, RuleID: rule, RuleIDs: []string{rule}, Category: category,
 		Phase: phase, Severity: "error", File: file, Range: location,
-		Primary: primary{SourceID: file, Start: location.Start, End: location.End}}}}
+		Primary: primary{SourceID: file, Start: location.Start, End: location.End},
+	}}}
 }
 
 func sourcePosition(file *ast.SourceFile, start, end int) primary {
@@ -189,9 +213,11 @@ func sourcePosition(file *ast.SourceFile, start, end int) primary {
 	endLine, _ := core.PositionToLineAndByteOffset(end, lines)
 	startOffset := positions.UTF8ToUTF16(start)
 	endOffset := positions.UTF8ToUTF16(end)
-	return primary{SourceID: file.FileName(), Start: startOffset, End: endOffset,
+	return primary{
+		SourceID: file.FileName(), Start: startOffset, End: endOffset,
 		StartLine: startLine, StartColumn: startOffset - positions.UTF8ToUTF16(int(lines[startLine])),
-		EndLine: endLine, EndColumn: endOffset - positions.UTF8ToUTF16(int(lines[endLine]))}
+		EndLine: endLine, EndColumn: endOffset - positions.UTF8ToUTF16(int(lines[endLine])),
+	}
 }
 
 func failAt(code, category string, file *ast.SourceFile, node *ast.Node) response {
@@ -213,13 +239,13 @@ func valid(r request) bool {
 	if (r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" || r.Declarations.Version == conversionVersion) && !validIntegerTarget(r.Target) {
 		return false
 	}
-	if r.SourceRoot == "" || !strings.HasPrefix(r.SourceRoot, "/") || path.Clean(r.SourceRoot) != r.SourceRoot || r.RootFile == "" ||
+	if r.SourceRoot == "" || !strings.HasPrefix(r.SourceRoot, "/") || canonicalProjectPath(r.SourceRoot) != r.SourceRoot || r.RootFile == "" ||
 		(r.Declarations.Version != "minimal-bool-v1" && r.Declarations.Version != "minimal-scalars-v2" && r.Declarations.Version != "minimal-integers-v3" && r.Declarations.Version != "minimal-floats-v4" && r.Declarations.Version != conversionVersion) || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS || len(r.Files) == 0 || len(r.Declarations.Paths) == 0 {
 		return false
 	}
 	seen := map[string]bool{}
 	for _, file := range r.Files {
-		if file.Path != path.Clean(file.Path) || !strings.HasPrefix(file.Path, r.SourceRoot+"/") || seen[file.Path] ||
+		if file.Path != canonicalProjectPath(file.Path) || !strings.HasPrefix(file.Path, r.SourceRoot+"/") || seen[file.Path] ||
 			(file.Path != r.RootFile && !strings.HasSuffix(file.Path, ".d.ts")) {
 			return false
 		}
@@ -948,8 +974,10 @@ func (p *projection) addSymbol(node *ast.Node, kind, t string, writable bool) (s
 	if upstream == nil {
 		return symbol{}, false
 	}
-	s := symbol{ID: fmt.Sprintf("s%d", len(p.result.Symbols)+1), Name: node.Text(),
-		Kind: kind, Type: t, Writable: writable, Range: offset(p.file, node)}
+	s := symbol{
+		ID: fmt.Sprintf("s%d", len(p.result.Symbols)+1), Name: node.Text(),
+		Kind: kind, Type: t, Writable: writable, Range: offset(p.file, node),
+	}
 	p.result.Symbols = append(p.result.Symbols, s)
 	p.bindings[upstream] = s
 	return s, true
@@ -1345,7 +1373,8 @@ func i32LiteralCallArgument(file *ast.SourceFile, check *checker.Checker, d *ast
 }
 
 func projectExpression(file *ast.SourceFile, check *checker.Checker, node *ast.Node, expected string,
-	refs map[*ast.Symbol]symbol, functions map[*ast.Symbol]functionInfo) (expression, *response) {
+	refs map[*ast.Symbol]symbol, functions map[*ast.Symbol]functionInfo,
+) (expression, *response) {
 	if value, literal, ok := exactInteger(file, node); ok && expected == "i32" {
 		if !i32InRange(value) {
 			failure := failAt("r01-d-integer-range", "error", file, node)
@@ -1406,8 +1435,10 @@ func projectExpression(file *ast.SourceFile, check *checker.Checker, node *ast.N
 			arguments = append(arguments, projected)
 		}
 		sig := target.Signature
-		return expression{Kind: "call", Type: sig.ReturnType, Target: target.ID,
-			Arguments: &arguments, Signature: &sig, Range: offset(file, node)}, nil
+		return expression{
+			Kind: "call", Type: sig.ReturnType, Target: target.ID,
+			Arguments: &arguments, Signature: &sig, Range: offset(file, node),
+		}, nil
 	}
 	if node.Kind == ast.KindBinaryExpression || node.Kind == ast.KindPrefixUnaryExpression || node.Kind == ast.KindParenthesizedExpression {
 		projected, failure := projectOperator(file, check, node, refs, functions)
@@ -1527,9 +1558,7 @@ func analyze(r request) response {
 			release()
 			return *failure
 		}
-		for symbol, info := range conversions.Functions {
-			contextFunctions[symbol] = info
-		}
+		maps.Copy(contextFunctions, conversions.Functions)
 	}
 	if r.Target != nil {
 		check.SetTSFGScalarAssignments(scalarAssignmentContexts(file, check, contextFunctions, r.Target))
@@ -1674,9 +1703,11 @@ func analyze(r request) response {
 			if code == "r02b-d-input" {
 				rule, category = "r01-input-boundary", "input"
 			}
-			result.Diagnostics = append(result.Diagnostics, diagnostic{Code: code, RuleID: rule, RuleIDs: []string{rule},
+			result.Diagnostics = append(result.Diagnostics, diagnostic{
+				Code: code, RuleID: rule, RuleIDs: []string{rule},
 				Category: category, Phase: phase, Severity: "error", File: name, Range: where,
-				Primary: primaryLocation, UpstreamCode: d.Code()})
+				Primary: primaryLocation, UpstreamCode: d.Code(),
+			})
 		}
 	}
 	if len(result.Diagnostics) != 0 {
@@ -1697,9 +1728,7 @@ func analyze(r request) response {
 	}
 	functions := map[*ast.Symbol]functionInfo{}
 	if conversions != nil {
-		for symbol, info := range conversions.Functions {
-			functions[symbol] = info
-		}
+		maps.Copy(functions, conversions.Functions)
 	}
 	for _, node := range file.Statements.Nodes {
 		if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Body() == nil {
@@ -1729,8 +1758,10 @@ func analyze(r request) response {
 		if resolved == nil {
 			return failAt("r02b-d-type", "error", file, node.Name())
 		}
-		s := symbol{ID: fmt.Sprintf("s%d", len(result.Symbols)+1), Name: node.Name().Text(),
-			Kind: "function", Type: returnType, Range: offset(file, node.Name())}
+		s := symbol{
+			ID: fmt.Sprintf("s%d", len(result.Symbols)+1), Name: node.Name().Text(),
+			Kind: "function", Type: returnType, Range: offset(file, node.Name()),
+		}
 		result.Symbols = append(result.Symbols, s)
 		if !hasPresence {
 			presence = nil
@@ -1796,20 +1827,12 @@ func analyze(r request) response {
 	return result
 }
 
-func main() {
-	if len(os.Args) != 1 {
-		fmt.Fprintln(os.Stderr, "tsfg-frontend accepts one JSON request on stdin")
-		os.Exit(2)
-	}
-	decoder := json.NewDecoder(os.Stdin)
+func runCommand(input io.Reader, output io.Writer) error {
+	decoder := json.NewLegacyDecoder(input)
 	decoder.DisallowUnknownFields()
 	var r request
 	if err := decoder.Decode(&r); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(2)
+		return err
 	}
-	if err := json.NewEncoder(os.Stdout).Encode(analyze(r)); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(2)
-	}
+	return json.NewLegacyEncoder(output).Encode(analyze(r))
 }
