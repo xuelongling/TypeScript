@@ -38,13 +38,15 @@ type request struct {
 	RootFile     string         `json:"rootFile"`
 	Files        []inputFile    `json:"files"`
 	Declarations struct {
-		Version string   `json:"version"`
-		Paths   []string `json:"paths"`
+		MarkerProfile *markerProfile `json:"markerProfile,omitempty"`
+		Version       string         `json:"version"`
+		Paths         []string       `json:"paths"`
 	} `json:"declarations"`
 	Config struct {
-		Strict  bool `json:"strict"`
-		NoEmit  bool `json:"noEmit"`
-		AllowJS bool `json:"allowJs"`
+		DecoratorMode string `json:"decoratorMode,omitempty"`
+		Strict        bool   `json:"strict"`
+		NoEmit        bool   `json:"noEmit"`
+		AllowJS       bool   `json:"allowJs"`
 	} `json:"config"`
 }
 
@@ -87,6 +89,10 @@ type symbol struct {
 }
 
 type expression struct {
+	Receiver     *expression       `json:"receiver,omitempty"`
+	FieldPath    []string          `json:"fieldPath,omitempty"`
+	OwnerType    string            `json:"ownerType,omitempty"`
+	Permission   *fieldPermission  `json:"permission,omitempty"`
 	Conversion   *conversionOrigin `json:"conversion,omitempty"`
 	Kind         string            `json:"kind"`
 	Type         string            `json:"type"`
@@ -150,11 +156,12 @@ type functionInfo struct {
 }
 
 type response struct {
-	Status      string       `json:"status"`
-	Inputs      []string     `json:"inputs,omitempty"`
-	Functions   []function   `json:"functions,omitempty"`
-	Symbols     []symbol     `json:"symbols"`
-	Diagnostics []diagnostic `json:"diagnostics,omitempty"`
+	AggregateFacts *aggregateFacts `json:"aggregateFacts,omitempty"`
+	Status         string          `json:"status"`
+	Inputs         []string        `json:"inputs,omitempty"`
+	Functions      []function      `json:"functions,omitempty"`
+	Symbols        []symbol        `json:"symbols"`
+	Diagnostics    []diagnostic    `json:"diagnostics,omitempty"`
 }
 
 // canonicalProjectPath validates the protocol's absolute, slash-delimited
@@ -193,6 +200,9 @@ func fail(code, category, file string, location span) response {
 	}
 	if code == "r01-d-conversion-entry" || code == "r01-d-conversion-type" {
 		phase, rule = "types", "r01-conversions"
+	}
+	if strings.HasPrefix(code, "r01-d-aggregate-") {
+		phase, rule = "types", "r01-values"
 	}
 	if category == "prohibited" {
 		phase, rule = "types", "r01-input-boundary"
@@ -236,6 +246,9 @@ func failCallAt(code string, file *ast.SourceFile, node *ast.Node) response {
 }
 
 func valid(r request) bool {
+	if r.Declarations.MarkerProfile != nil && (r.Declarations.Version != conversionVersion || r.Config.DecoratorMode != "standard" || !validMarkerProfile(r)) || r.Declarations.MarkerProfile == nil && r.Config.DecoratorMode != "" {
+		return false
+	}
 	if (r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" || r.Declarations.Version == conversionVersion) && !validIntegerTarget(r.Target) {
 		return false
 	}
@@ -961,6 +974,8 @@ func scalarReturnMismatch(file *ast.SourceFile, check *checker.Checker, d *ast.D
 }
 
 type projection struct {
+	aggregates    *aggregateProjection
+	self          *aggregateInfo
 	integerTarget *integerTarget
 	file          *ast.SourceFile
 	check         *checker.Checker
@@ -984,6 +999,11 @@ func (p *projection) addSymbol(node *ast.Node, kind, t string, writable bool) (s
 }
 
 func (p *projection) expr(node *ast.Node, expected string, presence ...*parameterPresence) (*expression, response) {
+	if p.aggregates != nil {
+		if projected, failure, handled := p.aggregateExpr(node, expected); handled {
+			return projected, failure
+		}
+	}
 	if p.integerTarget != nil {
 		var shape *parameterPresence
 		if len(presence) != 0 {
@@ -1072,7 +1092,14 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 				var shape *parameterPresence
 				if local.Type != nil {
 					var valid bool
-					t, shape, valid = checkedLocalPresence(p.file, p.check, decl)
+					if p.aggregates != nil {
+						t = p.aggregates.typeName(p.check.GetTypeFromTypeNode(local.Type))
+					}
+					if t != "" {
+						valid = true
+					} else {
+						t, shape, valid = checkedLocalPresence(p.file, p.check, decl)
+					}
 					if !valid {
 						return nil, failAt("r02b-d-unsupported", "unsupported", p.file, local.Type)
 					}
@@ -1105,6 +1132,14 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 			}
 		case ast.KindExpressionStatement:
 			expr := node.AsExpressionStatement().Expression
+			if p.aggregates != nil && aggregateFieldMutation(expr) {
+				value, failure := p.expr(expr, "")
+				if failure.Status != "" {
+					return nil, failure
+				}
+				out = append(out, statement{Kind: "expression", Expression: value, Range: offset(p.file, node)})
+				continue
+			}
 			if expr.Kind != ast.KindBinaryExpression || expr.AsBinaryExpression().OperatorToken.Kind != ast.KindEqualsToken || p.integerTarget != nil && expr.AsBinaryExpression().Left.Kind == ast.KindParenthesizedExpression {
 				var discardedPresence *parameterPresence
 				candidate := ast.SkipParentheses(expr)
@@ -1139,6 +1174,10 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 			}
 			out = append(out, statement{Kind: "assignment", Target: target, Value: value, Range: offset(p.file, node)})
 		case ast.KindReturnStatement:
+			if p.self != nil && node.AsReturnStatement().Expression == nil {
+				out = append(out, statement{Kind: "return", Range: offset(p.file, node)})
+				continue
+			}
 			expr, failure := p.expr(node.AsReturnStatement().Expression, returnType)
 			if failure.Status != "" {
 				return nil, failure
@@ -1560,6 +1599,17 @@ func analyze(r request) response {
 		}
 		maps.Copy(contextFunctions, conversions.Functions)
 	}
+	aggregates, aggregateFailure := admittedAggregates(r, program, check, file, &result)
+	if aggregateFailure != nil {
+		release()
+		return *aggregateFailure
+	}
+	if aggregates != nil {
+		if failure := aggregates.constructorHeaders(file, check, &result); failure != nil {
+			release()
+			return *failure
+		}
+	}
 	if r.Target != nil {
 		check.SetTSFGScalarAssignments(scalarAssignmentContexts(file, check, contextFunctions, r.Target))
 	}
@@ -1614,6 +1664,17 @@ func analyze(r request) response {
 			code := group.code
 			if d.Code() == 6053 || d.Code() == 2688 || d.Code() == 2307 {
 				return fail("r02b-d-input", "input", r.RootFile, span{})
+			}
+			if aggregates != nil {
+				if handled, failure := aggregates.contextDiagnostic(file, check, d, &result, contextFunctions, r.Target); handled {
+					if failure == nil {
+						continue
+					}
+					owned := failure.Diagnostics[0]
+					owned.UpstreamCode = d.Code()
+					result.Diagnostics = append(result.Diagnostics, owned)
+					continue
+				}
 			}
 			if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" || r.Declarations.Version == conversionVersion {
 				if handled, failure := integerContextDiagnostic(file, check, d, contextFunctions, r.Target); handled {
@@ -1731,6 +1792,9 @@ func analyze(r request) response {
 		maps.Copy(functions, conversions.Functions)
 	}
 	for _, node := range file.Statements.Nodes {
+		if aggregates != nil && node.Kind == ast.KindClassDeclaration {
+			continue
+		}
 		if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Body() == nil {
 			return failAt("r02b-d-unsupported", "unsupported", file, node)
 		}
@@ -1739,6 +1803,9 @@ func analyze(r request) response {
 			return failAt("r02b-d-unsupported", "unsupported", file, node)
 		}
 		returnType := scalar(check.GetTypeFromTypeNode(decl.Type))
+		if aggregates != nil && returnType == "" {
+			returnType = aggregates.typeName(check.GetTypeFromTypeNode(decl.Type))
+		}
 		if returnType == "" {
 			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
 		}
@@ -1747,6 +1814,9 @@ func analyze(r request) response {
 		hasPresence := false
 		for _, p := range decl.Parameters.Nodes {
 			t, shape, valid := checkedParameter(file, check, p)
+			if aggregates != nil && !valid {
+				t, shape, valid = aggregates.parameter(file, check, p)
+			}
 			if !valid {
 				return failAt("r02b-d-unsupported", "unsupported", file, p)
 			}
@@ -1768,7 +1838,19 @@ func analyze(r request) response {
 		}
 		functions[resolved] = functionInfo{ID: s.ID, Declaration: node, Signature: signature{Parameters: parameters, ReturnType: returnType, Presence: presence}}
 	}
+	if aggregates != nil {
+		if failure := aggregates.constructorBodies(file, check, &result, functions, r.Target); failure != nil {
+			return *failure
+		}
+		if failure := aggregates.coverage(file, check, functions); failure != nil {
+			return *failure
+		}
+		result.AggregateFacts = aggregates.facts
+	}
 	for _, node := range file.Statements.Nodes {
+		if aggregates != nil && node.Kind == ast.KindClassDeclaration {
+			continue
+		}
 		if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Body() == nil {
 			return failAt("r02b-d-unsupported", "unsupported", file, node)
 		}
@@ -1780,15 +1862,21 @@ func analyze(r request) response {
 		info := functions[check.GetSymbolAtLocation(node.Name())]
 		fn := function{Name: node.Name().Text(), Symbol: info.ID, Parameters: []symbol{}, Body: []statement{}, Range: offset(file, node)}
 		fn.ReturnType = scalar(check.GetTypeFromTypeNode(decl.Type))
+		if aggregates != nil && fn.ReturnType == "" {
+			fn.ReturnType = aggregates.typeName(check.GetTypeFromTypeNode(decl.Type))
+		}
 		if fn.ReturnType == "" {
 			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
 		}
-		project := projection{file: file, check: check, result: &result, bindings: map[*ast.Symbol]symbol{}, functions: functions}
+		project := projection{file: file, check: check, result: &result, bindings: map[*ast.Symbol]symbol{}, functions: functions, aggregates: aggregates}
 		if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" || r.Declarations.Version == conversionVersion {
 			project.integerTarget = r.Target
 		}
 		for _, p := range decl.Parameters.Nodes {
 			t, shape, valid := checkedParameter(file, check, p)
+			if aggregates != nil && !valid {
+				t, shape, valid = aggregates.parameter(file, check, p)
+			}
 			if !valid {
 				return failAt("r02b-d-unsupported", "unsupported", file, p)
 			}
