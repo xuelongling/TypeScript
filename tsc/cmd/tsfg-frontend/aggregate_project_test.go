@@ -524,3 +524,88 @@ func TestAggregateMalformedSyntaxKeepsOfficialPublicDiagnostics(t *testing.T) {
 		})
 	}
 }
+
+func TestAggregateUnsynchronizedPresenceUsesPublicCapabilityDiagnostics(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name, source, unsupportedText string
+	}{
+		{"default aggregate parameter", `@tsfgValue class Pair { n: i64 = 7; } function make(p: Pair = new Pair()): Pair { return p; } export function answer(): i64 { return make().n; }`, "p: Pair = new Pair()"},
+		{"optional aggregate parameter", `@tsfgValue class Pair { n: i64 = 7; } function make(p?: Pair): Pair { if (p === undefined) { return new Pair(); } return p; } export function answer(): i64 { return make().n; }`, "p?: Pair"},
+		{"default aggregate constructor parameter", `@tsfgValue class Pair { n: i64 = 7; } @tsfgValue class Holder { pair: Pair; constructor(pair: Pair = new Pair()) { this.pair = pair; } } export function answer(): i64 { return new Holder().pair.n; }`, "pair: Pair = new Pair()"},
+		{"optional aggregate constructor parameter", `@tsfgValue class Pair { n: i64 = 7; } @tsfgValue class Holder { pair!: Pair; constructor(pair?: Pair) { if (pair !== undefined) { this.pair = pair; } } } export function answer(): i64 { return new Holder().pair.n; }`, "pair?: Pair"},
+		{"aggregate payload nullish field assignment", `@tsfgValue class I { n: u8 = 1; } @tsfgValue class O { i: I = new I(); } export function answer(): u8 { const o = new O(); o.i ??= new I(); return o.i.n; }`, "o.i ??= new I()"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			r := aggregateRequest(t, test.source)
+			var input, output bytes.Buffer
+			if err := json.NewLegacyEncoder(&input).Encode(r); err != nil {
+				t.Fatal(err)
+			}
+			if err := runCommand(&input, &output); err != nil {
+				t.Fatal(err)
+			}
+			var result response
+			if err := json.NewLegacyDecoder(&output).Decode(&result); err != nil {
+				t.Fatal(err)
+			}
+			if result.Status != "error" || result.AggregateFacts != nil || len(result.Functions) != 0 {
+				t.Fatalf("unsupported profile emitted incompatible facts: %+v", result)
+			}
+			start := bytes.Index([]byte(test.source), []byte(test.unsupportedText))
+			if start < 0 {
+				t.Fatal("missing independent source anchor")
+			}
+			end := start + len(test.unsupportedText)
+			expected := primary{SourceID: "/src/main.ts", Start: start, End: end, StartLine: 0, EndLine: 0, StartColumn: start, EndColumn: end}
+			found := false
+			for _, d := range result.Diagnostics {
+				if d.Code != "r02b-d-unsupported" {
+					continue
+				}
+				if d.Category != "unsupported" || d.Phase != "capability" || d.Severity != "error" || d.RuleID != "r01-ts-baseline" || len(d.RuleIDs) != 1 || d.RuleIDs[0] != d.RuleID || d.UpstreamCode != 0 || d.File != "/src/main.ts" || d.Range != (span{start, end}) || d.Primary != expected {
+					t.Fatalf("capability diagnostic lost its source identity: %+v", d)
+				}
+				found = true
+			}
+			if !found {
+				t.Fatalf("missing public capability refusal: %+v", result.Diagnostics)
+			}
+		})
+	}
+}
+
+func TestAggregateCapabilityBoundaryKeepsSupportedPublicFacts(t *testing.T) {
+	t.Parallel()
+	tests := []struct{ name, source string }{
+		{"required aggregate parameter", `@tsfgValue class Pair { n: i64 = 7; } function make(p: Pair): Pair { return p; } export function answer(): i64 { return make(new Pair()).n; }`},
+		{"default scalar constructor parameter", `@tsfgValue class Pair { n: i64; constructor(n: i64 = 7) { this.n = n; } } export function answer(): i64 { return new Pair().n; }`},
+		{"default scalar with aggregate parameter", `@tsfgValue class Pair { n: i64 = 7; } function take(p: Pair, n: i64 = 7): i64 { return p.n + n; } export function answer(): i64 { return take(new Pair()); }`},
+		{"optional ordinary scalar parameter", `@tsfgValue class Pair { n: i64 = 7; } function take(n?: i64): i64 { if (n === undefined) { return 7; } return n; } export function answer(): i64 { const pair = new Pair(); return take(); }`},
+		{"ordinary scalar nullish assignment", `@tsfgValue class Pair { n: i64 = 7; } export function answer(): i64 { const pair = new Pair(); let value: i64 | undefined = undefined; value ??= 7; return value; }`},
+		{"scalar payload field nullish assignment", `@tsfgValue class Pair { n: i64 = 7; } export function answer(): i64 { const pair = new Pair(); pair.n ??= 7; return pair.n; }`},
+		{"plain aggregate payload field assignment", `@tsfgValue class I { n: u8 = 1; } @tsfgValue class O { i: I = new I(); } export function answer(): u8 { const o = new O(); o.i = new I(); return o.i.n; }`},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			r := aggregateRequest(t, test.source)
+			var input, output bytes.Buffer
+			if err := json.NewLegacyEncoder(&input).Encode(r); err != nil {
+				t.Fatal(err)
+			}
+			if err := runCommand(&input, &output); err != nil {
+				t.Fatal(err)
+			}
+			var result response
+			if err := json.NewLegacyDecoder(&output).Decode(&result); err != nil {
+				t.Fatal(err)
+			}
+			if result.Status != "ok" || result.AggregateFacts == nil || len(result.Functions) == 0 || len(result.Diagnostics) != 0 {
+				t.Fatalf("supported public facts rejected by aggregate capability boundary: %+v", result)
+			}
+		})
+	}
+}

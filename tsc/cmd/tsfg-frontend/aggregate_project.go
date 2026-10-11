@@ -627,6 +627,10 @@ func (p *projection) aggregateExpr(node *ast.Node, expected string) (*expression
 			if failure.Status != "" {
 				return nil, failure, true
 			}
+			// Aggregate payload writes currently synchronize only plain assignment.
+			if operator == "??=" && strings.HasPrefix(left.Type, "a") {
+				return nil, failAt("r02b-d-unsupported", "unsupported", p.file, node), true
+			}
 			logical := operator == "&&=" || operator == "||="
 			floatOperation := operator == "+=" || operator == "-=" || operator == "*=" || operator == "/=" || operator == "%="
 			if logical && left.Type != "bool" || operator != "=" && operator != "??=" && !logical && !integerKind(left.Type) && !(p.integerTarget.floats && floatKind(left.Type) && floatOperation) {
@@ -830,14 +834,11 @@ func (a *aggregateProjection) parameter(file *ast.SourceFile, check *checker.Che
 	parameter := node.AsParameterDeclaration()
 	if parameter.Type != nil && parameter.DotDotDotToken == nil && node.Name() != nil && node.Name().Kind == ast.KindIdentifier && !ast.IsParameterPropertyDeclaration(node, node.Parent) {
 		if t := a.typeName(check.GetTypeFromTypeNode(parameter.Type)); t != "" {
-			if parameter.QuestionToken != nil {
+			// This snapshot profile has no aggregate parameter presence/default contract.
+			if parameter.QuestionToken != nil || parameter.Initializer != nil {
 				return "", nil, false
 			}
-			var presence *parameterPresence
-			if parameter.Initializer != nil {
-				presence = &parameterPresence{Default: true, Optional: true, Undefined: true, Range: offset(file, node), Annotation: expressionOffset(file, parameter.Type)}
-			}
-			return t, presence, true
+			return t, nil, true
 		}
 	}
 	return checkedParameter(file, check, node)
