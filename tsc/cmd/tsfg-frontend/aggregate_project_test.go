@@ -674,3 +674,114 @@ func TestAggregateLocalRebindingPreservesOwnedPublicFacts(t *testing.T) {
 		})
 	}
 }
+
+func TestAggregateScalarWritesConsumeFieldRHS(t *testing.T) {
+	const header = `@tsfgValue class Pair { n:i64=7; } `
+	for _, item := range []struct{ name, body, operator string }{
+		{"compound", `const pair=new Pair(); let x:i64=2; x += pair.n; return x;`, "+="},
+		{"assignment expression", `const pair=new Pair(); let x:i64=2; return (x = pair.n);`, "="},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			source := header + "export function answer():i64 { " + item.body + " }"
+			r := aggregateRequest(t, source)
+			var input, output bytes.Buffer
+			if err := json.NewLegacyEncoder(&input).Encode(r); err != nil {
+				t.Fatal(err)
+			}
+			if err := runCommand(&input, &output); err != nil {
+				t.Fatal(err)
+			}
+			var result response
+			if err := json.NewLegacyDecoder(&output).Decode(&result); err != nil {
+				t.Fatal(err)
+			}
+			if result.Status != "ok" || len(result.Diagnostics) != 0 || result.AggregateFacts == nil || len(result.Functions) != 1 {
+				t.Fatalf("scalar write with field RHS rejected: %+v", result)
+			}
+			write := result.Functions[0].Body[2].Expression
+			if write.Kind == "group" {
+				write = write.Operand
+			}
+			if write.Kind != "write" || write.Operator != item.operator || write.Type != "i64" || write.Left.Kind != "reference" || write.Right.Kind != "field" || write.Right.Type != "i64" {
+				t.Fatalf("owned scalar/field write facts changed: %+v", write)
+			}
+			if sourceText(t, source, write.Right.Range) != "pair.n" || write.Left.Range.Start < write.Range.Start || write.Right.Range.End > write.Range.End {
+				t.Fatalf("write operands lost official source containment: %+v", write)
+			}
+		})
+	}
+}
+
+func TestAggregateScalarWriteKeepsOrdinaryBoundaries(t *testing.T) {
+	const header = `@tsfgValue class Pair { n:i64=7; count:i32=1; flag:bool=true; f:f64=1; } `
+	tests := []struct {
+		name, body, code string
+		upstream         int32
+	}{
+		{"plain statement", `const pair=new Pair(); let x:i64=2; x=pair.n; return x;`, "", 0},
+		{"shift count", `const pair=new Pair(); let x:i64=2; return (x <<= pair.count);`, "", 0},
+		{"nullable nullish assignment", `const pair=new Pair(); let x:i64|undefined=undefined; return (x ??= pair.n);`, "", 0},
+		{"nullable plain assignment", `const pair=new Pair(); let x:i64|undefined=undefined; return (x = pair.n);`, "", 0},
+		{"boolean logical assignment", `const pair=new Pair(); let x:bool=true; return (x &&= pair.flag);`, "", 0},
+		{"float compound", `const pair=new Pair(); let x:f64=2; return (x += pair.f);`, "", 0},
+		{"immutable binding", `const pair=new Pair(); const x:i64=2; return (x = pair.n);`, "", 2588},
+		{"wrong scalar payload", `const pair=new Pair(); let x:u8=2; return (x = pair.n);`, "r01-d-scalar-type", 0},
+		{"wrong shift count", `const pair=new Pair(); let x:i64=2; return (x <<= pair.n);`, "r01-d-scalar-type", 0},
+		{"unproven nullable compound", `const pair=new Pair(); let x:i64|undefined=undefined; return (x += pair.n);`, "", 18048},
+	}
+	for _, item := range tests {
+		t.Run(item.name, func(t *testing.T) {
+			resultType := "i64"
+			if item.name == "boolean logical assignment" {
+				resultType = "bool"
+			}
+			if item.name == "float compound" {
+				resultType = "f64"
+			}
+			if item.name == "wrong scalar payload" {
+				resultType = "u8"
+			}
+			source := header + "export function answer():" + resultType + " { " + item.body + " }"
+			r := aggregateRequest(t, source)
+			var input, output bytes.Buffer
+			if err := json.NewLegacyEncoder(&input).Encode(r); err != nil {
+				t.Fatal(err)
+			}
+			if err := runCommand(&input, &output); err != nil {
+				t.Fatal(err)
+			}
+			var result response
+			if err := json.NewLegacyDecoder(&output).Decode(&result); err != nil {
+				t.Fatal(err)
+			}
+			if item.code != "" || item.upstream != 0 {
+				if result.Status != "error" {
+					t.Fatalf("invalid scalar write admitted: %+v", result)
+				}
+				found := false
+				for _, d := range result.Diagnostics {
+					if item.code != "" && d.Code == item.code || item.upstream != 0 && d.UpstreamCode == item.upstream {
+						found = true
+					}
+				}
+				if !found {
+					t.Fatalf("ordinary write diagnostic changed: %+v", result.Diagnostics)
+				}
+				return
+			}
+			if result.Status != "ok" || len(result.Diagnostics) != 0 || result.AggregateFacts == nil {
+				t.Fatalf("valid scalar write rejected: %+v", result)
+			}
+			if item.name == "plain statement" {
+				return
+			}
+			write := result.Functions[0].Body[2].Expression
+			if write.Kind == "group" {
+				write = write.Operand
+			}
+			if write.Kind != "write" || write.Left.Kind != "reference" || write.Right.Kind != "field" || write.Type != resultType || !permittedPresence(write, nil) {
+				t.Fatalf("ordinary scalar write/presence facts lost: %+v", write)
+			}
+		})
+	}
+}

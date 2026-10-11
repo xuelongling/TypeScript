@@ -456,8 +456,8 @@ func (p *projection) fieldExpr(node *ast.Node, write bool) (*expression, respons
 // An aggregate expression uses lexical token spans. When it delegates an
 // operand subtree to the ordinary scalar projector, retain that projector's
 // checked facts and normalize only this owned subtree against its actual AST.
-func (p *projection) aggregateOperand(node *ast.Node, expected string) (*expression, response) {
-	value, failure := p.expr(node, expected)
+func (p *projection) aggregateOperand(node *ast.Node, expected string, presence ...*parameterPresence) (*expression, response) {
+	value, failure := p.expr(node, expected, presence...)
 	if failure.Status != "" {
 		return nil, failure
 	}
@@ -500,7 +500,7 @@ func (p *projection) aggregateOperandRanges(value *expression, node *ast.Node) {
 	}
 }
 
-func (p *projection) aggregateExpr(node *ast.Node, expected string) (*expression, response, bool) {
+func (p *projection) aggregateExpr(node *ast.Node, expected string, presence ...*parameterPresence) (*expression, response, bool) {
 	if node == nil {
 		return nil, response{}, false
 	}
@@ -515,10 +515,17 @@ func (p *projection) aggregateExpr(node *ast.Node, expected string) (*expression
 			}
 			return nil, failAt(code, "error", p.file, node), true
 		}
+		var shape *parameterPresence
+		if len(presence) != 0 {
+			shape = presence[0]
+		}
+		if expected != "" && !permittedPresence(value, shape) {
+			return nil, failAt("r01-d-scalar-type", "error", p.file, node), true
+		}
 		return value, response{}, true
 	}
 	if node.Kind == ast.KindParenthesizedExpression {
-		inner, failure, handled := p.aggregateExpr(node.AsParenthesizedExpression().Expression, expected)
+		inner, failure, handled := p.aggregateExpr(node.AsParenthesizedExpression().Expression, expected, presence...)
 		if !handled {
 			return nil, response{}, false
 		}
@@ -638,6 +645,52 @@ func (p *projection) aggregateExpr(node *ast.Node, expected string) (*expression
 						return nil, failure, true
 					}
 					return finish(&expression{Kind: "write", Type: binding.Type, Operator: "=", Left: left, Right: right, Range: expressionOffset(p.file, node)}, response{})
+				}
+
+				if exists {
+					if !binding.Writable {
+						return nil, failAt("r01-d-scalar-type", "error", p.file, binary.Left), true
+					}
+					logical := operator == "&&=" || operator == "||="
+					allowAbsent := operator == "=" || operator == "??=" || logical
+					var shape *parameterPresence
+					if allowAbsent {
+						shape = binding.Presence
+					}
+					left, failure := p.aggregateOperand(binary.Left, binding.Type, shape)
+					if failure.Status != "" {
+						return nil, failure, true
+					}
+					rightType := binding.Type
+					if operator == "<<=" || operator == ">>=" || operator == ">>>=" {
+						rightType = "i32"
+					}
+					right, failure := p.aggregateOperand(binary.Right, rightType, shape)
+					if failure.Status != "" {
+						return nil, failure, true
+					}
+					if allowAbsent && !permittedPresence(right, binding.Presence) {
+						return nil, failAt("r01-d-scalar-type", "error", p.file, binary.Right), true
+					}
+					if logical {
+						if binding.Type != "bool" {
+							return nil, failAt("r01-d-scalar-type", "error", p.file, binary.Left), true
+						}
+					} else if operator != "=" && operator != "??=" {
+						floatOperation := operator == "+=" || operator == "-=" || operator == "*=" || operator == "/=" || operator == "%="
+						if !integerKind(binding.Type) && !(p.integerTarget.floats && floatKind(binding.Type) && floatOperation) {
+							return nil, failAt("r01-d-scalar-type", "error", p.file, binary.Left), true
+						}
+					}
+					value := &expression{Kind: "write", Type: binding.Type, Operator: operator, Left: left, Right: right, Range: expressionOffset(p.file, node)}
+					if logical {
+						payload, u, n, valid := finitePresence(p.check.GetTypeAtLocation(node))
+						if !valid || payload != "" && payload != binding.Type {
+							return nil, failAt("r01-d-scalar-type", "error", p.file, node), true
+						}
+						value.PresenceFlow = &presenceFlow{Undefined: u, Null: n}
+					}
+					return finish(value, response{})
 				}
 			}
 			if leaf.Kind != ast.KindPropertyAccessExpression {
@@ -1084,10 +1137,10 @@ func (a *aggregateProjection) contextDiagnostic(file *ast.SourceFile, check *che
 				expected = scalar(check.GetTypeFromTypeNode(function.AsFunctionDeclaration().Type))
 			}
 		}
-		if d.Code() == 2322 && node.Kind == ast.KindBinaryExpression && ordinaryAssignmentOperator(node.AsBinaryExpression().OperatorToken.Kind) == "=" {
+		if d.Code() == 2322 && node.Kind == ast.KindBinaryExpression && ordinaryAssignmentOperator(node.AsBinaryExpression().OperatorToken.Kind) != "" {
 			leaf := ast.SkipParentheses(node.AsBinaryExpression().Left)
 			if leaf.Kind == ast.KindIdentifier {
-				if binding, exists := bindings[check.GetSymbolAtLocation(leaf)]; exists && strings.HasPrefix(binding.Type, "a") {
+				if binding, exists := bindings[check.GetSymbolAtLocation(leaf)]; exists && (strings.HasPrefix(binding.Type, "a") || (&projection{aggregates: a, check: check}).involvesAggregate(node)) {
 					candidate = node
 					expected = binding.Type
 				}

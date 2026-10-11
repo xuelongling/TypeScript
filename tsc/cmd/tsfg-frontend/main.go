@@ -1000,7 +1000,7 @@ func (p *projection) addSymbol(node *ast.Node, kind, t string, writable bool) (s
 
 func (p *projection) expr(node *ast.Node, expected string, presence ...*parameterPresence) (*expression, response) {
 	if p.aggregates != nil {
-		if projected, failure, handled := p.aggregateExpr(node, expected); handled {
+		if projected, failure, handled := p.aggregateExpr(node, expected, presence...); handled {
 			return projected, failure
 		}
 	}
