@@ -107,6 +107,111 @@ export function answer(): i64 { const pair = new Pair(false); return pair.n; }`
 	}
 }
 
+func TestAggregateFieldCompoundUpdateCopyPreservesTypedMutation(t *testing.T) {
+	t.Parallel()
+	const source = `@tsfgValue class Pair { n: i64 = 7; }
+export function answer(): i64 { const pair = new Pair(); pair.n += 2; pair.n++; const copy: Pair = pair; pair.n = 40; return copy.n; }`
+	result := analyze(aggregateRequest(t, source))
+	if result.Status != "ok" || len(result.Functions) != 1 {
+		t.Fatalf("typed compound mutation falsely rejected: %+v", result)
+	}
+	body := result.Functions[0].Body
+	if len(body) != 6 {
+		t.Fatalf("mutation/copy statements were swallowed: %+v", body)
+	}
+	compound, update := body[1].Expression, body[2].Expression
+	if compound.Kind != "fieldWrite" || compound.Operator != "+=" || compound.Type != "i64" || compound.Right.Type != "i64" || compound.Right.Literal == nil || compound.Right.Literal.Decimal != "2" || !compound.Left.Permission.Writable || compound.Left.Permission.ConstructorSelf {
+		t.Fatalf("compound lost typed ordinary field permission or literal: %+v", compound)
+	}
+	if update.Kind != "fieldUpdate" || update.Operator != "++" || update.Prefix == nil || *update.Prefix || update.Type != "i64" || !update.Operand.Permission.Writable || update.Operand.Symbol != compound.Left.Symbol {
+		t.Fatalf("postfix update lost actual field identity: %+v", update)
+	}
+	if body[3].Initializer.Kind != "reference" || body[3].Initializer.Type != result.AggregateFacts.Declarations[0].ID || body[4].Expression.Kind != "fieldWrite" || body[4].Expression.Operator != "=" || body[5].Expression.Kind != "field" || body[5].Expression.Receiver.Symbol != body[3].Symbol.ID {
+		t.Fatalf("ordinary copy/store/read ownership lost: %+v", body)
+	}
+	for _, item := range []struct {
+		name, source, code string
+		upstream           int32
+	}{
+		{"readonly compound", `@tsfgValue class Pair { readonly n: i64 = 7; } export function answer(): i64 { const pair = new Pair(); pair.n += 2; return pair.n; }`, "r02b-d-type", 2540},
+		{"readonly update", `@tsfgValue class Pair { readonly n: i64 = 7; } export function answer(): i64 { const pair = new Pair(); pair.n++; return pair.n; }`, "r02b-d-type", 2540},
+		{"wrong scalar", `@tsfgValue class Pair { n: i64 = 7; } export function answer(): i64 { const pair = new Pair(); const wrong: u8 = 1; pair.n += wrong; return pair.n; }`, "r01-d-scalar-type", 2322},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			result := analyze(aggregateRequest(t, item.source))
+			found := false
+			for _, d := range result.Diagnostics {
+				if d.Code == item.code && d.UpstreamCode == item.upstream {
+					found = true
+				}
+			}
+			if result.Status != "error" || !found {
+				t.Fatalf("mutation gate swallowed readonly/type diagnostic: %+v", result)
+			}
+		})
+	}
+}
+
+func TestAggregateMixedCallSignaturesKeepNumericLiteralContexts(t *testing.T) {
+	t.Parallel()
+	const header = `@tsfgValue class Pair { n: u8; constructor(n: u8) { this.n = n; } }
+`
+	for _, item := range []struct{ name, source string }{
+		{"aggregate return", `function make(n: u8): Pair { return new Pair(n); }
+export function answer(): u8 { const pair = make(1); return pair.n; }`},
+		{"aggregate parameter", `function take(p: Pair, n: u8): u8 { return p.n + n; }
+export function answer(): u8 { const pair = new Pair(1); return take(pair, 1); }`},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			result := analyze(aggregateRequest(t, header+item.source))
+			if result.Status != "ok" || len(result.Functions) != 2 || result.AggregateFacts == nil || len(result.AggregateFacts.SourceCoverage) != 3 {
+				t.Fatalf("mixed signature falsely rejected or source coverage lost: %+v", result)
+			}
+			owner := result.AggregateFacts.Declarations[0].ID
+			callee, caller := result.Functions[0], result.Functions[1]
+			var call *expression
+			if item.name == "aggregate return" {
+				if callee.ReturnType != owner || callee.Parameters[0].Type != "u8" {
+					t.Fatalf("mixed return signature lost nominal/scalar identity: %+v", callee)
+				}
+				call = caller.Body[0].Initializer
+			} else {
+				if callee.ReturnType != "u8" || len(callee.Parameters) != 2 || callee.Parameters[0].Type != owner || callee.Parameters[1].Type != "u8" {
+					t.Fatalf("mixed parameter signature lost nominal/scalar identity: %+v", callee)
+				}
+				call = caller.Body[1].Expression
+			}
+			if call.Kind != "call" || call.Target != callee.Symbol || call.Arguments == nil {
+				t.Fatalf("actual checked ordinary call identity lost: %+v", call)
+			}
+			argument := (*call.Arguments)[len(*call.Arguments)-1]
+			if argument.Type != "u8" || argument.Literal == nil || argument.Literal.Decimal != "1" {
+				t.Fatalf("mixed call literal context lost: %+v", argument)
+			}
+		})
+	}
+	for _, source := range []string{
+		`function make(n: u8): Pair { return new Pair(n); }
+export function answer(): u8 { const pair = make(256); return pair.n; }`,
+		`function take(p: Pair, n: u8): u8 { return p.n + n; }
+export function answer(): u8 { const pair = new Pair(1); return take(pair, 256); }`,
+	} {
+		result := analyze(aggregateRequest(t, header+source))
+		if result.Status != "error" {
+			t.Fatalf("mixed signature numeric overflow admitted: %+v", result)
+		}
+		found := false
+		for _, d := range result.Diagnostics {
+			if d.Code == "r01-d-integer-range" && d.UpstreamCode == 2345 && sourceText(t, header+source, d.Range) == "256" {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatalf("mixed overflow lost owned range or genuine official identity: %+v", result.Diagnostics)
+		}
+	}
+}
+
 func TestAggregateFieldShiftKeepsOwnedDefaultI32Local(t *testing.T) {
 	t.Parallel()
 	const source = `@tsfgValue class Pair { n: i64 = 7; }

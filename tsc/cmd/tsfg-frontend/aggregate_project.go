@@ -796,6 +796,67 @@ func (a *aggregateProjection) parameter(file *ast.SourceFile, check *checker.Che
 	return checkedParameter(file, check, node)
 }
 
+// Mixed aggregate/scalar signatures need their scalar argument contexts before
+// official diagnostics. Keep the same complete source declaration and checked
+// signature identity requirements as the ordinary scalar context registry.
+func (a *aggregateProjection) functionContexts(file *ast.SourceFile, check *checker.Checker) map[*ast.Symbol]functionInfo {
+	functions := map[*ast.Symbol]functionInfo{}
+	for _, node := range file.Statements.Nodes {
+		if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Name().Kind != ast.KindIdentifier || node.Body() == nil || node.Body().Kind != ast.KindBlock {
+			continue
+		}
+		decl := node.AsFunctionDeclaration()
+		if decl.Type == nil || decl.TypeParameters != nil {
+			continue
+		}
+		resolved := check.GetSymbolAtLocation(node.Name())
+		if resolved == nil {
+			continue
+		}
+		signatures := check.GetSignaturesOfType(check.GetTypeOfSymbol(resolved), checker.SignatureKindCall)
+		if len(signatures) != 1 || signatures[0].Declaration() != node {
+			continue
+		}
+		checked := signatures[0]
+		returnType := a.typeName(check.GetReturnTypeOfSignature(checked))
+		hasAggregate := returnType != ""
+		if returnType == "" {
+			returnType = scalar(check.GetReturnTypeOfSignature(checked))
+		}
+		if returnType == "" || len(checked.Parameters()) != len(decl.Parameters.Nodes) {
+			continue
+		}
+		parameters := make([]string, 0, len(checked.Parameters()))
+		presence := make([]*parameterPresence, 0, len(checked.Parameters()))
+		hasPresence := false
+		for index, node := range decl.Parameters.Nodes {
+			t, shape, valid := a.parameter(file, check, node)
+			checkedType := check.GetTypeOfSymbol(checked.Parameters()[index])
+			ownedType := a.typeName(checkedType)
+			if ownedType != "" {
+				hasAggregate = true
+			} else {
+				var validType bool
+				ownedType, _, _, validType = finitePresence(checkedType)
+				valid = valid && validType
+			}
+			if !valid || ownedType != t || check.GetSymbolAtLocation(node.Name()) != checked.Parameters()[index] {
+				break
+			}
+			parameters = append(parameters, t)
+			presence = append(presence, shape)
+			hasPresence = hasPresence || shape != nil
+		}
+		if hasAggregate && len(parameters) == len(decl.Parameters.Nodes) {
+			if !hasPresence {
+				presence = nil
+			}
+			functions[resolved] = functionInfo{Declaration: node, Signature: signature{Parameters: parameters, ReturnType: returnType, Presence: presence}}
+		}
+	}
+	return functions
+}
+
 func (a *aggregateProjection) constructorHeaders(file *ast.SourceFile, check *checker.Checker, result *response) *response {
 	for _, info := range a.ordered() {
 		decl := &a.facts.Declarations[info.index]
@@ -955,9 +1016,22 @@ func (a *aggregateProjection) contextDiagnostic(file *ast.SourceFile, check *che
 				expected = scalar(check.GetTypeFromTypeNode(function.AsFunctionDeclaration().Type))
 			}
 		}
-		if d.Code() == 2322 && node.Kind == ast.KindBinaryExpression && node.AsBinaryExpression().OperatorToken.Kind == ast.KindEqualsToken && ast.SkipParentheses(node.AsBinaryExpression().Left).Kind == ast.KindPropertyAccessExpression {
-			candidate = node.AsBinaryExpression().Right
-			expected = scalar(check.GetTypeAtLocation(node.AsBinaryExpression().Left))
+		if d.Code() == 2322 && aggregateFieldMutation(node) {
+			var operand *ast.Node
+			switch node.Kind {
+			case ast.KindBinaryExpression:
+				operand = node.AsBinaryExpression().Left
+			case ast.KindPrefixUnaryExpression:
+				operand = node.AsPrefixUnaryExpression().Operand
+			case ast.KindPostfixUnaryExpression:
+				operand = node.AsPostfixUnaryExpression().Operand
+			}
+			if operand != nil {
+				// Qualify the complete owned mutation, including its resolved
+				// field identity, write permission and operator operand types.
+				candidate = node
+				expected = scalar(check.GetTypeAtLocation(operand))
+			}
 		}
 		if d.Code() == 2322 && node.Kind == ast.KindParameter && ast.FindAncestor(node, ast.IsConstructorDeclaration) != nil {
 			candidate = node.AsParameterDeclaration().Initializer

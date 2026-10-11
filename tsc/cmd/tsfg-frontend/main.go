@@ -1609,6 +1609,7 @@ func analyze(r request) response {
 			release()
 			return *failure
 		}
+		maps.Copy(contextFunctions, aggregates.functionContexts(file, check))
 	}
 	if r.Target != nil {
 		check.SetTSFGScalarAssignments(scalarAssignmentContexts(file, check, contextFunctions, r.Target))
