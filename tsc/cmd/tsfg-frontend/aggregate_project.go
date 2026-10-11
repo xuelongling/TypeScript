@@ -1095,8 +1095,18 @@ func (a *aggregateProjection) contextDiagnostic(file *ast.SourceFile, check *che
 				checked = check.GetTypeAtLocation(node.Name())
 			}
 			t := a.typeName(checked)
+			var shape *parameterPresence
 			if t == "" {
 				t = scalar(checked)
+				if node.Kind == ast.KindParameter {
+					if payload, presence, ok := checkedParameter(file, check, node); ok {
+						t, shape = payload, presence
+					}
+				} else if node.Kind == ast.KindVariableDeclaration && annotation != nil {
+					if payload, presence, ok := checkedLocalPresence(file, check, node); ok {
+						t, shape = payload, presence
+					}
+				}
 			}
 			if annotation == nil && node.Kind == ast.KindVariableDeclaration && node.AsVariableDeclaration().Initializer != nil {
 				// The checker sees numeric initializers as number. Diagnostic
@@ -1108,7 +1118,7 @@ func (a *aggregateProjection) contextDiagnostic(file *ast.SourceFile, check *che
 				}
 			}
 			if t != "" {
-				bindings[check.GetSymbolAtLocation(node.Name())] = symbol{Type: t, Writable: true}
+				bindings[check.GetSymbolAtLocation(node.Name())] = symbol{Type: t, Writable: true, Presence: shape}
 			}
 		}
 		return node.ForEachChild(bind)

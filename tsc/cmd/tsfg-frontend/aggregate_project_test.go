@@ -785,3 +785,68 @@ func TestAggregateScalarWriteKeepsOrdinaryBoundaries(t *testing.T) {
 		})
 	}
 }
+
+func TestAggregateNarrowedScalarWritesKeepDeclaredPresence(t *testing.T) {
+	const header = `@tsfgValue class Pair { n:i64=7; } `
+	tests := []struct {
+		name, parameter, prelude, write string
+		upstream                        int32
+	}{
+		{"explicit undefined compound", "x:i64|undefined", "if(x===undefined){return 7;}", "x += pair.n", 0},
+		{"explicit undefined assignment", "x:i64|undefined", "if(x===undefined){return 7;}", "x = pair.n", 0},
+		{"nonnullable control", "x:i64", "", "x += pair.n", 0},
+		{"explicit null compound", "x:i64|null", "if(x===null){return 7;}", "x += pair.n", 0},
+		{"both absence members", "x:i64|undefined|null", "if(x===undefined || x===null){return 7;}", "x += pair.n", 0},
+		{"optional syntax control", "x?:i64", "if(x===undefined){return 7;}", "x += pair.n", 0},
+		{"nullable local", "value:i64|undefined", "let x:i64|undefined=value; if(x===undefined){return 7;}", "x += pair.n", 0},
+		{"unproven nullable remains invalid", "x:i64|undefined", "", "x += pair.n", 18048},
+	}
+	for _, item := range tests {
+		t.Run(item.name, func(t *testing.T) {
+			source := header + "export function answer(" + item.parameter + "):i64 { " + item.prelude + " const pair=new Pair(); return (" + item.write + "); }"
+			r := aggregateRequest(t, source)
+			var input, output bytes.Buffer
+			if err := json.NewLegacyEncoder(&input).Encode(r); err != nil {
+				t.Fatal(err)
+			}
+			if err := runCommand(&input, &output); err != nil {
+				t.Fatal(err)
+			}
+			var result response
+			if err := json.NewLegacyDecoder(&output).Decode(&result); err != nil {
+				t.Fatal(err)
+			}
+			if item.upstream != 0 {
+				if result.Status != "error" {
+					t.Fatalf("unproven nullable write admitted: %+v", result)
+				}
+				found := false
+				for _, d := range result.Diagnostics {
+					if d.UpstreamCode == item.upstream {
+						found = true
+					}
+				}
+				if !found {
+					t.Fatalf("official nullable failure was swallowed: %+v", result.Diagnostics)
+				}
+				return
+			}
+			if result.Status != "ok" || result.AggregateFacts == nil || len(result.Diagnostics) != 0 || len(result.Functions) != 1 {
+				t.Fatalf("checked narrowing rejected: %+v", result)
+			}
+			fn := result.Functions[0]
+			if item.name == "explicit undefined compound" || item.name == "explicit undefined assignment" {
+				if fn.Parameters[0].Presence == nil || !fn.Parameters[0].Presence.Undefined || fn.Parameters[0].Presence.Optional {
+					t.Fatalf("explicit union was changed into optional syntax: %+v", fn.Parameters)
+				}
+			}
+			write := fn.Body[len(fn.Body)-1].Expression.Operand
+			if write.Kind != "write" || write.Left.Kind != "reference" || write.Operator != "=" && (write.Left.PresenceFlow == nil && item.name != "nonnullable control" || write.Left.PresenceFlow != nil && (write.Left.PresenceFlow.Undefined || write.Left.PresenceFlow.Null)) || !permittedPresence(write, nil) || write.Right.Kind != "field" || write.Type != "i64" {
+				t.Fatalf("narrowed write lost payload/presence: %+v", write)
+			}
+			if sourceText(t, source, write.Right.Range) != "pair.n" || write.Left.Range.Start < write.Range.Start || write.Right.Range.End > write.Range.End {
+				t.Fatalf("official write operands lost source containment: %+v", write)
+			}
+		})
+	}
+}
