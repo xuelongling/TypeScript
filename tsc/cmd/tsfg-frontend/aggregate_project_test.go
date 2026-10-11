@@ -475,3 +475,52 @@ func TestAggregateNativeProtocolOwnedFacts(t *testing.T) {
 		t.Fatalf("selected self leaf turned into whole-self copy: %+v", read)
 	}
 }
+
+func TestAggregateMalformedSyntaxKeepsOfficialPublicDiagnostics(t *testing.T) {
+	t.Parallel()
+	const malformed = "@tsfgValue class Pair { n: i64 = 7;"
+	tests := []struct {
+		name, prefix string
+		end, line    int
+	}{
+		{"missing class brace", "", 35, 0},
+		{"UTF16 prefix", "// 💡\n", 41, 1},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			r := aggregateRequest(t, test.prefix+malformed)
+			var input, output bytes.Buffer
+			if err := json.NewLegacyEncoder(&input).Encode(r); err != nil {
+				t.Fatal(err)
+			}
+			if err := runCommand(&input, &output); err != nil {
+				t.Fatal(err)
+			}
+			var result response
+			if err := json.NewLegacyDecoder(&output).Decode(&result); err != nil {
+				t.Fatal(err)
+			}
+			if result.Status != "error" || result.AggregateFacts != nil || len(result.Functions) != 0 {
+				t.Fatalf("malformed source acquired projected facts: %+v", result)
+			}
+			found := false
+			for _, d := range result.Diagnostics {
+				if d.Code == "r01-d-aggregate-marker" {
+					t.Fatalf("custom admission replaced official syntax: %+v", result.Diagnostics)
+				}
+				if d.Code != "r02b-d-syntax" || d.UpstreamCode != 1005 {
+					continue
+				}
+				expected := primary{SourceID: "/src/main.ts", Start: test.end, End: test.end, StartLine: test.line, EndLine: test.line, StartColumn: len(malformed), EndColumn: len(malformed)}
+				if d.File != "/src/main.ts" || d.Range != (span{test.end, test.end}) || d.Primary != expected || d.RuleID != "r01-ts-baseline" || len(d.RuleIDs) != 1 || d.RuleIDs[0] != d.RuleID || d.Category != "error" || d.Phase != "syntax" || d.Severity != "error" {
+					t.Fatalf("official syntax identity or UTF16 anchor changed: %+v", d)
+				}
+				found = true
+			}
+			if !found {
+				t.Fatalf("missing official closing-brace diagnostic: %+v", result.Diagnostics)
+			}
+		})
+	}
+}

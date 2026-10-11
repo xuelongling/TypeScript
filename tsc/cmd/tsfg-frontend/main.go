@@ -1583,43 +1583,49 @@ func analyze(r request) response {
 	}
 	slices.Sort(consumed)
 	result := response{Status: "ok", Inputs: consumed, Functions: []function{}, Symbols: []symbol{}}
+	syntacticDiagnostics := program.GetSyntacticDiagnostics(context.Background(), nil)
 	check, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
 	contextFunctions := operatorFunctions(file, check)
 	var conversions *conversionFacts
-	if r.Declarations.Version == conversionVersion {
-		var failure *response
-		conversions, failure = admittedConversions(r, program, check)
-		if failure != nil {
-			release()
-			return *failure
+	var aggregates *aggregateProjection
+	// Custom admission assumes complete syntax and must not replace parser diagnostics.
+	if len(syntacticDiagnostics) == 0 {
+		if r.Declarations.Version == conversionVersion {
+			var failure *response
+			conversions, failure = admittedConversions(r, program, check)
+			if failure != nil {
+				release()
+				return *failure
+			}
+			if failure = verifyConversionNominals(file, check, conversions); failure != nil {
+				release()
+				return *failure
+			}
+			maps.Copy(contextFunctions, conversions.Functions)
 		}
-		if failure = verifyConversionNominals(file, check, conversions); failure != nil {
+		var aggregateFailure *response
+		aggregates, aggregateFailure = admittedAggregates(r, program, check, file, &result)
+		if aggregateFailure != nil {
 			release()
-			return *failure
+			return *aggregateFailure
 		}
-		maps.Copy(contextFunctions, conversions.Functions)
-	}
-	aggregates, aggregateFailure := admittedAggregates(r, program, check, file, &result)
-	if aggregateFailure != nil {
-		release()
-		return *aggregateFailure
-	}
-	if aggregates != nil {
-		if failure := aggregates.constructorHeaders(file, check, &result); failure != nil {
-			release()
-			return *failure
+		if aggregates != nil {
+			if failure := aggregates.constructorHeaders(file, check, &result); failure != nil {
+				release()
+				return *failure
+			}
+			maps.Copy(contextFunctions, aggregates.functionContexts(file, check))
 		}
-		maps.Copy(contextFunctions, aggregates.functionContexts(file, check))
-	}
-	if r.Target != nil {
-		check.SetTSFGScalarAssignments(scalarAssignmentContexts(file, check, contextFunctions, r.Target))
+		if r.Target != nil {
+			check.SetTSFGScalarAssignments(scalarAssignmentContexts(file, check, contextFunctions, r.Target))
+		}
 	}
 	release()
 	groups := []struct {
 		items []*ast.Diagnostic
 		code  string
 	}{
-		{program.GetSyntacticDiagnostics(context.Background(), nil), "r02b-d-syntax"},
+		{syntacticDiagnostics, "r02b-d-syntax"},
 		{program.GetSemanticDiagnostics(context.Background(), nil), "r02b-d-type"},
 		{program.GetProgramDiagnostics(), "r02b-d-type"},
 		{program.GetGlobalDiagnostics(context.Background()), "r02b-d-type"},
