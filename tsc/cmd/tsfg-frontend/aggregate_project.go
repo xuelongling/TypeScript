@@ -453,6 +453,53 @@ func (p *projection) fieldExpr(node *ast.Node, write bool) (*expression, respons
 	return &expression{Kind: "field", Type: field.Type, Receiver: receiver, FieldPath: path, Symbol: field.Symbol, Permission: &fieldPermission{Readable: readable, Writable: writable, ConstructorSelf: self, ClassRef: decl.ID}, Range: expressionOffset(p.file, node)}, response{}
 }
 
+// An aggregate expression uses lexical token spans. When it delegates an
+// operand subtree to the ordinary scalar projector, retain that projector's
+// checked facts and normalize only this owned subtree against its actual AST.
+func (p *projection) aggregateOperand(node *ast.Node, expected string) (*expression, response) {
+	value, failure := p.expr(node, expected)
+	if failure.Status != "" {
+		return nil, failure
+	}
+	if !p.involvesAggregate(node) {
+		p.aggregateOperandRanges(value, node)
+	}
+	return value, response{}
+}
+
+func (p *projection) aggregateOperandRanges(value *expression, node *ast.Node) {
+	if value == nil || node == nil {
+		return
+	}
+	value.Range = expressionOffset(p.file, node)
+	switch node.Kind {
+	case ast.KindParenthesizedExpression:
+		p.aggregateOperandRanges(value.Operand, node.AsParenthesizedExpression().Expression)
+	case ast.KindBinaryExpression:
+		binary := node.AsBinaryExpression()
+		p.aggregateOperandRanges(value.Left, binary.Left)
+		p.aggregateOperandRanges(value.Right, binary.Right)
+	case ast.KindPrefixUnaryExpression:
+		p.aggregateOperandRanges(value.Operand, node.AsPrefixUnaryExpression().Operand)
+	case ast.KindPostfixUnaryExpression:
+		p.aggregateOperandRanges(value.Operand, node.AsPostfixUnaryExpression().Operand)
+	case ast.KindCallExpression:
+		call := node.AsCallExpression()
+		if call.Arguments != nil {
+			if value.Kind == "conversion" && len(call.Arguments.Nodes) == 1 {
+				p.aggregateOperandRanges(value.Operand, call.Arguments.Nodes[0])
+			}
+			if value.Arguments != nil {
+				for index, argument := range call.Arguments.Nodes {
+					if index < len(*value.Arguments) {
+						p.aggregateOperandRanges(&(*value.Arguments)[index], argument)
+					}
+				}
+			}
+		}
+	}
+}
+
 func (p *projection) aggregateExpr(node *ast.Node, expected string) (*expression, response, bool) {
 	if node == nil {
 		return nil, response{}, false
@@ -622,7 +669,7 @@ func (p *projection) aggregateExpr(node *ast.Node, expected string) (*expression
 			}
 			context = "bool"
 		}
-		left, failure := p.expr(binary.Left, context)
+		left, failure := p.aggregateOperand(binary.Left, context)
 		if failure.Status != "" {
 			return nil, failure, true
 		}
@@ -630,7 +677,7 @@ func (p *projection) aggregateExpr(node *ast.Node, expected string) (*expression
 		if shift {
 			rightType = "i32"
 		}
-		right, failure := p.expr(binary.Right, rightType)
+		right, failure := p.aggregateOperand(binary.Right, rightType)
 		if failure.Status != "" {
 			if shift && failure.Diagnostics[0].Code == "r01-d-scalar-type" {
 				failure = failAt("r01-d-shift-count-type", "error", p.file, binary.Right)

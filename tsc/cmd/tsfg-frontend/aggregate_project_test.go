@@ -20,6 +20,78 @@ func aggregateRequest(t *testing.T, source string) request {
 	return r
 }
 
+func TestAggregateScalarOperandSpansKeepTokenStartsAndContainment(t *testing.T) {
+	t.Parallel()
+	const observed = "@tsfgValue class Pair { n: i64 = 7; }\nexport function answer(): i64 { const pair = new Pair(); const count: i64 = 1; return count + pair.n; }"
+	original := analyze(aggregateRequest(t, observed))
+	if original.Status != "ok" {
+		t.Fatalf("original observed scalar-left source rejected: %+v", original.Diagnostics)
+	}
+	observedValue := original.Functions[0].Body[2].Expression
+	if observedValue.Range != (span{124, 138}) || observedValue.Left.Range != (span{124, 129}) || observedValue.Right.Range != (span{132, 138}) {
+		t.Fatalf("original observed spans were not corrected from actual AST token starts: %+v", observedValue)
+	}
+	const header = "/*😀*/ @tsfgValue class Pair { n: i64 = 7; }\n"
+	const ordinary = "export function ordinary(n: i64): i64 { return n; }\n"
+	pure := analyze(conversionRequest(t, ordinary))
+	if pure.Status != "ok" {
+		t.Fatalf("ordinary scalar baseline rejected: %+v", pure.Diagnostics)
+	}
+	pureRangeText := sourceText(t, ordinary, pure.Functions[0].Body[0].Expression.Range)
+	for _, item := range []struct{ name, operand, rangeText string }{
+		{"observed", "count + pair.n", "count + pair.n"},
+		{"leading-trivia", " \t /* lead */ count + pair.n", "count + pair.n"},
+		{"parentheses", "( count ) + pair.n", "( count ) + pair.n"},
+		{"multiple-scalar-subexpressions", "count + count + pair.n", "count + count + pair.n"},
+		{"nested-groups", "((count + count)) + (pair.n + count)", "((count + count)) + (pair.n + count)"},
+		{"scalar-call-operand", "ordinary( count + count ) + pair.n", "ordinary( count + count ) + pair.n"},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			source := header + ordinary + "export function answer(): i64 { const pair = new Pair(); const count: i64 = 1; return " + item.operand + "; }"
+			result := analyze(aggregateRequest(t, source))
+			if result.Status != "ok" || len(result.Functions) != 2 {
+				t.Fatalf("typed aggregate scalar operand rejected: %+v", result)
+			}
+			if sourceText(t, source, result.Functions[0].Body[0].Expression.Range) != pureRangeText {
+				t.Fatal("pure-scalar declaration projection changed under aggregate profile")
+			}
+			value := result.Functions[1].Body[2].Expression
+			if value.Kind != "binary" || value.Type != "i64" || sourceText(t, source, value.Range) != item.rangeText {
+				t.Fatalf("aggregate parent lost its actual lexical token span: %+v", value)
+			}
+			var check func(*expression)
+			check = func(parent *expression) {
+				if parent == nil {
+					return
+				}
+				text := sourceText(t, source, parent.Range)
+				if len(text) == 0 || text[0] == ' ' || text[0] == '\t' || text[0] == '\n' || text[0] == '\r' {
+					t.Fatalf("aggregate-owned operand retained leading trivia: %+v", parent)
+				}
+				children := []*expression{parent.Left, parent.Right, parent.Operand, parent.Receiver}
+				if parent.Arguments != nil {
+					for index := range *parent.Arguments {
+						children = append(children, &(*parent.Arguments)[index])
+					}
+				}
+				for _, child := range children {
+					if child == nil {
+						continue
+					}
+					if child.Range.Start < parent.Range.Start || child.Range.End > parent.Range.End {
+						t.Fatalf("actual Source child span escapes owned parent: parent=%+v child=%+v", parent.Range, child.Range)
+					}
+					check(child)
+				}
+			}
+			check(value)
+			if value.Left.Kind == "reference" && sourceText(t, source, value.Left.Range) != "count" {
+				t.Fatalf("observed ordinary scalar reference did not keep its exact token identity: %+v", value.Left)
+			}
+		})
+	}
+}
+
 func TestAggregateScalarLeavesKeepEvaluationAndTypeRules(t *testing.T) {
 	t.Parallel()
 	const header = `@tsfgValue class Pair { n: i64 = 7; flag: bool = false; small: u8 = 1; fraction: f32 = 1.5; }
