@@ -620,6 +620,26 @@ func (p *projection) aggregateExpr(node *ast.Node, expected string) (*expression
 		binary := node.AsBinaryExpression()
 		if operator := ordinaryAssignmentOperator(binary.OperatorToken.Kind); operator != "" {
 			leaf := ast.SkipParentheses(binary.Left)
+			if leaf.Kind == ast.KindIdentifier {
+				binding, exists := p.bindings[p.check.GetSymbolAtLocation(leaf)]
+				if exists && strings.HasPrefix(binding.Type, "a") {
+					if operator != "=" {
+						return nil, failAt("r02b-d-unsupported", "unsupported", p.file, node), true
+					}
+					if !binding.Writable {
+						return nil, failAt("r01-d-aggregate-write", "error", p.file, leaf), true
+					}
+					left, failure := p.expr(leaf, binding.Type)
+					if failure.Status != "" {
+						return nil, failure, true
+					}
+					right, failure := p.expr(binary.Right, binding.Type)
+					if failure.Status != "" {
+						return nil, failure, true
+					}
+					return finish(&expression{Kind: "write", Type: binding.Type, Operator: "=", Left: left, Right: right, Range: expressionOffset(p.file, node)}, response{})
+				}
+			}
 			if leaf.Kind != ast.KindPropertyAccessExpression {
 				return nil, response{}, false
 			}
@@ -1062,6 +1082,15 @@ func (a *aggregateProjection) contextDiagnostic(file *ast.SourceFile, check *che
 			if function := ast.FindAncestor(node, ast.IsFunctionDeclaration); function != nil && function.AsFunctionDeclaration().Type != nil {
 				candidate = node.AsReturnStatement().Expression
 				expected = scalar(check.GetTypeFromTypeNode(function.AsFunctionDeclaration().Type))
+			}
+		}
+		if d.Code() == 2322 && node.Kind == ast.KindBinaryExpression && ordinaryAssignmentOperator(node.AsBinaryExpression().OperatorToken.Kind) == "=" {
+			leaf := ast.SkipParentheses(node.AsBinaryExpression().Left)
+			if leaf.Kind == ast.KindIdentifier {
+				if binding, exists := bindings[check.GetSymbolAtLocation(leaf)]; exists && strings.HasPrefix(binding.Type, "a") {
+					candidate = node
+					expected = binding.Type
+				}
 			}
 		}
 		if d.Code() == 2322 && aggregateFieldMutation(node) {

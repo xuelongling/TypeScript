@@ -609,3 +609,68 @@ func TestAggregateCapabilityBoundaryKeepsSupportedPublicFacts(t *testing.T) {
 		})
 	}
 }
+
+func TestAggregateLocalRebindingPreservesOwnedPublicFacts(t *testing.T) {
+	const header = `@tsfgValue class Pair { n:i64; m:i64; constructor(n:i64,m:i64) { this.n=n; this.m=m; } } `
+	tests := []struct {
+		name, source, code string
+		upstream           int32
+	}{
+		{"captured receiver", header + `export function answer():i64 { let p=new Pair(10,20); p.n += (p=new Pair(100,200)).n-95; return p.n*1000+p.m; }`, "", 0},
+		{"plain rebinding", header + `export function answer():i64 { let p=new Pair(10,20); p=new Pair(100,200); return p.n; }`, "", 0},
+		{"immutable binding", header + `export function answer():i64 { const p=new Pair(10,20); p=new Pair(100,200); return p.n; }`, "", 2588},
+		{"foreign nominal", header + `@tsfgValue class Other { n:i64=100; m:i64=200; } export function answer():i64 { let p=new Pair(10,20); p=new Other(); return p.n; }`, "r01-d-aggregate-identity", 0},
+		{"constructor argument overflow", `@tsfgValue class Pair { n:u8; constructor(n:u8) { this.n=n; } } export function answer():u8 { let p=new Pair(1); p=new Pair(256); return p.n; }`, "r01-d-integer-range", 0},
+	}
+	for _, item := range tests {
+		t.Run(item.name, func(t *testing.T) {
+			r := aggregateRequest(t, item.source)
+			var input, output bytes.Buffer
+			if err := json.NewLegacyEncoder(&input).Encode(r); err != nil {
+				t.Fatal(err)
+			}
+			if err := runCommand(&input, &output); err != nil {
+				t.Fatal(err)
+			}
+			var result response
+			if err := json.NewLegacyDecoder(&output).Decode(&result); err != nil {
+				t.Fatal(err)
+			}
+			if item.code != "" || item.upstream != 0 {
+				if result.Status != "error" {
+					t.Fatalf("invalid nominal write admitted: %+v", result)
+				}
+				found := false
+				for _, d := range result.Diagnostics {
+					if item.code != "" && d.Code == item.code || item.upstream != 0 && d.UpstreamCode == item.upstream {
+						found = true
+					}
+				}
+				if !found {
+					t.Fatalf("negative identity changed: %+v", result.Diagnostics)
+				}
+				return
+			}
+			if result.Status != "ok" || result.AggregateFacts == nil || len(result.Functions) != 1 || len(result.Diagnostics) != 0 {
+				t.Fatalf("valid local rebinding rejected: %+v", result)
+			}
+			if item.name == "plain rebinding" {
+				assignment := result.Functions[0].Body[1]
+				if assignment.Kind != "assignment" || assignment.Target.Type != result.AggregateFacts.Declarations[0].ID || assignment.Value.Kind != "construct" || len(*assignment.Value.Arguments) != 2 {
+					t.Fatalf("ordinary assignment facts changed: %+v", assignment)
+				}
+				return
+			}
+			write := result.Functions[0].Body[1].Expression
+			if item.name == "captured receiver" {
+				if write.Kind != "fieldWrite" || write.Operator != "+=" || write.Right.Kind != "binary" || write.Right.Left.Kind != "field" {
+					t.Fatalf("ordered field-write facts changed: %+v", write)
+				}
+				write = write.Right.Left.Receiver.Operand
+			}
+			if write == nil || write.Kind != "write" || write.Operator != "=" || write.Type != result.AggregateFacts.Declarations[0].ID || write.Left.Kind != "reference" || write.Right.Kind != "construct" || len(*write.Right.Arguments) != 2 || write.Right.Signature.Parameters[0] != "i64" || write.Right.Signature.Parameters[1] != "i64" {
+				t.Fatalf("nominal write/constructor facts lost: %+v", write)
+			}
+		})
+	}
+}
