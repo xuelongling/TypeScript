@@ -917,3 +917,97 @@ func TestAggregateRequiredNominalParameterPresenceFacts(t *testing.T) {
 		})
 	}
 }
+
+func TestAggregateConstructorDefaultPresenceFromAnnotation(t *testing.T) {
+	for _, item := range []struct{ name, annotation, initializer, absence, guard string }{
+		{"nullable-null", "bool | null", "null", "null", "null"},
+		{"undefined-default", "bool | undefined", "undefined", "undefined", "undefined"},
+		{"required-present", "bool", "false", "", ""},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			body := "this.n = n;"
+			ordinaryBody := "return n;"
+			if item.guard != "" {
+				body = "if (n === " + item.guard + ") { this.n = false; } else { this.n = n; }"
+				ordinaryBody = "if (n === " + item.guard + ") { return false; } return n;"
+			}
+			source := "/*😀*/ @tsfgValue class Flag { n: bool; constructor(n: " + item.annotation + " = " + item.initializer + ") { " + body + " } } function ordinary(n: " + item.annotation + " = " + item.initializer + "): bool { " + ordinaryBody + " } export function answer(): bool { return new Flag().n; }"
+			var input, output bytes.Buffer
+			if err := json.NewLegacyEncoder(&input).Encode(aggregateRequest(t, source)); err != nil {
+				t.Fatal(err)
+			}
+			if err := runCommand(&input, &output); err != nil {
+				t.Fatal(err)
+			}
+			var result response
+			if err := json.NewLegacyDecoder(&output).Decode(&result); err != nil {
+				t.Fatal(err)
+			}
+			if result.Status != "ok" {
+				t.Fatalf("valid constructor scalar default rejected: %+v", result.Diagnostics)
+			}
+			ctor := result.AggregateFacts.Declarations[0].Constructors[0]
+			ordinary := result.Functions[0]
+			if len(ctor.ParameterInitializers) != 1 || len(ordinary.ParameterInitializers) != 1 {
+				t.Fatal("default slots missing")
+			}
+			value, control := ctor.ParameterInitializers[0], ordinary.ParameterInitializers[0]
+			if value == nil || control == nil || value.Kind != control.Kind || value.Type != "bool" || value.Absence != item.absence || value.Absence != control.Absence {
+				t.Fatalf("constructor differs from ordinary annotated initializer: constructor=%+v ordinary=%+v", value, control)
+			}
+			if sourceText(t, source, value.Range) != item.initializer || sourceText(t, source, control.Range) != item.initializer {
+				t.Fatal("initializer official token range lost")
+			}
+			shape := ctor.Parameters[0].Presence
+			if shape == nil || !shape.Default || !shape.Optional || !shape.Undefined || shape.Null != (item.absence == "null") || sourceText(t, source, shape.Annotation) != item.annotation {
+				t.Fatalf("header annotation/default proof lost: %+v", shape)
+			}
+			if len(ctor.Signature.Presence) != 1 || ctor.Signature.Presence[0] == nil || *ctor.Signature.Presence[0] != *shape {
+				t.Fatal("constructor signature/header presence differ")
+			}
+			call := result.Functions[1].Body[0].Expression.Receiver
+			if call.Kind != "construct" || call.Arguments == nil || len(*call.Arguments) != 0 {
+				t.Fatalf("omitted actual constructor argument was fabricated: %+v", call)
+			}
+		})
+	}
+}
+
+func TestAggregateConstructorDefaultExcludesUndeclaredAbsence(t *testing.T) {
+	for _, item := range []struct {
+		name, parameters string
+		upstream         int32
+	}{
+		{"required-null", "n: bool = null", 0},
+		{"required-undefined", "n: bool = undefined", 0},
+		{"nullable-excludes-undefined", "n: bool | null = undefined", 0},
+		{"later-parameter", "n: bool = later, later: bool = false", 2373},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			source := "@tsfgValue class Flag { n: bool; constructor(" + item.parameters + ") { if (n === null) { this.n = false; } else { this.n = n; } } } export function answer(): bool { return new Flag().n; }"
+			var input, output bytes.Buffer
+			if err := json.NewLegacyEncoder(&input).Encode(aggregateRequest(t, source)); err != nil {
+				t.Fatal(err)
+			}
+			if err := runCommand(&input, &output); err != nil {
+				t.Fatal(err)
+			}
+			var result response
+			if err := json.NewLegacyDecoder(&output).Decode(&result); err != nil {
+				t.Fatal(err)
+			}
+			if result.Status == "ok" || len(result.Diagnostics) == 0 {
+				t.Fatalf("invalid annotation/default admitted: %+v", result)
+			}
+			if item.upstream != 0 {
+				found := false
+				for _, diagnostic := range result.Diagnostics {
+					found = found || diagnostic.UpstreamCode == item.upstream
+				}
+				if !found {
+					t.Fatalf("later parameter lost official diagnostic%d: %+v", item.upstream, result.Diagnostics)
+				}
+			}
+		})
+	}
+}

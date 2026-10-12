@@ -1045,7 +1045,7 @@ func (a *aggregateProjection) constructorBodies(file *ast.SourceFile, check *che
 			}
 			for index, node := range implementation.AsConstructorDeclaration().Parameters.Nodes {
 				if initializer := node.AsParameterDeclaration().Initializer; initializer != nil {
-					value, failure := project.expr(initializer, ctor.Parameters[index].Type)
+					value, failure := project.expr(initializer, ctor.Parameters[index].Type, checkedInitializerPresence(check, node))
 					if failure.Status != "" {
 						return &failure
 					}
