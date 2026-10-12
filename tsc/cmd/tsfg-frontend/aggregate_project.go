@@ -907,11 +907,16 @@ func (a *aggregateProjection) parameter(file *ast.SourceFile, check *checker.Che
 	parameter := node.AsParameterDeclaration()
 	if parameter.Type != nil && parameter.DotDotDotToken == nil && node.Name() != nil && node.Name().Kind == ast.KindIdentifier && !ast.IsParameterPropertyDeclaration(node, node.Parent) {
 		if t := a.typeName(check.GetTypeFromTypeNode(parameter.Type)); t != "" {
-			// This snapshot profile has no aggregate parameter presence/default contract.
+			// Aggregate parameters are required and present in this profile. Keep
+			// their official declaration ranges just like scalar parameters;
+			// optional/default aggregate payloads remain outside the profile.
 			if parameter.QuestionToken != nil || parameter.Initializer != nil {
 				return "", nil, false
 			}
-			return t, nil, true
+			return t, &parameterPresence{
+				Undefined: false, Null: false, Optional: false, Default: false,
+				Range: offset(file, node), Annotation: expressionOffset(file, parameter.Type),
+			}, true
 		}
 	}
 	return checkedParameter(file, check, node)

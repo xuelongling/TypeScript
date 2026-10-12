@@ -534,6 +534,8 @@ func TestAggregateUnsynchronizedPresenceUsesPublicCapabilityDiagnostics(t *testi
 		{"optional aggregate parameter", `@tsfgValue class Pair { n: i64 = 7; } function make(p?: Pair): Pair { if (p === undefined) { return new Pair(); } return p; } export function answer(): i64 { return make().n; }`, "p?: Pair"},
 		{"default aggregate constructor parameter", `@tsfgValue class Pair { n: i64 = 7; } @tsfgValue class Holder { pair: Pair; constructor(pair: Pair = new Pair()) { this.pair = pair; } } export function answer(): i64 { return new Holder().pair.n; }`, "pair: Pair = new Pair()"},
 		{"optional aggregate constructor parameter", `@tsfgValue class Pair { n: i64 = 7; } @tsfgValue class Holder { pair!: Pair; constructor(pair?: Pair) { if (pair !== undefined) { this.pair = pair; } } } export function answer(): i64 { return new Holder().pair.n; }`, "pair?: Pair"},
+		{"nullable aggregate parameter", `@tsfgValue class Pair { n: i64 = 7; } function make(p: Pair | null): Pair { if (p === null) { return new Pair(); } return p; } export function answer(): i64 { return make(null).n; }`, "p: Pair | null"},
+		{"nullable aggregate constructor parameter", `@tsfgValue class Pair { n: i64 = 7; } @tsfgValue class Holder { pair: Pair; constructor(pair: Pair | null) { if (pair === null) { this.pair = new Pair(); } else { this.pair = pair; } } } export function answer(): i64 { return new Holder(null).pair.n; }`, "pair: Pair | null"},
 		{"aggregate payload nullish field assignment", `@tsfgValue class I { n: u8 = 1; } @tsfgValue class O { i: I = new I(); } export function answer(): u8 { const o = new O(); o.i ??= new I(); return o.i.n; }`, "o.i ??= new I()"},
 	}
 	for _, test := range tests {
@@ -846,6 +848,71 @@ func TestAggregateNarrowedScalarWritesKeepDeclaredPresence(t *testing.T) {
 			}
 			if sourceText(t, source, write.Right.Range) != "pair.n" || write.Left.Range.Start < write.Range.Start || write.Right.Range.End > write.Range.End {
 				t.Fatalf("official write operands lost source containment: %+v", write)
+			}
+		})
+	}
+}
+
+func TestAggregateRequiredNominalParameterPresenceFacts(t *testing.T) {
+	for _, item := range []struct{ name, header, parameter, construction string }{
+		{"value", "@tsfgValue class Pair { n: i64 = 7; } ", "value: Pair", "new Pair()"},
+		{"component and constructor", "@tsfgValue class Pair { n: i64 = 7; } @tsfgComponent class Box { pair: Pair; constructor(pair: Pair) { this.pair = pair; } } ", "value /*😀*/: Box", "new Box(new Pair())"},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			name := "Pair"
+			field := "n"
+			if item.name != "value" {
+				name, field = "Box", "pair.n"
+			}
+			source := item.header + "function echo(" + item.parameter + "): " + name + " { return value; } export function answer(): i64 { return echo(" + item.construction + ")." + field + "; }"
+			r := aggregateRequest(t, source)
+			var input, output bytes.Buffer
+			if err := json.NewLegacyEncoder(&input).Encode(r); err != nil {
+				t.Fatal(err)
+			}
+			if err := runCommand(&input, &output); err != nil {
+				t.Fatal(err)
+			}
+			var result response
+			if err := json.NewLegacyDecoder(&output).Decode(&result); err != nil {
+				t.Fatal(err)
+			}
+			if result.Status != "ok" {
+				t.Fatalf("required nominal parameter rejected: %+v", result.Diagnostics)
+			}
+			verify := func(parameter symbol) {
+				t.Helper()
+				shape := parameter.Presence
+				if shape == nil || shape.Undefined || shape.Null || shape.Optional || shape.Default {
+					t.Fatalf("missing physical-required Presence fact: %+v", parameter)
+				}
+				if sourceText(t, source, shape.Annotation) != name && sourceText(t, source, shape.Annotation) != "Pair" {
+					t.Fatalf("not the official nominal annotation range: %+v", shape)
+				}
+				if shape.Range.Start > parameter.Range.Start || shape.Range.End < parameter.Range.End || shape.Annotation.Start < parameter.Range.End || shape.Annotation.End > shape.Range.End {
+					t.Fatalf("parameter/annotation ownership range lost: %+v", shape)
+				}
+				matched := false
+				for _, candidate := range result.Symbols {
+					if candidate.ID == parameter.ID {
+						matched = candidate.Presence != nil && *candidate.Presence == *shape && candidate.Type == parameter.Type && candidate.Range == parameter.Range
+					}
+				}
+				if !matched {
+					t.Fatalf("parameter and owned symbol differ: %+v", parameter)
+				}
+			}
+			verify(result.Functions[0].Parameters[0])
+			call := result.Functions[1].Body[0].Expression.Receiver
+			if call.Kind != "call" || call.Signature == nil || len(call.Signature.Presence) != 1 || call.Signature.Presence[0] == nil || *call.Signature.Presence[0] != *result.Functions[0].Parameters[0].Presence {
+				t.Fatalf("required nominal call signature Presence lost: %+v", call)
+			}
+			if item.name != "value" {
+				ctor := result.AggregateFacts.Declarations[1].Constructors[0]
+				verify(ctor.Parameters[0])
+				if len(ctor.Signature.Presence) != 1 || ctor.Signature.Presence[0] == nil || *ctor.Signature.Presence[0] != *ctor.Parameters[0].Presence {
+					t.Fatalf("constructor Presence signature differs: %+v", ctor)
+				}
 			}
 		})
 	}
