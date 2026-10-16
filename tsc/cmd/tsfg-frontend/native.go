@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 )
@@ -12,11 +13,7 @@ import (
 //
 //nolint:forbidigo // Native command host must read argv/stdin and report status via stderr/exit.
 func main() {
-	if len(os.Args) != 1 {
-		fmt.Fprintln(os.Stderr, "tsfg-frontend accepts one JSON request on stdin")
-		os.Exit(2)
-	}
-	if err := runCommand(os.Stdin, os.Stdout); err != nil {
+	if err := runFrontendCommand(context.Background(), os.Args[1:], os.Stdin, os.Stdout); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
