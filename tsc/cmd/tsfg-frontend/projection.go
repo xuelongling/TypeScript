@@ -152,7 +152,11 @@ func (p *projection) expr(node *ast.Node, expected string, presence ...*paramete
 	return projected, response{}
 }
 
-func (p *projection) statements(nodes []*ast.Node, returnType string) ([]statement, response) {
+func (p *projection) statements(nodes []*ast.Node, returnType string, returns ...*returnPresence) ([]statement, response) {
+	var returnShape *returnPresence
+	if len(returns) != 0 {
+		returnShape = returns[0]
+	}
 	out := make([]statement, 0, len(nodes))
 	for _, node := range nodes {
 		switch node.Kind {
@@ -259,13 +263,19 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 				out = append(out, statement{Kind: "return", Range: offset(p.file, node)})
 				continue
 			}
-			expr, failure := p.expr(node.AsReturnStatement().Expression, returnType)
+			var expr *expression
+			var failure response
+			if returnShape != nil {
+				expr, failure = p.nullableReturnExpr(node.AsReturnStatement().Expression, returnType, returnShape)
+			} else {
+				expr, failure = p.expr(node.AsReturnStatement().Expression, returnType)
+			}
 			if failure.Status != "" {
 				return nil, failure
 			}
 			out = append(out, statement{Kind: "return", Expression: expr, Range: offset(p.file, node)})
 		case ast.KindBlock:
-			body, failure := p.statements(node.AsBlock().Statements.Nodes, returnType)
+			body, failure := p.statements(node.AsBlock().Statements.Nodes, returnType, returns...)
 			if failure.Status != "" {
 				return nil, failure
 			}
@@ -276,13 +286,13 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 			if failure.Status != "" {
 				return nil, failure
 			}
-			thenBody, failure := p.statements([]*ast.Node{branch.ThenStatement}, returnType)
+			thenBody, failure := p.statements([]*ast.Node{branch.ThenStatement}, returnType, returns...)
 			if failure.Status != "" {
 				return nil, failure
 			}
 			projected := statement{Kind: "if", Condition: condition, ThenBody: thenBody, Range: expressionOffset(p.file, node)}
 			if branch.ElseStatement != nil {
-				projected.ElseBody, failure = p.statements([]*ast.Node{branch.ElseStatement}, returnType)
+				projected.ElseBody, failure = p.statements([]*ast.Node{branch.ElseStatement}, returnType, returns...)
 				if failure.Status != "" {
 					return nil, failure
 				}
@@ -294,7 +304,7 @@ func (p *projection) statements(nodes []*ast.Node, returnType string) ([]stateme
 			if failure.Status != "" {
 				return nil, failure
 			}
-			body, failure := p.statements([]*ast.Node{loop.Statement}, returnType)
+			body, failure := p.statements([]*ast.Node{loop.Statement}, returnType, returns...)
 			if failure.Status != "" {
 				return nil, failure
 			}

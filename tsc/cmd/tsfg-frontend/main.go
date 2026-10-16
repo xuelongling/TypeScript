@@ -65,15 +65,16 @@ type primary struct {
 }
 
 type symbol struct {
-	SourcePath  string             `json:"sourcePath,omitempty"`
-	BindingKind string             `json:"bindingKind,omitempty"`
-	ID          string             `json:"id"`
-	Name        string             `json:"name"`
-	Kind        string             `json:"kind"`
-	Type        string             `json:"type"`
-	Writable    bool               `json:"writable"`
-	Range       span               `json:"range"`
-	Presence    *parameterPresence `json:"presence,omitempty"`
+	SourcePath     string             `json:"sourcePath,omitempty"`
+	BindingKind    string             `json:"bindingKind,omitempty"`
+	ID             string             `json:"id"`
+	Name           string             `json:"name"`
+	Kind           string             `json:"kind"`
+	Type           string             `json:"type"`
+	Writable       bool               `json:"writable"`
+	Range          span               `json:"range"`
+	Presence       *parameterPresence `json:"presence,omitempty"`
+	ReturnPresence *returnPresence    `json:"returnPresence,omitempty"`
 }
 
 type expression struct {
@@ -103,9 +104,10 @@ type expression struct {
 }
 
 type signature struct {
-	Parameters []string             `json:"parameters"`
-	ReturnType string               `json:"returnType"`
-	Presence   []*parameterPresence `json:"presence,omitempty"`
+	Parameters     []string             `json:"parameters"`
+	ReturnType     string               `json:"returnType"`
+	Presence       []*parameterPresence `json:"presence,omitempty"`
+	ReturnPresence *returnPresence      `json:"returnPresence,omitempty"`
 }
 
 type integerLiteral struct {
@@ -128,14 +130,15 @@ type statement struct {
 }
 
 type function struct {
-	SourcePath            string        `json:"sourcePath,omitempty"`
-	Name                  string        `json:"name"`
-	Symbol                string        `json:"symbol"`
-	Parameters            []symbol      `json:"parameters"`
-	ReturnType            string        `json:"returnType"`
-	Body                  []statement   `json:"body"`
-	Range                 span          `json:"range"`
-	ParameterInitializers []*expression `json:"parameterInitializers,omitempty"`
+	SourcePath            string          `json:"sourcePath,omitempty"`
+	Name                  string          `json:"name"`
+	Symbol                string          `json:"symbol"`
+	Parameters            []symbol        `json:"parameters"`
+	ReturnType            string          `json:"returnType"`
+	ReturnPresence        *returnPresence `json:"returnPresence,omitempty"`
+	Body                  []statement     `json:"body"`
+	Range                 span            `json:"range"`
+	ParameterInitializers []*expression   `json:"parameterInitializers,omitempty"`
 }
 
 type functionInfo struct {

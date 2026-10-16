@@ -36,6 +36,65 @@ func finitePresence(t *checker.Type) (payload string, undefined, null, ok bool) 
 	return payload, false, false, payload != ""
 }
 
+// returnPresence records declaration members independently of parameter omission
+// and default selection. Its anchors always belong to the original function.
+type returnPresence struct {
+	Undefined  bool `json:"undefined"`
+	Null       bool `json:"null"`
+	Range      span `json:"range"`
+	Annotation span `json:"annotation"`
+}
+
+// Admit this first nullable return slice only from matching official annotation
+// and signature facts. No synthesized union stands in for either type object.
+func checkedNullableReturn(file *ast.SourceFile, check *checker.Checker, node *ast.Node) (string, *returnPresence, bool) {
+	decl := node.AsFunctionDeclaration()
+	if decl.Type == nil || decl.TypeParameters != nil || node.Name() == nil {
+		return "", nil, false
+	}
+	payload, undefined, null, valid := finitePresence(check.GetTypeFromTypeNode(decl.Type))
+	if !valid || payload != "i32" || !undefined && !null {
+		return "", nil, false
+	}
+	resolved := check.GetSymbolAtLocation(node.Name())
+	if resolved == nil {
+		return "", nil, false
+	}
+	signatures := check.GetSignaturesOfType(check.GetTypeOfSymbol(resolved), checker.SignatureKindCall)
+	if len(signatures) != 1 || signatures[0].Declaration() != node {
+		return "", nil, false
+	}
+	checkedPayload, checkedUndefined, checkedNull, checkedValid := finitePresence(check.GetReturnTypeOfSignature(signatures[0]))
+	if !checkedValid || checkedPayload != payload || checkedUndefined != undefined || checkedNull != null {
+		return "", nil, false
+	}
+	return payload, &returnPresence{
+		Undefined: undefined, Null: null, Range: offset(file, node), Annotation: expressionOffset(file, decl.Type),
+	}, true
+}
+
+// Nullable returns share the integer expression projector, while their allowed
+// members come from the return declaration rather than a parameter DTO.
+func (p *projection) nullableReturnExpr(node *ast.Node, payload string, declared *returnPresence) (*expression, response) {
+	if node == nil || p.integerTarget == nil {
+		return nil, fail("r02b-d-unsupported", "unsupported", p.file.FileName(), span{})
+	}
+	checkedPayload, undefined, null, valid := finitePresence(p.check.GetTypeAtLocation(node))
+	if !valid || checkedPayload != "" && checkedPayload != payload || undefined && !declared.Undefined || null && !declared.Null {
+		return nil, failAt("r01-d-scalar-type", "error", p.file, node)
+	}
+	value, failure := projectIntegerExpression(p.file, p.check, node, payload, p.bindings, p.functions, p.integerTarget, false, true)
+	if failure != nil {
+		return nil, *failure
+	}
+	flow := expressionPresence(value)
+	if flow != nil && (flow.Undefined && !declared.Undefined || flow.Null && !declared.Null) {
+		return nil, failAt("r01-d-scalar-type", "error", p.file, node)
+	}
+	value.PresenceFlow = &presenceFlow{Undefined: undefined, Null: null}
+	return value, response{}
+}
+
 type parameterPresence struct {
 	Undefined  bool `json:"undefined"`
 	Null       bool `json:"null"`
@@ -120,10 +179,28 @@ func checkedLocalPresence(file *ast.SourceFile, check *checker.Checker, node *as
 }
 
 func resolvedCallMatches(file *ast.SourceFile, check *checker.Checker, resolved *checker.Signature, fn functionInfo) bool {
-	if resolved == nil || resolved.Declaration() == nil || scalar(check.GetReturnTypeOfSignature(resolved)) != fn.Signature.ReturnType || len(resolved.Parameters()) != len(fn.Signature.Parameters) {
+	if resolved == nil || resolved.Declaration() == nil || len(resolved.Parameters()) != len(fn.Signature.Parameters) {
 		return false
 	}
 	declaration := resolved.Declaration()
+	if expected := fn.Signature.ReturnPresence; expected != nil {
+		// Nullable ordinary calls require this exact source declaration. The
+		// scalar ambient/conversion spelling exception below is not authority
+		// for a different nullable declaration or return member set.
+		if fn.Conversion != nil || declaration != fn.Declaration || len(declaration.AsFunctionDeclaration().Parameters.Nodes) != len(resolved.Parameters()) {
+			return false
+		}
+		payload, undefined, null, valid := finitePresence(check.GetReturnTypeOfSignature(resolved))
+		if !valid || payload != "i32" || payload != fn.Signature.ReturnType || undefined != expected.Undefined || null != expected.Null {
+			return false
+		}
+		declaredPayload, declared, valid := checkedNullableReturn(ast.GetSourceFileOfNode(declaration), check, declaration)
+		if !valid || declaredPayload != payload || *declared != *expected {
+			return false
+		}
+	} else if scalar(check.GetReturnTypeOfSignature(resolved)) != fn.Signature.ReturnType {
+		return false
+	}
 	if declaration != fn.Declaration {
 		// An already admitted ambient conversion spelling may share its official
 		// symbol with a user implementation. Match the real symbol and complete

@@ -312,6 +312,10 @@ func analyze(r request) response {
 			return failAt("r02b-d-unsupported", "unsupported", file, node)
 		}
 		returnType := scalar(check.GetTypeFromTypeNode(decl.Type))
+		var returnShape *returnPresence
+		if returnType == "" && aggregates == nil && r.Target != nil {
+			returnType, returnShape, _ = checkedNullableReturn(file, check, node)
+		}
 		if aggregates != nil && returnType == "" {
 			returnType = aggregates.typeName(check.GetTypeFromTypeNode(decl.Type))
 		}
@@ -339,13 +343,13 @@ func analyze(r request) response {
 		}
 		s := symbol{
 			ID: fmt.Sprintf("s%d", len(result.Symbols)+1), Name: node.Name().Text(),
-			Kind: "function", Type: returnType, Range: offset(file, node.Name()),
+			Kind: "function", Type: returnType, Range: offset(file, node.Name()), ReturnPresence: returnShape,
 		}
 		result.Symbols = append(result.Symbols, s)
 		if !hasPresence {
 			presence = nil
 		}
-		functions[resolved] = functionInfo{ID: s.ID, Declaration: node, Signature: signature{Parameters: parameters, ReturnType: returnType, Presence: presence}}
+		functions[resolved] = functionInfo{ID: s.ID, Declaration: node, Signature: signature{Parameters: parameters, ReturnType: returnType, Presence: presence, ReturnPresence: returnShape}}
 	}
 	if aggregates != nil {
 		if failure := aggregates.constructorBodies(file, check, &result, functions, r.Target); failure != nil {
@@ -370,7 +374,11 @@ func analyze(r request) response {
 		body := decl.Body.AsBlock().Statements.Nodes
 		info := functions[check.GetSymbolAtLocation(node.Name())]
 		fn := function{Name: node.Name().Text(), Symbol: info.ID, Parameters: []symbol{}, Body: []statement{}, Range: offset(file, node)}
+		fn.ReturnPresence = info.Signature.ReturnPresence
 		fn.ReturnType = scalar(check.GetTypeFromTypeNode(decl.Type))
+		if fn.ReturnPresence != nil {
+			fn.ReturnType = info.Signature.ReturnType
+		}
 		if aggregates != nil && fn.ReturnType == "" {
 			fn.ReturnType = aggregates.typeName(check.GetTypeFromTypeNode(decl.Type))
 		}
@@ -384,7 +392,7 @@ func analyze(r request) response {
 		if failure := project.parameters(&fn, decl.Parameters.Nodes, info.Signature.Presence != nil); failure.Status != "" {
 			return failure
 		}
-		projected, failure := project.statements(body, fn.ReturnType)
+		projected, failure := project.statements(body, fn.ReturnType, fn.ReturnPresence)
 		if failure.Status != "" {
 			return failure
 		}

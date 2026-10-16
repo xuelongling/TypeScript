@@ -195,7 +195,18 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			return &expression{Kind: "conversion", Type: fn.Signature.ReturnType, Operand: &args[0], Conversion: fn.Conversion, Range: expressionOffset(file, node)}, nil
 		}
 		sig := fn.Signature
-		return &expression{Kind: "call", Type: sig.ReturnType, Target: fn.ID, Signature: &sig, Arguments: &args, Range: offset(file, node)}, nil
+		value := &expression{Kind: "call", Type: sig.ReturnType, Target: fn.ID, Signature: &sig, Arguments: &args, Range: offset(file, node)}
+		if declared := sig.ReturnPresence; declared != nil {
+			// The signature retains the callee's declaration anchors, while
+			// the call expression owns independently checked use-site flow.
+			payload, undefined, null, valid := finitePresence(check.GetTypeAtLocation(node))
+			if !valid || payload != "" && payload != sig.ReturnType || undefined && !declared.Undefined || null && !declared.Null {
+				return failureAt("r01-d-scalar-type", "error", node)
+			}
+			value.PresenceFlow = &presenceFlow{Undefined: undefined, Null: null}
+			return finish(value)
+		}
+		return value, nil
 	case ast.KindPrefixUnaryExpression:
 		prefix := node.AsPrefixUnaryExpression()
 		operator, context := "", expected
