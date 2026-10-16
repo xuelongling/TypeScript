@@ -163,7 +163,7 @@ func genericOfficialFailure(d *ast.Diagnostic, tree *genericTree) error {
 	}
 	source := genericSource{}
 	if d.File() != nil {
-		source = genericSource{Path: d.File().FileName(), Digest: genericTextDigest(d.File().Text()), PositionUnit: "utf16", Length: d.File().GetPositionMap().UTF8ToUTF16(len(d.File().Text()))}
+		source = genericSourceForFile(d.File())
 	}
 	return &genericFailure{Kind: "official-type", Code: d.Code(), Source: source, Origin: origin, Detail: "official compiler diagnostic"}
 }

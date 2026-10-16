@@ -8,11 +8,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/core"
-	"github.com/microsoft/typescript-go/internal/json"
 	"github.com/microsoft/typescript-go/internal/scanner"
 )
 
@@ -26,10 +26,11 @@ type genericOrigin struct {
 }
 
 type genericSource struct {
-	Path         string
-	Digest       string
-	PositionUnit string // Original-source anchors are UTF-16 code units.
-	Length       int
+	Path            string
+	Digest          string
+	PositionUnit    string // Original-source anchors are UTF-16 code units.
+	Length          int
+	SurrogateStarts []int
 }
 
 type genericType struct {
@@ -99,32 +100,23 @@ func genericError(kind, detail string, origin genericOrigin) error {
 	return &genericFailure{Kind: kind, Detail: detail, Origin: origin}
 }
 
-func genericHash(value any) string {
-	data, err := json.Marshal(value)
-	if err != nil {
-		panic(err) // All callers supply bounded, acyclic owned value structs.
-	}
-	sum := sha256.Sum256(data)
-	return hex.EncodeToString(sum[:])
-}
-
 func genericTextDigest(text string) string {
 	sum := sha256.Sum256([]byte(text))
 	return hex.EncodeToString(sum[:])
 }
 
 func genericGraphDigest(g genericGraph) string {
-	g.Digest = ""
-	return genericHash(g)
+	return genericPackageIdentity(genericPackageDomain, genericPackagePayload(g))
 }
 
 func genericDefinitionKey(g genericGraph, d genericDefinition) string {
-	return genericHash(struct {
-		Package string
-		Source  genericSource
-		Name    string
-		Origin  genericOrigin
-	}{g.Package, g.Source, d.Name, d.Origin})
+	return genericPackageIdentity(genericDefinitionDomain, genericPackageDefinitionIdentityDTO{
+		Name: d.Name, Origin: genericPackageOrigin(d.Origin), Scope: g.Package, Source: genericPackageSource(g.Source)})
+}
+
+func cloneGenericSource(source genericSource) genericSource {
+	source.SurrogateStarts = slices.Clone(source.SurrogateStarts)
+	return source
 }
 
 func genericIdentifier(name string) bool {
@@ -143,41 +135,54 @@ func genericValidType(t genericType, count int) bool {
 }
 
 func (g genericGraph) validate() error {
+	if err := genericPackageBudget(g); err != nil {
+		return err
+	}
 	bad := func(detail string) error { return genericError("input", detail, genericOrigin{}) }
-	if g.Package == "" || len(g.Package) > 256 || g.Semantics != genericSemantics ||
-		g.Source.Path != canonicalProjectPath(g.Source.Path) || !strings.HasSuffix(g.Source.Path, ".ts") ||
+	if g.Package == "" || len(g.Package) > 256 || !genericPackageString(g.Package) || g.Semantics != genericSemantics ||
+		!genericPackagePath(g.Source.Path) || !strings.HasSuffix(g.Source.Path, ".ts") ||
 		!strings.HasPrefix(g.Source.Path, "/") || strings.HasSuffix(g.Source.Path, ".d.ts") ||
-		g.Source.PositionUnit != "utf16" || g.Source.Length <= 0 || g.Source.Length > 1<<20 || !genericDigest(g.Source.Digest) ||
-		len(g.Definitions) == 0 || len(g.Definitions) > 256 {
-		return bad("graph identity or metadata")
+		g.Source.PositionUnit != "utf16" || g.Source.Length <= 0 || g.Source.Length > 1<<20 ||
+		len(g.Definitions) == 0 || len(g.Definitions) > 256 || !genericPackageSourceBoundaries(g.Source) {
+		return bad("graph metadata")
+	}
+	if !genericDigest(g.Source.Digest) {
+		return genericPackageError("identity", "source digest")
 	}
 	if err := g.Environment.validate(); err != nil {
 		return err
 	}
-	origins := func(o genericOrigin) bool { return o.Start >= 0 && o.End > o.Start && o.End <= g.Source.Length }
+	origins := func(o genericOrigin) bool { return genericPackageOriginBoundary(g.Source, o) }
 	defs := map[string]genericDefinition{}
 	names := map[string]bool{}
 	for _, d := range g.Definitions {
-		if !genericIdentifier(d.Name) || names[d.Name] || !origins(d.Origin) ||
-			d.Key != genericDefinitionKey(g, d) || len(d.TypeParameters) == 0 ||
-			len(d.TypeParameters) > 16 || len(d.Parameters) > 64 || !genericValidType(d.Return, len(d.TypeParameters)) {
+		if !genericIdentifier(d.Name) || !genericPackageString(d.Name) || names[d.Name] || !origins(d.Origin) ||
+			len(d.TypeParameters) == 0 || len(d.TypeParameters) > 16 || len(d.Parameters) > 64 {
 			return bad("definition metadata")
+		}
+		if d.Key != genericDefinitionKey(g, d) {
+			return genericError("package-identity", "definition key", d.Origin)
+		}
+		if err := validateGenericTypeReference(d.Return, len(d.TypeParameters), d.Origin); err != nil {
+			return err
 		}
 		names[d.Name] = true
 		defs[d.Key] = d
 		typeNames := map[string]bool{}
 		for _, name := range d.TypeParameters {
-			if !genericIdentifier(name) || typeNames[name] {
+			if !genericIdentifier(name) || !genericPackageString(name) || typeNames[name] {
 				return bad("type parameter identity")
 			}
 			typeNames[name] = true
 		}
 		valueNames := map[string]bool{}
 		for _, p := range d.Parameters {
-			if !genericIdentifier(p.Name) || valueNames[p.Name] || !origins(p.Origin) ||
-				p.Origin.Start < d.Origin.Start || p.Origin.End > d.Origin.End ||
-				!genericValidType(p.Type, len(d.TypeParameters)) {
+			if !genericIdentifier(p.Name) || !genericPackageString(p.Name) || valueNames[p.Name] || !origins(p.Origin) ||
+				p.Origin.Start < d.Origin.Start || p.Origin.End > d.Origin.End {
 				return bad("parameter metadata")
+			}
+			if err := validateGenericTypeReference(p.Type, len(d.TypeParameters), p.Origin); err != nil {
+				return err
 			}
 			valueNames[p.Name] = true
 		}
@@ -193,23 +198,28 @@ func (g genericGraph) validate() error {
 			}
 			switch e.Kind {
 			case "parameter":
-				if e.Parameter < 0 || e.Parameter >= len(d.Parameters) || e.Definition != "" ||
-					len(e.TypeArguments) != 0 || len(e.Arguments) != 0 {
-					return bad("parameter reference")
+				if e.Definition != "" || len(e.TypeArguments) != 0 || len(e.Arguments) != 0 {
+					return bad("parameter expression metadata")
+				}
+				if e.Parameter < 0 || e.Parameter >= len(d.Parameters) {
+					return genericError("package-reference", "parameter reference", e.Origin)
 				}
 			case "call":
+				if e.Parameter != 0 {
+					return bad("call expression metadata")
+				}
 				target, ok := defs[e.Definition]
-				if !ok || e.Parameter != 0 || len(e.TypeArguments) != len(target.TypeParameters) || len(e.Arguments) != len(target.Parameters) {
-					return bad("dangling definition or call arity")
+				if !ok || len(e.TypeArguments) != len(target.TypeParameters) || len(e.Arguments) != len(target.Parameters) {
+					return genericError("package-reference", "dangling definition or call arity", e.Origin)
 				}
 				for _, p := range d.Parameters {
 					if p.Name == target.Name {
-						return bad("call target shadowed by parameter")
+						return genericError("package-reference", "call target shadowed by parameter", e.Origin)
 					}
 				}
 				for _, a := range e.TypeArguments {
-					if !genericValidType(a, len(d.TypeParameters)) {
-						return bad("call type argument")
+					if err := validateGenericTypeReference(a, len(d.TypeParameters), e.Origin); err != nil {
+						return err
 					}
 				}
 				for _, a := range e.Arguments {
@@ -227,7 +237,7 @@ func (g genericGraph) validate() error {
 		}
 	}
 	if g.Digest != genericGraphDigest(g) {
-		return bad("graph digest")
+		return genericPackageError("identity", "graph digest")
 	}
 	return nil
 }
@@ -243,11 +253,25 @@ func (e genericDeclarationEnvironment) validate() error {
 	}
 	seen := map[string]bool{}
 	for _, f := range e.Files {
-		if !strings.HasPrefix(f.Path, "/") || f.Path != canonicalProjectPath(f.Path) || !strings.HasSuffix(f.Path, ".d.ts") ||
-			seen[f.Path] || len(f.Content) == 0 || len(f.Content) > 1<<20 || f.Digest != genericTextDigest(f.Content) {
-			return genericError("input", "declaration environment path/content identity", genericOrigin{})
+		if !genericPackagePath(f.Path) || !strings.HasSuffix(f.Path, ".d.ts") ||
+			seen[f.Path] || len(f.Content) == 0 || !genericPackageString(f.Content) {
+			return genericError("input", "declaration environment path/content metadata", genericOrigin{})
+		}
+		if f.Digest != genericTextDigest(f.Content) {
+			return genericPackageError("identity", "declaration content digest")
 		}
 		seen[f.Path] = true
 	}
 	return nil
+}
+
+// Binder resolution is distinct from the representation of a type node.
+func validateGenericTypeReference(t genericType, count int, origin genericOrigin) error {
+	if genericValidType(t, count) {
+		return nil
+	}
+	if t.Kind == "parameter" {
+		return genericError("package-reference", "type parameter reference", origin)
+	}
+	return genericError("input", "type metadata", origin)
 }

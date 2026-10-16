@@ -49,7 +49,9 @@ func (g genericGraph) request(key string, args ...genericType) genericInstanceRe
 
 func genericInstanceKey(r genericInstanceRequest) string {
 	// Include phantom arguments even when they do not appear in the signature.
-	return genericHash(r)
+	return genericPackageIdentity(genericInstanceDomain, genericPackageInstanceIdentityDTO{
+		Definition: r.Definition, GraphDigest: r.GraphDigest, Scope: r.Package, SemanticProfile: r.Semantics,
+		TypeArguments: genericPackageTypes(r.TypeArguments)})
 }
 
 func validateGenericRequest(g genericGraph, r genericInstanceRequest) error {
@@ -109,7 +111,7 @@ func instantiateGenericGraph(ctx context.Context, g genericGraph, requests []gen
 		instance, calls, err := projectGenericInstance(ctx, g, r)
 		if err != nil {
 			if failure, ok := err.(*genericFailure); ok && (failure.Source.Path == "" || failure.Source.Path == genericFileName) {
-				failure.Source = g.Source
+				failure.Source = cloneGenericSource(g.Source)
 			}
 			return genericInstanceSet{}, err
 		}

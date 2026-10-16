@@ -7,6 +7,7 @@ package main
 import (
 	"context"
 	"slices"
+	"unicode/utf8"
 
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/checker"
@@ -19,9 +20,15 @@ func exportGenericGraph(ctx context.Context, program *compiler.Program, file *as
 	if err := ctx.Err(); err != nil {
 		return genericGraph{}, err
 	}
+	if scope := packageID; scope == "" || len(scope) > 256 || !genericPackageString(scope) {
+		return genericGraph{}, genericPackageError("input", "scope")
+	}
 	environment.Files = slices.Clone(environment.Files)
 	if program == nil || file == nil || program.GetSourceFile(file.FileName()) != file {
 		return genericGraph{}, genericError("input", "source does not belong to program", genericOrigin{})
+	}
+	if !utf8.ValidString(file.Text()) || !genericPackagePath(file.FileName()) || file.GetPositionMap().UTF8ToUTF16(len(file.Text())) > 1<<20 {
+		return genericGraph{}, genericPackageError("input", "original source metadata")
 	}
 	options := program.Options()
 	if file.IsDeclarationFile || file.ScriptKind != core.ScriptKindTS || file.ExternalModuleIndicator == nil ||
@@ -65,7 +72,7 @@ func exportGenericGraph(ctx context.Context, program *compiler.Program, file *as
 		return genericGraph{}, context.Canceled
 	}
 	g := genericGraph{Package: packageID, Semantics: genericSemantics, Environment: environment,
-		Source: genericSource{Path: file.FileName(), Digest: genericTextDigest(file.Text()), PositionUnit: "utf16", Length: file.GetPositionMap().UTF8ToUTF16(len(file.Text()))}}
+		Source: genericSourceForFile(file)}
 	defs := map[*ast.Symbol]string{}
 	nodes := file.Statements.Nodes
 	for _, node := range nodes {
@@ -96,6 +103,9 @@ func exportGenericGraph(ctx context.Context, program *compiler.Program, file *as
 				return genericGraph{}, genericError("input", "missing type parameter symbol", genericNodeOrigin(tp))
 			}
 			typeSymbols[sym] = i
+			if !genericPackageString(tp.Name().Text()) {
+				return genericGraph{}, genericPackageError("limit", "type parameter string")
+			}
 			d.TypeParameters = append(d.TypeParameters, tp.Name().Text())
 		}
 		for _, param := range f.Parameters.Nodes {
@@ -108,12 +118,18 @@ func exportGenericGraph(ctx context.Context, program *compiler.Program, file *as
 			if err != nil {
 				return genericGraph{}, err
 			}
+			if !genericPackageString(p.Name().Text()) {
+				return genericGraph{}, genericPackageError("limit", "parameter string")
+			}
 			d.Parameters = append(d.Parameters, genericParameter{Name: p.Name().Text(), Type: t, Origin: genericNodeOrigin(param)})
 		}
 		var err error
 		d.Return, err = exportGenericType(check, f.Type, typeSymbols)
 		if err != nil {
 			return genericGraph{}, err
+		}
+		if !genericPackageString(d.Name) {
+			return genericGraph{}, genericPackageError("limit", "definition string")
 		}
 		d.Key = genericDefinitionKey(g, d)
 		sym := check.GetSymbolAtLocation(node.Name())
@@ -145,6 +161,9 @@ func exportGenericGraph(ctx context.Context, program *compiler.Program, file *as
 			return genericGraph{}, err
 		}
 		g.Definitions[i].Body = e
+	}
+	if err := genericPackageBudget(g); err != nil {
+		return genericGraph{}, err
 	}
 	g.Digest = genericGraphDigest(g)
 	if err := g.validate(); err != nil {
@@ -220,4 +239,19 @@ func exportGenericExpression(ctx context.Context, check *checker.Checker, node *
 		}
 	}
 	return genericExpression{}, genericError("unsupported", "only parameter values and explicit generic direct calls", e.Origin)
+}
+
+func genericSourceForFile(file *ast.SourceFile) genericSource {
+	source := genericSource{Path: file.FileName(), Digest: genericTextDigest(file.Text()), PositionUnit: "utf16",
+		Length: file.GetPositionMap().UTF8ToUTF16(len(file.Text()))}
+	position := 0
+	for _, ch := range file.Text() {
+		if ch > 0xffff {
+			source.SurrogateStarts = append(source.SurrogateStarts, position)
+			position += 2
+		} else {
+			position++
+		}
+	}
+	return source
 }

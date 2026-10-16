@@ -122,7 +122,7 @@ func makeGenericInstance(ctx context.Context, g genericGraph, r genericInstanceR
 	decl := tree.definitions[r.Definition]
 	project := genericProjection{ctx: ctx, graph: g, tree: tree, check: check, declaration: decl}
 	instance := genericInstance{Key: genericInstanceKey(r), Definition: r.Definition,
-		TypeArguments: slices.Clone(r.TypeArguments), Source: g.Source, Origin: tree.origins[decl]}
+		TypeArguments: slices.Clone(r.TypeArguments), Source: cloneGenericSource(g.Source), Origin: tree.origins[decl]}
 	for _, parameter := range decl.AsFunctionDeclaration().Parameters.Nodes {
 		t, err := project.mappedType(parameter.Type(), true)
 		if err != nil {

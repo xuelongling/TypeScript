@@ -91,7 +91,7 @@ func TestOwnedGenericHostFreshInstances(t *testing.T) {
 			r.Body.Arguments[0].Type != want || id.Return != want || id.Body.Type != want || id.Body.Kind != "parameter" {
 			t.Fatalf("official mapped transitive body: route=%+v identity=%+v", r, id)
 		}
-		if r.Origin != route.Origin || r.Body.Origin != route.Body.Origin || r.Source != g.Source || id.Definition != identity.Key {
+		if r.Origin != route.Origin || r.Body.Origin != route.Body.Origin || !reflect.DeepEqual(r.Source, g.Source) || id.Definition != identity.Key {
 			t.Fatal("original declaration/source identity lost")
 		}
 	}
@@ -118,7 +118,7 @@ func TestOwnedGenericHostRejectsBadOfficialType(t *testing.T) {
 	_, err := instantiateGenericGraph(t.Context(), g, []genericInstanceRequest{g.request(bad.Key, genericType{Kind: "boolean"})})
 	var failure *genericFailure
 	if !errors.As(err, &failure) || failure.Kind != "official-type" || failure.Code != 2322 ||
-		failure.Source != g.Source || failure.Origin.Start < bad.Origin.Start || failure.Origin.End > bad.Origin.End || failure.Origin.End <= failure.Origin.Start {
+		!reflect.DeepEqual(failure.Source, g.Source) || failure.Origin.Start < bad.Origin.Start || failure.Origin.End > bad.Origin.End || failure.Origin.End <= failure.Origin.Start {
 		t.Fatalf("expected real TS2322 with original source anchor, got %v", err)
 	}
 }
