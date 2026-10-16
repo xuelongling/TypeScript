@@ -145,7 +145,7 @@ func TestOwnedGenericHostCancellationDuringCheckingReturns(t *testing.T) {
 	t.Parallel()
 	g := ownedGenericFixture(t)
 	r := g.request(g.Definitions[0].Key, genericType{Kind: "boolean"})
-	tree := buildGenericTree(g, r)
+	tree := genericTreeForTest(t, g, r)
 	program := newGenericProgram(g, tree, tree.text.String())
 	inner, cancel := context.WithCancel(t.Context())
 	defer cancel()
@@ -165,4 +165,13 @@ func TestOwnedGenericHostCancellationDuringCheckingReturns(t *testing.T) {
 	if !wasCanceled {
 		t.Fatal("controlled cancellation did not occur inside official checking")
 	}
+}
+
+func genericTreeForTest(t *testing.T, g genericGraph, request genericInstanceRequest) *genericTree {
+	t.Helper()
+	tree, err := buildGenericTree(g, request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return tree
 }

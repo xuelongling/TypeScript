@@ -87,3 +87,26 @@ func validateGenericPackagePayload(p genericPackagePayloadDTO) error {
 	}
 	return nil
 }
+
+// Explicit files must never also be a directory in the in-memory VFS.
+func validateGenericPackageFileSet(source string, files []genericDeclaration) error {
+	paths := make([]string, 0, len(files)+1)
+	if source != "" {
+		paths = append(paths, source)
+	}
+	for _, file := range files {
+		paths = append(paths, file.Path)
+	}
+	for i, left := range paths {
+		for _, right := range paths[i+1:] {
+			if genericPackageFilePathConflict(left, right) {
+				return genericPackageError("input", "VFS file/directory conflict")
+			}
+		}
+	}
+	return nil
+}
+
+func genericPackageFilePathConflict(left, right string) bool {
+	return left == right || strings.HasPrefix(left, right+"/") || strings.HasPrefix(right, left+"/")
+}

@@ -18,7 +18,6 @@ import (
 
 const genericSemantics = "tsfg-owned-scalar-generics-host-v1"
 const genericDeclarationProfile = "minimal-scalars-v2"
-const genericFileName = "/owned/definitions.ts"
 
 type genericOrigin struct {
 	Start int
@@ -152,6 +151,9 @@ func (g genericGraph) validate() error {
 	if err := g.Environment.validate(); err != nil {
 		return err
 	}
+	if err := validateGenericPackageFileSet(g.Source.Path, g.Environment.Files); err != nil {
+		return err
+	}
 	origins := func(o genericOrigin) bool { return genericPackageOriginBoundary(g.Source, o) }
 	defs := map[string]genericDefinition{}
 	names := map[string]bool{}
@@ -262,7 +264,7 @@ func (e genericDeclarationEnvironment) validate() error {
 		}
 		seen[f.Path] = true
 	}
-	return nil
+	return validateGenericPackageFileSet("", e.Files)
 }
 
 // Binder resolution is distinct from the representation of a type node.

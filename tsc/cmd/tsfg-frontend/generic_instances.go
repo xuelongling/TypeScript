@@ -110,9 +110,6 @@ func instantiateGenericGraph(ctx context.Context, g genericGraph, requests []gen
 		pending = pending[1:]
 		instance, calls, err := projectGenericInstance(ctx, g, r)
 		if err != nil {
-			if failure, ok := err.(*genericFailure); ok && (failure.Source.Path == "" || failure.Source.Path == genericFileName) {
-				failure.Source = cloneGenericSource(g.Source)
-			}
 			return genericInstanceSet{}, err
 		}
 		result.Instances[instance.Key] = instance

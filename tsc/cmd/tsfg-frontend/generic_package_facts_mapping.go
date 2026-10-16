@@ -27,7 +27,7 @@ func mapGenericPackageFacts(ctx context.Context, g genericGraph, definitions map
 		Roots: append([]string{}, set.Roots...), Instances: []genericPackageInstanceFact{}}
 	// Count the top-level object and its empty instances array once. Each actual
 	// instance then extends that array using the same canonical budget walker.
-	budget := genericCanonicalBudget{}
+	budget := genericCanonicalBudget{policy: genericPackageJSONPolicy()}
 	if err := budget.walk(reflect.ValueOf(result), 0); err != nil {
 		return genericPackageFacts{}, err
 	}

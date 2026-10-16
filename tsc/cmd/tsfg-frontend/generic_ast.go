@@ -14,6 +14,7 @@ import (
 )
 
 type genericTree struct {
+	fileName        string
 	factory         *ast.NodeFactory
 	text            strings.Builder
 	identifiers     map[string]string
@@ -24,8 +25,12 @@ type genericTree struct {
 	invocation      *ast.Node
 }
 
-func buildGenericTree(g genericGraph, request genericInstanceRequest) *genericTree {
-	b := &genericTree{factory: ast.NewNodeFactory(ast.NodeFactoryHooks{}),
+func buildGenericTree(g genericGraph, request genericInstanceRequest) (*genericTree, error) {
+	fileName, err := genericOwnedFileName(g)
+	if err != nil {
+		return nil, err
+	}
+	b := &genericTree{fileName: fileName, factory: ast.NewNodeFactory(ast.NodeFactoryHooks{}),
 		identifiers: map[string]string{}, origins: map[*ast.Node]genericOrigin{}, definitions: map[string]*ast.Node{}}
 	defs := map[string]genericDefinition{}
 	for _, d := range g.Definitions {
@@ -37,7 +42,7 @@ func buildGenericTree(g genericGraph, request genericInstanceRequest) *genericTr
 		b.statements = append(b.statements, n)
 	}
 	b.statements = append(b.statements, b.driver(defs[request.Definition], request))
-	return b
+	return b, nil
 }
 
 func (b *genericTree) pos() int          { return b.text.Len() }
@@ -261,4 +266,29 @@ func (b *genericTree) freshName(base string) string {
 		base += "_"
 	}
 	return base
+}
+
+// At most one same-directory candidate conflicts with each explicit input.
+func genericOwnedFileName(g genericGraph) (string, error) {
+	inputs := []string{g.Source.Path}
+	for _, file := range g.Environment.Files {
+		inputs = append(inputs, file.Path)
+	}
+	for suffix := 0; suffix < len(g.Environment.Files)+2; suffix++ {
+		name := "/owned/definitions.ts"
+		if suffix != 0 {
+			name = "/owned/definitions-" + strconv.Itoa(suffix) + ".ts"
+		}
+		conflict := false
+		for _, input := range inputs {
+			if genericPackageFilePathConflict(name, input) {
+				conflict = true
+				break
+			}
+		}
+		if !conflict {
+			return name, nil
+		}
+	}
+	return "", genericPackageError("input", "no conflict-free owned source path")
 }

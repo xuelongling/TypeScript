@@ -25,15 +25,19 @@ func projectGenericInstance(ctx context.Context, g genericGraph, r genericInstan
 	if err := ctx.Err(); err != nil {
 		return genericInstance{}, nil, err
 	}
-	tree := buildGenericTree(g, r)
+	tree, err := buildGenericTree(g, r)
+	if err != nil {
+		return genericInstance{}, nil, err
+	}
 	if err := ctx.Err(); err != nil {
 		return genericInstance{}, nil, err
 	}
 	program := newGenericProgram(g, tree, tree.text.String())
 	if err := checkGenericProgram(ctx, g, program, tree); err != nil {
-		return genericInstance{}, nil, err
+		return genericInstance{}, nil, genericInstanceFailure(g, tree, err)
 	}
-	return projectCheckedGenericInstance(ctx, g, r, tree, program)
+	instance, calls, err := projectCheckedGenericInstance(ctx, g, r, tree, program)
+	return instance, calls, genericInstanceFailure(g, tree, err)
 }
 
 func genericConcreteType(t *checker.Type) string {
@@ -148,4 +152,14 @@ func makeGenericInstance(ctx context.Context, g genericGraph, r genericInstanceR
 		return genericInstance{}, nil, err
 	}
 	return instance, project.calls, nil
+}
+
+func genericInstanceFailure(g genericGraph, tree *genericTree, err error) error {
+	if failure, ok := err.(*genericFailure); ok && (failure.Source.Path == tree.fileName ||
+		failure.Source.Path == "" && failure.Origin.End > failure.Origin.Start) {
+		owned := *failure
+		owned.Source = cloneGenericSource(g.Source)
+		return &owned
+	}
+	return err
 }

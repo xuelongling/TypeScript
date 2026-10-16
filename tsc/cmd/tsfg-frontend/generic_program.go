@@ -25,7 +25,7 @@ type genericHost struct {
 var _ compiler.CompilerHost = (*genericHost)(nil)
 
 func (h *genericHost) GetSourceFile(opts ast.SourceFileParseOptions) *ast.SourceFile {
-	if opts.FileName != genericFileName {
+	if opts.FileName != h.tree.fileName {
 		if h.declarations[opts.FileName] {
 			return h.CompilerHost.GetSourceFile(opts)
 		}
@@ -38,11 +38,12 @@ func (h *genericHost) GetSourceFile(opts ast.SourceFileParseOptions) *ast.Source
 }
 
 func newGenericProgram(g genericGraph, tree *genericTree, diagnosticText string) *compiler.Program {
-	// Only declaration files carry text. Definition source is absent even from
-	// the VFS; the custom GetSourceFile is its sole semantic input.
-	contents := map[string]string{genericFileName: ""}
+	// fileloader checks FileExists before invoking GetSourceFile. This empty
+	// placeholder satisfies that gate; it is never read or parsed. Definition
+	// semantics come only from the factory AST, and original text is absent.
+	contents := map[string]string{tree.fileName: ""}
 	declarations := map[string]bool{}
-	fileNames := []string{genericFileName}
+	fileNames := []string{tree.fileName}
 	for _, d := range g.Environment.Files {
 		contents[d.Path] = d.Content
 		declarations[d.Path] = true
@@ -64,7 +65,7 @@ func checkGenericProgram(ctx context.Context, g genericGraph, program *compiler.
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	expected := map[string]bool{genericFileName: true}
+	expected := map[string]bool{tree.fileName: true}
 	for _, declaration := range g.Environment.Files {
 		expected[declaration.Path] = true
 	}
@@ -152,7 +153,7 @@ func genericOfficialFailure(d *ast.Diagnostic, tree *genericTree) error {
 	if d.File() != nil {
 		origin = genericOrigin{Start: d.File().GetPositionMap().UTF8ToUTF16(d.Pos()), End: d.File().GetPositionMap().UTF8ToUTF16(d.End())}
 	}
-	if tree != nil && d.File() != nil && d.File().FileName() == genericFileName {
+	if tree != nil && d.File() != nil && d.File().FileName() == tree.fileName {
 		width := int(^uint(0) >> 1)
 		origin = genericOrigin{}
 		for n, anchor := range tree.origins {
@@ -172,7 +173,7 @@ func projectCheckedGenericInstance(ctx context.Context, g genericGraph, r generi
 	if err := ctx.Err(); err != nil {
 		return genericInstance{}, nil, err
 	}
-	file := program.GetSourceFile(genericFileName)
+	file := program.GetSourceFile(tree.fileName)
 	if file == nil {
 		return genericInstance{}, nil, genericError("input", "missing owned module", genericOrigin{})
 	}

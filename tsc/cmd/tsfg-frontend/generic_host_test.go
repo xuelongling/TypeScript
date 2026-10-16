@@ -209,7 +209,7 @@ func TestOwnedGenericHostDiagnosticTextIsNonSemantic(t *testing.T) {
 	g := ownedGenericFixture(t)
 	d := genericDefinitionNamed(t, g, "route")
 	r := g.request(d.Key, genericType{Kind: "number"})
-	tree, blankTree := buildGenericTree(g, r), buildGenericTree(g, r)
+	tree, blankTree := genericTreeForTest(t, g, r), genericTreeForTest(t, g, r)
 	if !reflect.DeepEqual(genericSyntaxFacts(tree), genericSyntaxFacts(blankTree)) {
 		t.Fatal("metamorphic AST structure differs")
 	}
@@ -233,7 +233,7 @@ func TestOwnedGenericHostDiagnosticTextIsNonSemantic(t *testing.T) {
 	if !reflect.DeepEqual(a, b) || !reflect.DeepEqual(ac, bc) || b.Return != "f64" || b.Body.Type != "f64" {
 		t.Fatalf("diagnostic text changed official concrete facts: normal=%+v blank=%+v", a, b)
 	}
-	file := blankProgram.GetSourceFile(genericFileName)
+	file := blankProgram.GetSourceFile(blankTree.fileName)
 	if file.Text() != blank || file.ScriptKind != core.ScriptKindTS || file.LanguageVariant != core.LanguageVariantStandard ||
 		file.ExternalModuleIndicator == nil || len(file.Identifiers) == 0 || file.NodeCount == 0 {
 		t.Fatal("owned SourceFile metadata missing")
@@ -255,7 +255,7 @@ func TestOwnedGenericHostMapperRejectsForeignOwnership(t *testing.T) {
 	g := ownedGenericFixture(t)
 	d := genericDefinitionNamed(t, g, "identity")
 	r := g.request(d.Key, genericType{Kind: "boolean"})
-	tree, foreign := buildGenericTree(g, r), buildGenericTree(g, r)
+	tree, foreign := genericTreeForTest(t, g, r), genericTreeForTest(t, g, r)
 	program, other := newGenericProgram(g, tree, tree.text.String()), newGenericProgram(g, foreign, foreign.text.String())
 	if err := checkGenericProgram(t.Context(), g, program, tree); err != nil {
 		t.Fatal(err)
@@ -263,7 +263,7 @@ func TestOwnedGenericHostMapperRejectsForeignOwnership(t *testing.T) {
 	if err := checkGenericProgram(t.Context(), g, other, foreign); err != nil {
 		t.Fatal(err)
 	}
-	check, release := program.GetTypeCheckerForFileExclusive(t.Context(), program.GetSourceFile(genericFileName))
+	check, release := program.GetTypeCheckerForFileExclusive(t.Context(), program.GetSourceFile(tree.fileName))
 	defer release()
 	decl := tree.definitions[d.Key]
 	node := decl.Body().AsBlock().Statements.Nodes[0].AsReturnStatement().Expression

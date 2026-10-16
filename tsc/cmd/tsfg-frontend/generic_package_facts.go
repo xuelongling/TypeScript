@@ -79,13 +79,13 @@ func instantiateGenericPackageFacts(ctx context.Context, canonicalPackage []byte
 			return genericPackageFacts{}, genericPackageError("reference", "root must name an exported definition")
 		}
 		if len(root.TypeArguments) != len(d.TypeParameters) {
-			return genericPackageFacts{}, genericError("package-reference", "root type argument arity", d.Origin)
+			return genericPackageFacts{}, &genericFailure{Kind: "package-reference", Detail: "root type argument arity", Origin: d.Origin, Source: cloneGenericSource(g.Source)}
 		}
 		args := make([]genericType, len(root.TypeArguments))
 		for j, arg := range root.TypeArguments {
 			args[j] = genericType{Kind: arg.Kind, Parameter: arg.Parameter}
 			if !genericValidType(args[j], 0) {
-				return genericPackageFacts{}, genericError("package-reference", "root requires concrete boolean/number arguments", d.Origin)
+				return genericPackageFacts{}, &genericFailure{Kind: "package-reference", Detail: "root requires concrete boolean/number arguments", Origin: d.Origin, Source: cloneGenericSource(g.Source)}
 			}
 		}
 		requests[i] = g.request(d.Key, args...)

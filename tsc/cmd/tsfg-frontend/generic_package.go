@@ -27,7 +27,7 @@ func encodeGenericPackage(g genericGraph) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := genericPackagePreflight(data); err != nil {
+	if err := genericJSONPreflight(data, genericPackageJSONPolicy()); err != nil {
 		return nil, err
 	}
 	return data, nil
@@ -38,7 +38,7 @@ func decodeGenericPackage(data []byte) (genericGraph, error) {
 		return genericGraph{}, genericPackageError("limit", "package bytes")
 	}
 	data = bytes.Clone(data)
-	if err := genericPackagePreflight(data); err != nil {
+	if err := genericJSONPreflight(data, genericPackageJSONPolicy()); err != nil {
 		return genericGraph{}, err
 	}
 	var wire genericPackageDTO

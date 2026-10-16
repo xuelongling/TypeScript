@@ -24,9 +24,13 @@ func genericPackageError(category, detail string) error {
 }
 
 func genericPackageCanonical(value any) ([]byte, error) {
+	return genericJSONCanonical(value, genericPackageJSONPolicy())
+}
+
+func genericJSONCanonical(value any, policy genericJSONPolicy) ([]byte, error) {
 	// internal/json intentionally permits invalid UTF8 when marshaling. Validate
 	// DTO scalars first so no replacement character can silently change identity.
-	if err := genericPackageBudget(value); err != nil {
+	if err := (&genericCanonicalBudget{policy: policy}).walk(reflect.ValueOf(value), 0); err != nil {
 		return nil, err
 	}
 	data, err := json.Marshal(value)
@@ -43,25 +47,38 @@ func genericPackageCanonical(value any) ([]byte, error) {
 // The same bounded walk counts canonical wire bytes before Marshal, hashing or
 // domain-to-DTO copies. Owned graph fields use explicit wire names and omit the
 // internal digest; the injected capabilities are part of that payload view.
-type genericCanonicalBudget struct{ bytes, tokens int }
+type genericJSONPolicy struct {
+	maxBytes, maxDepth, maxTokens, maxString int
+	allowNUL, allowNull, allowRaw            bool
+}
+
+func genericPackageJSONPolicy() genericJSONPolicy {
+	return genericJSONPolicy{maxBytes: genericPackageMaxBytes, maxDepth: genericPackageMaxDepth,
+		maxTokens: genericPackageMaxTokens, maxString: genericPackageMaxString}
+}
+
+type genericCanonicalBudget struct {
+	bytes, tokens int
+	policy        genericJSONPolicy
+}
 
 func (b *genericCanonicalBudget) add(bytes, tokens int) error {
 	b.bytes += bytes
 	b.tokens += tokens
-	if b.bytes > genericPackageMaxBytes {
+	if b.bytes > b.policy.maxBytes {
 		return genericPackageError("limit", "canonical bytes")
 	}
-	if b.tokens > genericPackageMaxTokens {
+	if b.tokens > b.policy.maxTokens {
 		return genericPackageError("limit", "JSON tokens")
 	}
 	return nil
 }
 
 func (b *genericCanonicalBudget) text(text string) error {
-	if !utf8.ValidString(text) || strings.ContainsRune(text, 0) {
+	if !utf8.ValidString(text) || !b.policy.allowNUL && strings.ContainsRune(text, 0) {
 		return genericPackageError("unicode", "invalid Unicode scalar string or NUL")
 	}
-	if len(text) > genericPackageMaxString {
+	if len(text) > b.policy.maxString {
 		return genericPackageError("limit", "string bytes")
 	}
 	size := 2
@@ -169,7 +186,30 @@ func (b *genericCanonicalBudget) member(name string, value reflect.Value, depth 
 }
 
 func (b *genericCanonicalBudget) walk(v reflect.Value, depth int) error {
+	if v.Type() == reflect.TypeFor[json.Value]() && b.policy.allowRaw {
+		data := v.Bytes()
+		stats, err := inspectGenericJSON(data, b.policy)
+		if err != nil {
+			return err
+		}
+		if depth+stats.depth > b.policy.maxDepth {
+			return genericPackageError("limit", "JSON depth")
+		}
+		canonical := json.Value(bytes.Clone(data))
+		if err := canonical.Canonicalize(); err != nil || !bytes.Equal(canonical, data) {
+			return genericPackageError("canonical", "noncanonical raw value")
+		}
+		return b.add(len(data), stats.tokens)
+	}
 	switch v.Kind() {
+	case reflect.Pointer:
+		if !b.policy.allowNull {
+			return genericPackageError("json", "unsupported DTO scalar")
+		}
+		if v.IsNil() {
+			return b.add(4, 1)
+		}
+		return b.walk(v.Elem(), depth)
 	case reflect.String:
 		return b.text(v.String())
 	case reflect.Int, reflect.Int32, reflect.Int64:
@@ -184,7 +224,7 @@ func (b *genericCanonicalBudget) walk(v reflect.Value, depth int) error {
 		}
 		return b.add(size, 1)
 	case reflect.Struct:
-		if depth+1 > genericPackageMaxDepth {
+		if depth+1 > b.policy.maxDepth {
 			return genericPackageError("limit", "JSON depth")
 		}
 		if err := b.add(2, 2); err != nil {
@@ -213,7 +253,7 @@ func (b *genericCanonicalBudget) walk(v reflect.Value, depth int) error {
 		}
 		return nil
 	case reflect.Slice, reflect.Array:
-		if depth+1 > genericPackageMaxDepth {
+		if depth+1 > b.policy.maxDepth {
 			return genericPackageError("limit", "JSON depth")
 		}
 		if err := b.add(2, 2); err != nil {
@@ -235,7 +275,7 @@ func (b *genericCanonicalBudget) walk(v reflect.Value, depth int) error {
 }
 
 func genericPackageBudget(value any) error {
-	return (&genericCanonicalBudget{}).walk(reflect.ValueOf(value), 0)
+	return (&genericCanonicalBudget{policy: genericPackageJSONPolicy()}).walk(reflect.ValueOf(value), 0)
 }
 
 func genericPackageIdentity(domain string, value any) string {
@@ -252,53 +292,69 @@ func genericPackageIdentity(domain string, value any) string {
 // Preflight is streaming and precedes typed allocation. Decoder defaults enforce
 // RFC7493 Unicode and escape-equivalent duplicate-key rejection. Tokens include
 // object/array opens and closes, member keys, and primitive values.
-func genericPackagePreflight(data []byte) error {
-	if len(data) == 0 || len(data) > genericPackageMaxBytes {
-		return genericPackageError("limit", "package bytes")
+type genericJSONStats struct{ tokens, depth int }
+
+func genericJSONPreflight(data []byte, policy genericJSONPolicy) error {
+	_, err := inspectGenericJSON(data, policy)
+	return err
+}
+
+func inspectGenericJSON(data []byte, policy genericJSONPolicy) (genericJSONStats, error) {
+	stats := genericJSONStats{}
+	bad := func(category, detail string) (genericJSONStats, error) {
+		return stats, genericPackageError(category, detail)
+	}
+	if len(data) == 0 || len(data) > policy.maxBytes {
+		return bad("limit", "package bytes")
 	}
 	if !utf8.Valid(data) {
-		return genericPackageError("unicode", "invalid UTF8")
+		return bad("unicode", "invalid UTF8")
 	}
 	decoder := json.NewDecoder(bytes.NewReader(data))
-	depth, tokens := 0, 0
+	depth := 0
 	for {
 		token, err := decoder.ReadToken()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			return genericPackageError("json", "strict JSON token")
+			return bad("json", "strict JSON token")
 		}
-		tokens++
-		if tokens > genericPackageMaxTokens {
-			return genericPackageError("limit", "JSON tokens")
+		stats.tokens++
+		if stats.tokens > policy.maxTokens {
+			return bad("limit", "JSON tokens")
 		}
 		switch token.Kind() {
 		case '{', '[':
 			depth++
-			if depth > genericPackageMaxDepth {
-				return genericPackageError("limit", "JSON depth")
+			if depth > stats.depth {
+				stats.depth = depth
+			}
+			if depth > policy.maxDepth {
+				return bad("limit", "JSON depth")
 			}
 		case '}', ']':
 			depth--
 		case '"':
 			s := token.String()
-			if !utf8.ValidString(s) || strings.ContainsRune(s, 0) {
-				return genericPackageError("unicode", "invalid Unicode scalar string or NUL")
+			if !utf8.ValidString(s) || !policy.allowNUL && strings.ContainsRune(s, 0) {
+				return bad("unicode", "invalid Unicode scalar string or NUL")
 			}
-			if len(s) > genericPackageMaxString {
-				return genericPackageError("limit", "string bytes")
+			if len(s) > policy.maxString {
+				return bad("limit", "string bytes")
 			}
 		case '0':
 			n, err := token.Int()
 			if err != nil || n < 0 || n > 9007199254740991 {
-				return genericPackageError("json", "nonnegative safe integer required")
+				return bad("json", "nonnegative safe integer required")
 			}
 		case 'n':
-			return genericPackageError("schema", "null is not a candidate DTO value")
+			if !policy.allowNull {
+				return bad("schema", "null is not a candidate DTO value")
+			}
 		}
 	}
-	return nil
+	return stats, nil
 }
 
 func genericPackageCompareUTF16(a, b string) int {

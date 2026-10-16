@@ -52,7 +52,7 @@ func TestOwnedGenericPackageCanonicalIdentityAndOrdering(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	budget := &genericCanonicalBudget{}
+	budget := &genericCanonicalBudget{policy: genericPackageJSONPolicy()}
 	if err := budget.walk(reflect.ValueOf(g), 0); err != nil || budget.bytes != len(payload) {
 		t.Fatalf("domain and DTO canonical budget disagree: counted=%d actual=%d error=%v", budget.bytes, len(payload), err)
 	}
