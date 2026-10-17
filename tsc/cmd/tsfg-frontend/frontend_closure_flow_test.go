@@ -62,6 +62,9 @@ func TestFrontendCommandClosureFlowFacts(t *testing.T) {
 		{"transitiveExternalRootEnvironment", "export function entry(seed: bool): bool { function first(): bool { return seed; } function other(): bool { return false; } let selected: () => bool = first; function middle(): bool { function helper(): bool { return selected(); } return helper(); } return middle(); }"},
 		{"capturedBlockLocal", "export function entry(seed: bool): bool { function fallback(): bool { return false; } let selected: () => bool = fallback; { const value: bool = seed; function read(): bool { return value; } selected = read; } return selected(); }"},
 		{"capturedLoopLocal", "export function entry(seed: bool): bool { function fallback(): bool { return false; } let selected: () => bool = fallback; let again: bool = seed; while (again) { const value: bool = again; function read(): bool { return value; } selected = read; again = false; } return selected(); }"},
+		{"nestedParentParameterRead", "export function entry(seed: bool): bool { function first(): bool { return false; } function make(fn: () => bool): () => bool { function invoke(): bool { return fn() && seed; } return invoke; } const selected = make(first); return selected(); }"},
+		{"capturedCallableParameterWrites", "export function entry(selected: () => bool, replacement: () => bool): bool { function choose(fn: () => bool): () => bool { return fn; } function update(next: () => bool): bool { selected = choose(next); return (selected = choose(next))(); } return update(replacement); }"},
+		{"shortCircuitClosureRebind", "export function entry(seed: bool): bool { function first(): bool { return seed; } function other(): bool { return false; } let selected: () => bool = first; const before = seed && (selected = other)(); return selected() && before; }"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := integerRequest(tc.source)
