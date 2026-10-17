@@ -1,0 +1,1 @@
+/* 😀 */ export function probe(value: i32): bool { try { throw value; } catch (caught: unknown) { if (typeof caught === "boolean") { return caught; } throw caught; } finally { const copied: i32 = value; } } try { throw true; } catch (initCaught: unknown) { if (typeof initCaught === "boolean") { throw initCaught; } throw initCaught; } finally {}

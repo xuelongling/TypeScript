@@ -7,9 +7,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-
-	"github.com/microsoft/typescript-go/internal/ast"
-	"github.com/microsoft/typescript-go/internal/checker"
 )
 
 // Cancellation wins even over a simultaneous non-EOF read error here. The
@@ -79,9 +76,9 @@ func handleNullableFactsCandidate(ctx context.Context, data []byte) (outputBytes
 	var exports []nullableFactsExport
 	var projectionError error
 	called := false
-	facts := analyzeWithProjection(ctx, owned, func(file *ast.SourceFile, check *checker.Checker, functions map[*ast.Symbol]functionInfo, result response) {
+	facts := analyzeWithProjection(ctx, owned, func(checked ownedProjectionContext) {
 		called = true
-		exports, projectionError = projectNullableFacts(file, check, functions, result)
+		exports, projectionError = projectNullableFacts(checked.Root, checked.Checker, checked.Functions, checked.Facts)
 	})
 	if err := ctx.Err(); err != nil {
 		return nil, err

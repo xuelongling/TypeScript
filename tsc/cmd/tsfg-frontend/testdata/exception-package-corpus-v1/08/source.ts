@@ -1,0 +1,1 @@
+/* 😀 */ export function entry(value: i32): bool { try { throw value; } catch (caught) { function inner(): bool { try { throw caught; } catch (nested) { return typeof nested === "boolean"; } } return inner(); } }

@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func projectModules(r request, program *compiler.Program, check *checker.Checker, result response, conversions *conversionFacts) response {
+func projectModules(r request, program *compiler.Program, check *checker.Checker, result response, conversions *conversionFacts, finish ownedProjectionHook) response {
 	result.Modules = []moduleFact{}
 	functions := map[*ast.Symbol]functionInfo{}
 	if conversions != nil {
@@ -288,6 +288,10 @@ func projectModules(r request, program *compiler.Program, check *checker.Checker
 		}
 		moduleAnnotate(file, m.Initialization)
 		result.Modules = append(result.Modules, m)
+	}
+	if finish != nil {
+		root := program.GetSourceFile(r.RootFile)
+		finish(checkedProjectionContext(root, program, check, functions, result))
 	}
 	return result
 }

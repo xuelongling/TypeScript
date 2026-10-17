@@ -1,0 +1,1 @@
+import { probe } from "./worker"; export function entry(value: i32): bool { return probe(value); }

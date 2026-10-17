@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/microsoft/typescript-go/internal/ast"
-	"github.com/microsoft/typescript-go/internal/checker"
 	"github.com/microsoft/typescript-go/internal/compiler"
 	"github.com/microsoft/typescript-go/internal/core"
 	"github.com/microsoft/typescript-go/internal/tsoptions"
@@ -17,10 +16,6 @@ import (
 	"slices"
 	"strings"
 )
-
-// The optional terminal projection observes the same checked declaration map.
-// Legacy callers retain Background and exactly the existing response boundary.
-type ownedProjectionHook func(*ast.SourceFile, *checker.Checker, map[*ast.Symbol]functionInfo, response)
 
 func analyze(r request) response {
 	return analyzeWithProjection(context.Background(), r, nil)
@@ -303,7 +298,7 @@ func analyzeWithProjection(ctx context.Context, r request, finish ownedProjectio
 		return result
 	}
 	if r.CompilationClosure != nil {
-		return projectModules(r, program, check, result, conversions)
+		return projectModules(r, program, check, result, conversions, finish)
 	}
 	nodes, closures := closureDeclarations(file)
 	functions := map[*ast.Symbol]functionInfo{}
@@ -427,7 +422,7 @@ func analyzeWithProjection(ctx context.Context, r request, finish ownedProjectio
 		return fail("r02b-d-unsupported", "unsupported", r.RootFile, span{})
 	}
 	if finish != nil {
-		finish(file, check, functions, result)
+		finish(checkedProjectionContext(file, program, check, functions, result))
 	}
 	return result
 }
