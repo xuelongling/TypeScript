@@ -65,12 +65,12 @@ func TestOwnedGenericConditionalSignatureRejectsOldAndMixedPackageClaims(t *test
 		_, err = decodeGenericPackage(bad)
 		requireGenericPackageFailureKind(t, err, "package-schema")
 	})
-	for _, domain := range []string{"tsfg-owned-generic-package/v2\n", "tsfg-owned-generic-package/v4\n"} {
+	for _, domain := range []string{"tsfg-owned-generic-package/v2\n", "tsfg-owned-generic-package/v5\n"} {
 		t.Run("identity-"+strings.TrimSpace(domain), func(t *testing.T) {
 			t.Parallel()
 			wire := genericPackageWireForTest(t, data)
 			wire.PackageID = "sha256:" + genericPackageIdentity(domain, wire.Payload)
-			if strings.Contains(domain, "/v4") {
+			if strings.Contains(domain, "/v5") {
 				wire.PackageID = "sha256:" + strings.Repeat("0", 64)
 			}
 			bad, err := genericPackageCanonical(wire)
@@ -121,7 +121,7 @@ func TestOwnedGenericConditionalSignatureRejectsMalformedColdTypesAndBodies(t *t
 			d.Parameters = append(d.Parameters, p)
 		}},
 		{"body-parameter1", "unsupported", func(d *genericPackageDefinitionDTO) { d.Body.Parameter = 1 }},
-		{"body-call", "unsupported", func(d *genericPackageDefinitionDTO) {
+		{"body-call", "package-reference", func(d *genericPackageDefinitionDTO) {
 			d.Body.Kind = "call"
 			d.Body.Definition = d.Key
 			d.Body.TypeArguments = []genericPackageTypeDTO{{Kind: "parameter"}}
@@ -142,7 +142,7 @@ func TestOwnedGenericConditionalSignatureRejectsMalformedColdTypesAndBodies(t *t
 			if test.name == "hidden-scalar-children" {
 				wantOrigin = genericOrigin{Start: 32, End: 75}
 			}
-			if test.name == "conditional-type-argument" {
+			if test.name == "conditional-type-argument" || test.name == "body-call" {
 				wantOrigin = genericOrigin{Start: 124, End: 129}
 			}
 			// Existing expression-metadata failures have no source occurrence.
@@ -281,7 +281,7 @@ func TestOwnedGenericConditionalSignatureOwnsTypeStorageAndCountsExactBudget(t *
 	}
 	caps := genericPackageCapabilities()
 	caps[0] = "changed"
-	if genericPackageCapabilities()[0] != "conditional-signature" {
+	if genericPackageCapabilities()[0] != "conditional-generic-call" {
 		t.Fatal("shared capability table escaped caller ownership")
 	}
 }

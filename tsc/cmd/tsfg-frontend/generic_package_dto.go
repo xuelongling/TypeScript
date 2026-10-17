@@ -5,9 +5,9 @@
 package main
 
 const genericPackageFamily = "tsfg-owned-generic-package"
-const genericPackageVersion = 4
-const genericPackageSchema = "ec05631c15f280f54279ba9353fd8fc3ff779349a1f56f7cdb00eba22c767e20"
-const genericPackageDomain = "tsfg-owned-generic-package/v4\n"
+const genericPackageVersion = 5
+const genericPackageSchema = "da7eb72ae306eb88863a44c945df77d572a96443a005fefbd787267fe90658bf"
+const genericPackageDomain = "tsfg-owned-generic-package/v5\n"
 const genericDefinitionDomain = "tsfg:generic-definition:v1\n"
 const genericInstanceDomain = "tsfg:generic-instance:v1\n"
 const genericPackageMaxBytes = 8 << 20
@@ -20,7 +20,7 @@ const genericPackageMaxKeyMembers = 16
 
 // Return owned storage so callers cannot mutate protocol capabilities globally.
 func genericPackageCapabilities() []string {
-	return []string{"conditional-signature", "explicit-type-arguments", "mapped-indexed-signature", "number-add", "scalar-generics", "single-module"}
+	return []string{"conditional-generic-call", "conditional-signature", "explicit-type-arguments", "mapped-indexed-signature", "number-add", "scalar-generics", "single-module"}
 }
 
 type genericPackageDTO struct {
