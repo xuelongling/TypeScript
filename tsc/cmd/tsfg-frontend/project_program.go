@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/microsoft/typescript-go/internal/ast"
+	"github.com/microsoft/typescript-go/internal/checker"
 	"github.com/microsoft/typescript-go/internal/compiler"
 	"github.com/microsoft/typescript-go/internal/core"
 	"github.com/microsoft/typescript-go/internal/tsoptions"
@@ -17,7 +18,15 @@ import (
 	"strings"
 )
 
+// The optional terminal projection observes the same checked declaration map.
+// Legacy callers retain Background and exactly the existing response boundary.
+type ownedProjectionHook func(*ast.SourceFile, *checker.Checker, map[*ast.Symbol]functionInfo, response)
+
 func analyze(r request) response {
+	return analyzeWithProjection(context.Background(), r, nil)
+}
+
+func analyzeWithProjection(ctx context.Context, r request, finish ownedProjectionHook) response {
 	if !valid(r) {
 		return fail("r02b-d-input", "input", r.RootFile, span{})
 	}
@@ -63,8 +72,8 @@ func analyze(r request) response {
 	}
 	slices.Sort(consumed)
 	result := response{Status: "ok", Inputs: consumed, Functions: []function{}, Symbols: []symbol{}}
-	syntacticDiagnostics := program.GetSyntacticDiagnostics(context.Background(), nil)
-	check, release := program.GetTypeCheckerForFileExclusive(context.Background(), file)
+	syntacticDiagnostics := program.GetSyntacticDiagnostics(ctx, nil)
+	check, release := program.GetTypeCheckerForFileExclusive(ctx, file)
 	contextFunctions := operatorFunctions(file, check)
 	if r.CompilationClosure != nil {
 		for _, source := range program.GetSourceFiles() {
@@ -113,12 +122,12 @@ func analyze(r request) response {
 		code  string
 	}{
 		{syntacticDiagnostics, "r02b-d-syntax"},
-		{program.GetSemanticDiagnostics(context.Background(), nil), "r02b-d-type"},
+		{program.GetSemanticDiagnostics(ctx, nil), "r02b-d-type"},
 		{program.GetProgramDiagnostics(), "r02b-d-type"},
-		{program.GetGlobalDiagnostics(context.Background()), "r02b-d-type"},
+		{program.GetGlobalDiagnostics(ctx), "r02b-d-type"},
 	}
 	configured := check
-	check, release = program.GetTypeCheckerForFileExclusive(context.Background(), file)
+	check, release = program.GetTypeCheckerForFileExclusive(ctx, file)
 	defer release()
 	if check != configured {
 		return fail("r02b-d-input", "input", r.RootFile, span{})
@@ -416,6 +425,9 @@ func analyze(r request) response {
 	}
 	if len(result.Functions) == 0 {
 		return fail("r02b-d-unsupported", "unsupported", r.RootFile, span{})
+	}
+	if finish != nil {
+		finish(file, check, functions, result)
 	}
 	return result
 }

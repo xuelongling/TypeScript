@@ -14,6 +14,9 @@ func runFrontendCommand(ctx context.Context, args []string, input io.Reader, out
 	if len(args) == 1 && args[0] == "--generic-package-io-v1" {
 		return runGenericPackageCandidate(ctx, input, output)
 	}
+	if len(args) == 1 && args[0] == "--nullable-facts-io-v1" {
+		return runNullableFactsCandidate(ctx, input, output)
+	}
 	if len(args) != 0 {
 		return errors.New("tsfg-frontend accepts one JSON request on stdin")
 	}
