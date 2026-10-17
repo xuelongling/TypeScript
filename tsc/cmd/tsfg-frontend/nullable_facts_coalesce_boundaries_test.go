@@ -5,6 +5,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"reflect"
 	"slices"
@@ -226,6 +227,8 @@ func TestNullableFactsCommandNullishCoalesceBoundaries(t *testing.T) {
 				t.Fatalf("positive private v2 failed after official/legacy PASS: %v", err)
 			}
 			checkPackage(t, r, legacyRaw, input, output)
+			t.Logf("TSFG_NULLABLE_COALESCE_POSITIVE_REQUEST_V2 %s %s", tc.name, base64.StdEncoding.EncodeToString(input))
+			t.Logf("TSFG_NULLABLE_COALESCE_POSITIVE_RESPONSE_V2 %s %s", tc.name, base64.StdEncoding.EncodeToString(output))
 			if !bytes.Equal(before, canonical(r)) {
 				t.Fatal("private acquisition changed original request DTO")
 			}
