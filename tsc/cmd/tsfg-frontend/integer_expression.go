@@ -264,6 +264,13 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		return finish(&expression{Kind: "unary", Type: operand.Type, Operator: operator, Operand: operand, Range: expressionOffset(file, node)})
 	case ast.KindBinaryExpression:
 		binary := node.AsBinaryExpression()
+		if binary.OperatorToken.Kind == ast.KindQuestionQuestionToken {
+			value, failure := projectNullishCoalesce(file, check, node, refs, functions, target)
+			if failure != nil {
+				return nil, failure
+			}
+			return finish(value)
+		}
 		if binary.OperatorToken.Kind == ast.KindEqualsEqualsToken || binary.OperatorToken.Kind == ast.KindExclamationEqualsToken {
 			return failureAt("r02b-d-prohibited", "prohibited", binary.OperatorToken)
 		}

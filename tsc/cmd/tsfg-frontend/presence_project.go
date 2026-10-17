@@ -332,3 +332,36 @@ func missingState(check *checker.Checker, node *ast.Node) string {
 	}
 	return ""
 }
+
+// Keep ?? as one lazy, non-writing node. Each operand retains its official
+// use-site type; literal context cannot remove absence from the left operand.
+func projectNullishCoalesce(file *ast.SourceFile, check *checker.Checker, node *ast.Node,
+	refs map[*ast.Symbol]symbol, functions map[*ast.Symbol]functionInfo, target *integerTarget,
+) (*expression, *response) {
+	binary := node.AsBinaryExpression()
+	leftPayload, leftUndefined, leftNull, leftValid := finitePresence(check.GetTypeAtLocation(binary.Left))
+	rightPayload, rightUndefined, rightNull, rightValid := finitePresence(check.GetTypeAtLocation(binary.Right))
+	resultPayload, resultUndefined, resultNull, resultValid := finitePresence(check.GetTypeAtLocation(node))
+	if !leftValid || !rightValid || !resultValid || leftPayload != "i32" || rightPayload != leftPayload || resultPayload != leftPayload ||
+		!leftUndefined && !leftNull || rightUndefined || rightNull || resultUndefined || resultNull {
+		failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+		return nil, &failure
+	}
+	left, failure := projectIntegerExpression(file, check, binary.Left, leftPayload, refs, functions, target, true, true)
+	if failure != nil {
+		return nil, failure
+	}
+	leftFlow := expressionPresence(left)
+	if leftFlow == nil || leftFlow.Undefined != leftUndefined || leftFlow.Null != leftNull {
+		failure := failAt("r01-d-scalar-type", "error", file, binary.Left)
+		return nil, &failure
+	}
+	right, failure := projectIntegerExpression(file, check, binary.Right, rightPayload, refs, functions, target, true)
+	if failure != nil {
+		return nil, failure
+	}
+	return &expression{
+		Kind: "shortCircuit", Type: resultPayload, Operator: "??", Left: left, Right: right,
+		PresenceFlow: &presenceFlow{Undefined: resultUndefined, Null: resultNull}, Range: expressionOffset(file, node),
+	}, nil
+}
