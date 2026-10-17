@@ -16,7 +16,7 @@ func nullableFactsPresence(shape *parameterPresence) bool {
 	return shape == nil || !shape.Undefined && !shape.Optional && !shape.Default
 }
 
-func nullableFactsGrammar(file *ast.SourceFile, facts response) error {
+func nullableFactsGrammar(file *ast.SourceFile, check *checker.Checker, facts response) error {
 	if len(facts.Functions) == 0 || len(facts.Functions) > 512 || len(facts.Symbols) > 4096 || len(file.Statements.Nodes) != len(facts.Functions) {
 		return nullableFactsError("limit", "top-level function/symbol table")
 	}
@@ -66,7 +66,7 @@ func nullableFactsGrammar(file *ast.SourceFile, facts response) error {
 				if i != len(body)-1 {
 					return nullableFactsError("capability", "return must terminate the body")
 				}
-				if err := nullableFactsExpression(statement.AsReturnStatement().Expression, 0); err != nil {
+				if err := nullableFactsExpression(check, statement.AsReturnStatement().Expression, 0); err != nil {
 					return err
 				}
 			case ast.KindVariableStatement:
@@ -78,7 +78,7 @@ func nullableFactsGrammar(file *ast.SourceFile, facts response) error {
 					if local.Kind != ast.KindVariableDeclaration || local.Name() == nil || local.Name().Kind != ast.KindIdentifier || local.AsVariableDeclaration().Type == nil {
 						return nullableFactsError("capability", "explicitly typed local declaration required")
 					}
-					if err := nullableFactsExpression(local.AsVariableDeclaration().Initializer, 0); err != nil {
+					if err := nullableFactsExpression(check, local.AsVariableDeclaration().Initializer, 0); err != nil {
 						return err
 					}
 				}
@@ -90,7 +90,7 @@ func nullableFactsGrammar(file *ast.SourceFile, facts response) error {
 	return nil
 }
 
-func nullableFactsExpression(node *ast.Node, depth int) error {
+func nullableFactsExpression(check *checker.Checker, node *ast.Node, depth int) error {
 	if depth > 128 {
 		return nullableFactsError("limit", "expression depth")
 	}
@@ -98,6 +98,24 @@ func nullableFactsExpression(node *ast.Node, depth int) error {
 		return nullableFactsError("capability", "required value expression")
 	}
 	switch node.Kind {
+	case ast.KindBinaryExpression:
+		binary := node.AsBinaryExpression()
+		if binary.OperatorToken.Kind != ast.KindQuestionQuestionToken {
+			return nullableFactsError("capability", "only ordinary nullish coalesce operators")
+		}
+		// The same fresh checker proves operand/result members. Literal hints
+		// and already projected facts cannot substitute for these type objects.
+		leftPayload, leftUndefined, leftNull, leftValid := finitePresence(check.GetTypeAtLocation(binary.Left))
+		rightPayload, rightUndefined, rightNull, rightValid := finitePresence(check.GetTypeAtLocation(binary.Right))
+		resultPayload, resultUndefined, resultNull, resultValid := finitePresence(check.GetTypeAtLocation(node))
+		if !leftValid || !rightValid || !resultValid || leftPayload != "i32" || rightPayload != leftPayload || resultPayload != leftPayload ||
+			leftUndefined || !leftNull || rightUndefined || rightNull || resultUndefined || resultNull {
+			return nullableFactsError("capability", "nullish coalesce requires i32|null lhs and scalar i32 rhs/result")
+		}
+		if err := nullableFactsExpression(check, binary.Left, depth+1); err != nil {
+			return err
+		}
+		return nullableFactsExpression(check, binary.Right, depth+1)
 	case ast.KindIdentifier:
 		return nil
 	case ast.KindCallExpression:
@@ -106,7 +124,7 @@ func nullableFactsExpression(node *ast.Node, depth int) error {
 			return nullableFactsError("capability", "only direct ordinary calls")
 		}
 		for _, argument := range call.Arguments.Nodes {
-			if err := nullableFactsExpression(argument, depth+1); err != nil {
+			if err := nullableFactsExpression(check, argument, depth+1); err != nil {
 				return err
 			}
 		}
@@ -116,7 +134,7 @@ func nullableFactsExpression(node *ast.Node, depth int) error {
 }
 
 func projectNullableFacts(file *ast.SourceFile, check *checker.Checker, functions map[*ast.Symbol]functionInfo, facts response) ([]nullableFactsExport, error) {
-	if err := nullableFactsGrammar(file, facts); err != nil {
+	if err := nullableFactsGrammar(file, check, facts); err != nil {
 		return nil, err
 	}
 	// A script has no module symbol. Never ask the checker for exports of nil.

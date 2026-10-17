@@ -22,7 +22,7 @@ import (
 
 func TestNullableFactsCommandScalarEntry(t *testing.T) {
 	const source = "// 😀\nfunction echo(value: i32 | null): i32 | null { return value; }\nexport function entry(value: i32): i32 { const result: i32 | null = echo(value); return value; }"
-	const schema = "sha256:3da58c2cabf44bd6c337120300ac688bafa3d8e487c36f1ab0a48a4498699218"
+	const schema = "sha256:badc9425050a8f538fcb7b9397e5ef31fbde96391989dfeebb8cab6a122783bd"
 	r := integerRequest(source)
 	if len(source) != 167 || len(utf16.Encode([]rune(source))) != 165 || len(r.Files) != 2 || r.Files[0].Content != source {
 		t.Fatal("fixed original source/declaration request changed")
@@ -111,17 +111,17 @@ func TestNullableFactsCommandScalarEntry(t *testing.T) {
 		t.Fatal(err)
 	}
 	requestBytes := canonical(map[string]any{
-		"family": "tsfg.nullable-facts-request-candidate", "version": 1, "schemaHash": schema, "input": input,
+		"family": "tsfg.nullable-facts-request-candidate", "version": 2, "schemaHash": schema, "input": input,
 	})
 	requestBefore := bytes.Clone(requestBytes)
-	requestID := digest(append([]byte("tsfg.nullable-facts.request.v1\x00"), requestBytes...))
+	requestID := digest(append([]byte("tsfg.nullable-facts.request.v2\x00"), requestBytes...))
 	// The first command failure is an absent private command, not evidence of
 	// unsupported nullable semantics. Preserve the actual request before calling.
 	t.Logf("TSFG_NULLABLE_FACTS_REQUEST_V1 %s", base64.StdEncoding.EncodeToString(requestBytes))
 	t.Logf("TSFG_NULLABLE_FACTS_MAIN_V1 %s", base64.StdEncoding.EncodeToString([]byte(r.Files[0].Content)))
 	t.Logf("TSFG_NULLABLE_FACTS_DTS_V1 %s", base64.StdEncoding.EncodeToString([]byte(r.Files[1].Content)))
 	var output bytes.Buffer
-	if err := runFrontendCommand(t.Context(), []string{"--nullable-facts-io-v1"}, bytes.NewReader(requestBytes), &output); err != nil {
+	if err := runFrontendCommand(t.Context(), []string{"--nullable-facts-io-v2"}, bytes.NewReader(requestBytes), &output); err != nil {
 		t.Fatalf("private nullable command is not available or rejected this request: %v; rawResponse=%s", err, output.Bytes())
 	}
 	if !bytes.Equal(requestBefore, requestBytes) {
@@ -147,11 +147,11 @@ func TestNullableFactsCommandScalarEntry(t *testing.T) {
 	raw := bytes.Clone(output.Bytes())
 	t.Logf("TSFG_NULLABLE_FACTS_RESPONSE_V1 %s", base64.StdEncoding.EncodeToString(raw))
 	wire := fields(raw, "family", "version", "schemaHash", "requestId", "packageId", "payload")
-	if string(wire["family"]) != "\"tsfg.nullable-facts-package-candidate\"" || string(wire["version"]) != "1" || !bytes.Equal(wire["schemaHash"], canonical(schema)) || !bytes.Equal(wire["requestId"], canonical(requestID)) {
+	if string(wire["family"]) != "\"tsfg.nullable-facts-package-candidate\"" || string(wire["version"]) != "2" || !bytes.Equal(wire["schemaHash"], canonical(schema)) || !bytes.Equal(wire["requestId"], canonical(requestID)) {
 		t.Fatalf("private family/version/schema/request identity differs: %s", raw)
 	}
 	payload := fields(wire["payload"], "inputIdentity", "files", "facts", "exports")
-	preimage := append([]byte("tsfg.nullable-facts.package.v1\x00"+schema+"\x00"), wire["payload"]...)
+	preimage := append([]byte("tsfg.nullable-facts.package.v2\x00"+schema+"\x00"), wire["payload"]...)
 	if !bytes.Equal(wire["packageId"], canonical(digest(preimage))) {
 		t.Fatal("package ID does not bind schema and complete canonical payload")
 	}

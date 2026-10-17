@@ -111,9 +111,9 @@ func handleNullableFactsCandidate(ctx context.Context, data []byte) (outputBytes
 	if err != nil {
 		return nil, err
 	}
-	requestID := nullableFactsDigest(append([]byte("tsfg.nullable-facts.request.v1\x00"), data...))
-	preimage := append([]byte("tsfg.nullable-facts.package.v1\x00"+nullableFactsSchema+"\x00"), payloadBytes...)
-	result := nullableFactsPackage{Family: "tsfg.nullable-facts-package-candidate", Version: 1, SchemaHash: nullableFactsSchema,
+	requestID := nullableFactsDigest(append([]byte("tsfg.nullable-facts.request.v2\x00"), data...))
+	preimage := append([]byte("tsfg.nullable-facts.package.v2\x00"+nullableFactsSchema+"\x00"), payloadBytes...)
+	result := nullableFactsPackage{Family: "tsfg.nullable-facts-package-candidate", Version: 2, SchemaHash: nullableFactsSchema,
 		RequestID: requestID, PackageID: nullableFactsDigest(preimage), Payload: payload}
 	encoded, err := nullableFactsCanonical(result)
 	if err != nil {

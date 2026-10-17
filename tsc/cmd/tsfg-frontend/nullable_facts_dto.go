@@ -17,7 +17,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/json"
 )
 
-const nullableFactsSchema = "sha256:3da58c2cabf44bd6c337120300ac688bafa3d8e487c36f1ab0a48a4498699218"
+const nullableFactsSchema = "sha256:badc9425050a8f538fcb7b9397e5ef31fbde96391989dfeebb8cab6a122783bd"
 const nullableFactsMaxBytes = 8388608
 
 type nullableFactsInput struct {
@@ -133,7 +133,7 @@ func decodeNullableFactsRequest(data []byte) (nullableFactsRequest, error) {
 	if !bytes.Equal(encoded, data) {
 		return r, nullableFactsError("schema", "request exact fields and types")
 	}
-	if r.Family != "tsfg.nullable-facts-request-candidate" || r.Version != 1 || r.SchemaHash != nullableFactsSchema {
+	if r.Family != "tsfg.nullable-facts-request-candidate" || r.Version != 2 || r.SchemaHash != nullableFactsSchema {
 		return r, nullableFactsError("schema", "request family/version/schema")
 	}
 	return r, nil

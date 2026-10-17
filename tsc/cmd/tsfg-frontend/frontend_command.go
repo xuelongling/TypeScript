@@ -14,7 +14,7 @@ func runFrontendCommand(ctx context.Context, args []string, input io.Reader, out
 	if len(args) == 1 && args[0] == "--generic-package-io-v1" {
 		return runGenericPackageCandidate(ctx, input, output)
 	}
-	if len(args) == 1 && args[0] == "--nullable-facts-io-v1" {
+	if len(args) == 1 && args[0] == "--nullable-facts-io-v2" {
 		return runNullableFactsCandidate(ctx, input, output)
 	}
 	if len(args) != 0 {
