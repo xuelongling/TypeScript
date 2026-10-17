@@ -17,7 +17,7 @@ import (
 )
 
 func TestNullableFactsCommandNullishCoalesceBoundaries(t *testing.T) {
-	const schema = "sha256:badc9425050a8f538fcb7b9397e5ef31fbde96391989dfeebb8cab6a122783bd"
+	const schema = "sha256:24a04b0b595cae59ccf52a939f4671cea0369c46bd705f56726d028ab1df5a71"
 	const entry = "\nexport function entry(value: i32): i32 { return coalesce(value, value); }"
 	const fallback = "function fallback(value: i32): i32 { return value; }\n"
 	canonical := func(value any) []byte { return nullableFactsBoundaryCanonical(t, value) }
@@ -36,7 +36,7 @@ func TestNullableFactsCommandNullishCoalesceBoundaries(t *testing.T) {
 		if !bytes.Equal(before, canonical(r)) {
 			t.Fatal("official/legacy command changed original request")
 		}
-		input := canonical(map[string]any{"family": "tsfg.nullable-facts-request-candidate", "version": 2, "schemaHash": schema, "input": r})
+		input := canonical(map[string]any{"family": "tsfg.nullable-facts-request-candidate", "version": 3, "schemaHash": schema, "input": r})
 		return r, legacy, raw, input
 	}
 	private := func(t *testing.T, input []byte, flag string) ([]byte, error) {
@@ -67,11 +67,11 @@ func TestNullableFactsCommandNullishCoalesceBoundaries(t *testing.T) {
 	checkPackage := func(t *testing.T, r request, legacyRaw, input, output []byte) {
 		t.Helper()
 		packet := fields(t, output, "family", "version", "schemaHash", "requestId", "packageId", "payload")
-		if string(packet["family"]) != "\"tsfg.nullable-facts-package-candidate\"" || string(packet["version"]) != "2" || !bytes.Equal(packet["schemaHash"], canonical(schema)) || !bytes.Equal(packet["requestId"], canonical(digest(append([]byte("tsfg.nullable-facts.request.v2\x00"), input...)))) {
+		if string(packet["family"]) != "\"tsfg.nullable-facts-package-candidate\"" || string(packet["version"]) != "3" || !bytes.Equal(packet["schemaHash"], canonical(schema)) || !bytes.Equal(packet["requestId"], canonical(digest(append([]byte("tsfg.nullable-facts.request.v3\x00"), input...)))) {
 			t.Fatal("private family/version/schema/request identity changed")
 		}
 		payload := fields(t, packet["payload"], "inputIdentity", "files", "facts", "exports")
-		if !bytes.Equal(packet["packageId"], canonical(digest(append([]byte("tsfg.nullable-facts.package.v2\x00"+schema+"\x00"), packet["payload"]...)))) {
+		if !bytes.Equal(packet["packageId"], canonical(digest(append([]byte("tsfg.nullable-facts.package.v3\x00"+schema+"\x00"), packet["payload"]...)))) {
 			t.Fatal("package does not bind complete canonical payload")
 		}
 		var identity map[string]json.Value
@@ -222,13 +222,13 @@ func TestNullableFactsCommandNullishCoalesceBoundaries(t *testing.T) {
 			if !reflect.DeepEqual(counts, wantCounts) {
 				t.Fatalf("operands duplicated or eagerly rewritten: got=%v want=%v", counts, wantCounts)
 			}
-			output, err := private(t, input, "--nullable-facts-io-v2")
+			output, err := private(t, input, "--nullable-facts-io-v3")
 			if err != nil {
-				t.Fatalf("positive private v2 failed after official/legacy PASS: %v", err)
+				t.Fatalf("positive private v3 failed after official/legacy PASS: %v", err)
 			}
 			checkPackage(t, r, legacyRaw, input, output)
-			t.Logf("TSFG_NULLABLE_COALESCE_POSITIVE_REQUEST_V2 %s %s", tc.name, base64.StdEncoding.EncodeToString(input))
-			t.Logf("TSFG_NULLABLE_COALESCE_POSITIVE_RESPONSE_V2 %s %s", tc.name, base64.StdEncoding.EncodeToString(output))
+			t.Logf("TSFG_NULLABLE_COALESCE_POSITIVE_REQUEST_V3 %s %s", tc.name, base64.StdEncoding.EncodeToString(input))
+			t.Logf("TSFG_NULLABLE_COALESCE_POSITIVE_RESPONSE_V3 %s %s", tc.name, base64.StdEncoding.EncodeToString(output))
 			if !bytes.Equal(before, canonical(r)) {
 				t.Fatal("private acquisition changed original request DTO")
 			}
@@ -236,18 +236,38 @@ func TestNullableFactsCommandNullishCoalesceBoundaries(t *testing.T) {
 			return
 		}
 	}
-	negatives := []struct{ name, source, layer string }{
-		{"mask1TypedGrammar", "function coalesce(value: i32 | undefined, replacement: i32): i32 { return value ?? replacement; }" + entry, "capability"},
-		{"mask3TypedGrammar", "function coalesce(value: i32 | null | undefined, replacement: i32): i32 { return value ?? replacement; }" + entry, "capability"},
+	boundaryCases := []struct{ name, source, layer string }{
+		{"mask1Supported", "function coalesce(value: i32 | undefined, replacement: i32): i32 { return value ?? replacement; }" + entry, "success"},
+		{"mask3Supported", "function coalesce(value: i32 | null | undefined, replacement: i32): i32 { return value ?? replacement; }" + entry, "success"},
 		{"nullableExport", "export function entry(value: i32 | null, replacement: i32): i32 { return value ?? replacement; }", "export"},
 		{"parenthesizedRhsGrammar", "function coalesce(value: i32 | null, replacement: i32): i32 { return value ?? (replacement); }" + entry, "capability"},
 		{"assignmentOperatorGrammar", "function coalesce(value: i32 | null, replacement: i32): i32 { return value ??= replacement; }" + entry, "capability"},
 		{"nonnullableLhsSource", "function coalesce(value: i32, replacement: i32): i32 { return value ?? replacement; }" + entry, "source"},
 		{"nullableRhsResultSource", "function coalesce(value: i32 | null, replacement: i32 | null): i32 | null { return value ?? replacement; }\nexport function entry(value: i32): i32 { return value; }", "source"},
 	}
-	for _, tc := range negatives {
+	for _, tc := range boundaryCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, legacy, legacyRaw, input := acquire(t, tc.source)
+			r, legacy, legacyRaw, input := acquire(t, tc.source)
+			if tc.layer == "success" {
+				if legacy.Status != "ok" || len(legacy.Diagnostics) != 0 || len(legacy.Functions) != 2 || len(legacy.Symbols) != 5 {
+					t.Fatalf("supported mask failed official/legacy prerequisite: %+v raw=%s", legacy, legacyRaw)
+				}
+				fn := legacy.Functions[0]
+				root := fn.Body[0].Expression
+				wantNull := tc.name == "mask3Supported"
+				if len(fn.Parameters) != 2 || fn.Parameters[0].Presence == nil || !fn.Parameters[0].Presence.Undefined || fn.Parameters[0].Presence.Null != wantNull || fn.Parameters[0].Presence.Optional || fn.Parameters[0].Presence.Default || root == nil || root.Kind != "shortCircuit" || root.Operator != "??" || root.PresenceFlow == nil || root.PresenceFlow.Null || root.PresenceFlow.Undefined || root.Left == nil || root.Right == nil || root.Left.Kind != "reference" || root.Left.Symbol != fn.Parameters[0].ID || root.Left.PresenceFlow == nil || !root.Left.PresenceFlow.Undefined || root.Left.PresenceFlow.Null != wantNull || root.Right.Kind != "reference" || root.Right.Symbol != fn.Parameters[1].ID || root.Right.PresenceFlow != nil || sourceText(t, tc.source, root.Range) != "value ?? replacement" {
+					t.Fatal("supported mask lost exact owned declaration/flow/lazy reference structure")
+				}
+				output, err := private(t, input, "--nullable-facts-io-v3")
+				if err != nil {
+					t.Fatalf("supported mask private v3 refused after official/legacy PASS: %v", err)
+				}
+				checkPackage(t, r, legacyRaw, input, output)
+				t.Logf("TSFG_NULLABLE_COALESCE_POSITIVE_REQUEST_V3 %s %s", tc.name, base64.StdEncoding.EncodeToString(input))
+				t.Logf("TSFG_NULLABLE_COALESCE_POSITIVE_RESPONSE_V3 %s %s", tc.name, base64.StdEncoding.EncodeToString(output))
+				t.Logf("TSFG_NULLABLE_COALESCE_POSITIVE_LEGACY_V3 %s %s", tc.name, base64.StdEncoding.EncodeToString(legacyRaw))
+				return
+			}
 			if tc.layer == "source" {
 				if legacy.Status != "error" || len(legacy.Diagnostics) != 1 || len(legacy.Functions) != 0 {
 					t.Fatalf("Source control did not reject at legacy layer: %+v raw=%s", legacy, legacyRaw)
@@ -259,7 +279,7 @@ func TestNullableFactsCommandNullishCoalesceBoundaries(t *testing.T) {
 			} else if legacy.Status != "ok" || len(legacy.Diagnostics) != 0 || len(legacy.Functions) == 0 {
 				t.Fatalf("private negative failed before its claimed gate: %+v raw=%s", legacy, legacyRaw)
 			}
-			output, err := private(t, input, "--nullable-facts-io-v2")
+			output, err := private(t, input, "--nullable-facts-io-v3")
 			if err == nil || len(output) != 0 || !strings.HasPrefix(err.Error(), "[r03-nullable-facts-"+tc.layer+"] ") {
 				t.Fatalf("wrong private rejection layer: want=%s err=%v raw=%s", tc.layer, err, output)
 			}
@@ -269,19 +289,18 @@ func TestNullableFactsCommandNullishCoalesceBoundaries(t *testing.T) {
 			if tc.layer == "source" && !strings.Contains(err.Error(), "r02b-d-unsupported at /src/main.ts") {
 				t.Fatal("private Source adapter lost the actual legacy diagnostic identity")
 			}
-			// Undefined masks may fail the broader typed-grammar gate first;
-			// groups test group rejection, never binary/operator-specific credit.
+			// Groups test group rejection, never binary/operator-specific credit.
 			t.Logf("actual rejection layer=%s: %v", tc.layer, err)
 		})
 	}
-	t.Run("removedV1Api", func(t *testing.T) {
+	t.Run("removedV2Api", func(t *testing.T) {
 		_, legacy, raw, input := acquire(t, positives[0].source)
 		if legacy.Status != "ok" || len(legacy.Diagnostics) != 0 {
 			t.Fatalf("old-API control lost current valid legacy input: %s", raw)
 		}
-		output, err := private(t, input, "--nullable-facts-io-v1")
+		output, err := private(t, input, "--nullable-facts-io-v2")
 		if err == nil || len(output) != 0 || !strings.Contains(err.Error(), "accepts one JSON request on stdin") || strings.Contains(err.Error(), "[r03-nullable-facts-") {
-			t.Fatalf("removed v1 flag did not fail at argv API before package decoding: err=%v raw=%s", err, output)
+			t.Fatalf("removed v2 flag did not fail at argv API before package decoding: err=%v raw=%s", err, output)
 		}
 	})
 }

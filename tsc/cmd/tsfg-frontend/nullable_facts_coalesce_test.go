@@ -24,7 +24,7 @@ import (
 
 func TestNullableFactsCommandNullishCoalesce(t *testing.T) {
 	const source = "function fallback(value: i32): i32 { return value; }\nfunction coalesce(value: i32 | null, replacement: i32): i32 { return value ?? fallback(replacement); }\nexport function entry(value: i32): i32 { return coalesce(value, value); }"
-	const schema = "sha256:badc9425050a8f538fcb7b9397e5ef31fbde96391989dfeebb8cab6a122783bd"
+	const schema = "sha256:24a04b0b595cae59ccf52a939f4671cea0369c46bd705f56726d028ab1df5a71"
 	digest := func(data []byte) string {
 		sum := sha256.Sum256(data)
 		return "sha256:" + hex.EncodeToString(sum[:])
@@ -186,7 +186,7 @@ func TestNullableFactsCommandNullishCoalesce(t *testing.T) {
 				t.Fatalf("official fixed %s range differs: got=%+v want=%+v", key, anchors[key], want)
 			}
 		}
-		t.Logf("TSFG_NULLABLE_FACTS_OFFICIAL_ORACLE_V2 %s", base64.StdEncoding.EncodeToString(canonical(map[string]any{
+		t.Logf("TSFG_NULLABLE_FACTS_OFFICIAL_ORACLE_V3 %s", base64.StdEncoding.EncodeToString(canonical(map[string]any{
 			"kind": "test-only-official-coalesce-oracle", "sourcePath": r.RootFile, "anchors": anchors,
 			"exports": []map[string]any{{"name": "entry", "range": anchors["entry"], "definition": anchors["entryDefinition"]}},
 		})))
@@ -254,32 +254,32 @@ func TestNullableFactsCommandNullishCoalesce(t *testing.T) {
 		if err := json.Unmarshal(canonical(value), &tree); err != nil || len(tree) != 7 || string(tree["operator"]) != "\"??\"" {
 			t.Fatal("legacy ?? was expanded, duplicated or rewritten as a write")
 		}
-		t.Logf("TSFG_NULLABLE_FACTS_LEGACY_RESPONSE_V2 %s", base64.StdEncoding.EncodeToString(legacyRaw))
+		t.Logf("TSFG_NULLABLE_FACTS_LEGACY_RESPONSE_V3 %s", base64.StdEncoding.EncodeToString(legacyRaw))
 	}) {
 		return
 	}
 
 	t.Run("privateCommand", func(t *testing.T) {
-		requestBytes := canonical(map[string]any{"family": "tsfg.nullable-facts-request-candidate", "version": 2, "schemaHash": schema, "input": json.Value(originalInput)})
+		requestBytes := canonical(map[string]any{"family": "tsfg.nullable-facts-request-candidate", "version": 3, "schemaHash": schema, "input": json.Value(originalInput)})
 		before := bytes.Clone(requestBytes)
 		defer func() {
 			if !bytes.Equal(before, requestBytes) {
-				t.Fatal("private v2 command mutated original request bytes")
+				t.Fatal("private v3 command mutated original request bytes")
 			}
 		}()
-		t.Logf("TSFG_NULLABLE_FACTS_REQUEST_V2 %s", base64.StdEncoding.EncodeToString(requestBytes))
-		t.Logf("TSFG_NULLABLE_FACTS_ORIGINAL_V2 %s", base64.StdEncoding.EncodeToString(canonical(map[string]any{"rootFile": r.RootFile, "files": r.Files})))
-		t.Logf("TSFG_NULLABLE_FACTS_MAIN_V2 %s", base64.StdEncoding.EncodeToString([]byte(source)))
-		t.Logf("TSFG_NULLABLE_FACTS_DTS_V2 %s", base64.StdEncoding.EncodeToString([]byte(r.Files[1].Content)))
+		t.Logf("TSFG_NULLABLE_FACTS_REQUEST_V3 %s", base64.StdEncoding.EncodeToString(requestBytes))
+		t.Logf("TSFG_NULLABLE_FACTS_ORIGINAL_V3 %s", base64.StdEncoding.EncodeToString(canonical(map[string]any{"rootFile": r.RootFile, "files": r.Files})))
+		t.Logf("TSFG_NULLABLE_FACTS_MAIN_V3 %s", base64.StdEncoding.EncodeToString([]byte(source)))
+		t.Logf("TSFG_NULLABLE_FACTS_DTS_V3 %s", base64.StdEncoding.EncodeToString([]byte(r.Files[1].Content)))
 		var output bytes.Buffer
-		if err := runFrontendCommand(t.Context(), []string{"--nullable-facts-io-v2"}, bytes.NewReader(requestBytes), &output); err != nil {
+		if err := runFrontendCommand(t.Context(), []string{"--nullable-facts-io-v3"}, bytes.NewReader(requestBytes), &output); err != nil {
 			if output.Len() != 0 {
 				t.Fatalf("failed private command published partial output: err=%v raw=%s", err, output.Bytes())
 			}
-			t.Fatalf("official/legacy passed; private v2 command refused: %v", err)
+			t.Fatalf("official/legacy passed; private v3 command refused: %v", err)
 		}
 		raw := bytes.Clone(output.Bytes())
-		t.Logf("TSFG_NULLABLE_FACTS_RESPONSE_V2 %s", base64.StdEncoding.EncodeToString(raw))
+		t.Logf("TSFG_NULLABLE_FACTS_RESPONSE_V3 %s", base64.StdEncoding.EncodeToString(raw))
 		fields := func(data []byte, keys ...string) map[string]json.Value {
 			t.Helper()
 			var value map[string]json.Value
@@ -294,12 +294,12 @@ func TestNullableFactsCommandNullishCoalesce(t *testing.T) {
 			return value
 		}
 		packet := fields(raw, "family", "version", "schemaHash", "requestId", "packageId", "payload")
-		requestID := digest(append([]byte("tsfg.nullable-facts.request.v2\x00"), requestBytes...))
-		if string(packet["family"]) != "\"tsfg.nullable-facts-package-candidate\"" || string(packet["version"]) != "2" || !bytes.Equal(packet["schemaHash"], canonical(schema)) || !bytes.Equal(packet["requestId"], canonical(requestID)) {
+		requestID := digest(append([]byte("tsfg.nullable-facts.request.v3\x00"), requestBytes...))
+		if string(packet["family"]) != "\"tsfg.nullable-facts-package-candidate\"" || string(packet["version"]) != "3" || !bytes.Equal(packet["schemaHash"], canonical(schema)) || !bytes.Equal(packet["requestId"], canonical(requestID)) {
 			t.Fatal("private family/version/schema/request identity differs")
 		}
 		payload := fields(packet["payload"], "inputIdentity", "files", "facts", "exports")
-		if !bytes.Equal(packet["packageId"], canonical(digest(append([]byte("tsfg.nullable-facts.package.v2\x00"+schema+"\x00"), packet["payload"]...)))) {
+		if !bytes.Equal(packet["packageId"], canonical(digest(append([]byte("tsfg.nullable-facts.package.v3\x00"+schema+"\x00"), packet["payload"]...)))) {
 			t.Fatal("package ID failed independent complete payload preimage")
 		}
 		var identity map[string]json.Value
@@ -325,6 +325,6 @@ func TestNullableFactsCommandNullishCoalesce(t *testing.T) {
 		if !bytes.Equal(payload["exports"], canonical(wantExports)) {
 			t.Fatal("private exports differ from full official actual-declaration oracle")
 		}
-		t.Logf("TSFG_NULLABLE_FACTS_CAPTURE_HASHES_V2 %s", base64.StdEncoding.EncodeToString(canonical(map[string]any{"kind": "test-only-capture-hashes", "requestSha256": digest(requestBytes), "responseSha256": digest(raw)})))
+		t.Logf("TSFG_NULLABLE_FACTS_CAPTURE_HASHES_V3 %s", base64.StdEncoding.EncodeToString(canonical(map[string]any{"kind": "test-only-capture-hashes", "requestSha256": digest(requestBytes), "responseSha256": digest(raw)})))
 	})
 }

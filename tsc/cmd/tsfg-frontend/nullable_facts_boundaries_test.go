@@ -15,7 +15,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/json"
 )
 
-const nullableFactsBoundarySchema = "sha256:badc9425050a8f538fcb7b9397e5ef31fbde96391989dfeebb8cab6a122783bd"
+const nullableFactsBoundarySchema = "sha256:24a04b0b595cae59ccf52a939f4671cea0369c46bd705f56726d028ab1df5a71"
 const nullableFactsBoundarySource = "function echo(value: i32 | null): i32 | null { return value; }\nexport function entry(value: i32): i32 { const result: i32 | null = echo(value); return value; }"
 
 // Official canonicalization admits these fixed test DTOs without borrowing the
@@ -36,7 +36,7 @@ func nullableFactsBoundaryCanonical(t *testing.T, value any) []byte {
 func nullableFactsBoundaryRequest(t *testing.T, r request) []byte {
 	t.Helper()
 	return nullableFactsBoundaryCanonical(t, map[string]any{
-		"family": "tsfg.nullable-facts-request-candidate", "version": 2,
+		"family": "tsfg.nullable-facts-request-candidate", "version": 3,
 		"schemaHash": nullableFactsBoundarySchema, "input": r,
 	})
 }
@@ -67,7 +67,7 @@ func nullableFactsBoundaryLegacy(t *testing.T, r request) response {
 func nullableFactsBoundaryReject(t *testing.T, input []byte) {
 	t.Helper()
 	before := bytes.Clone(input)
-	output, err := nullableFactsBoundaryRun(t.Context(), []string{"--nullable-facts-io-v2"}, input)
+	output, err := nullableFactsBoundaryRun(t.Context(), []string{"--nullable-facts-io-v3"}, input)
 	if err == nil || len(output) != 0 {
 		t.Fatalf("private rejection must return error and no partial package: err=%v output=%s", err, output)
 	}
@@ -78,7 +78,7 @@ func nullableFactsBoundaryReject(t *testing.T, input []byte) {
 
 func TestNullableFactsCommandStrictBoundary(t *testing.T) {
 	baseline := nullableFactsBoundaryRequest(t, integerRequest(nullableFactsBoundarySource))
-	if output, err := nullableFactsBoundaryRun(t.Context(), []string{"--nullable-facts-io-v2"}, baseline); err != nil || len(output) == 0 {
+	if output, err := nullableFactsBoundaryRun(t.Context(), []string{"--nullable-facts-io-v3"}, baseline); err != nil || len(output) == 0 {
 		t.Fatalf("canonical positive control failed: %v; raw=%s", err, output)
 	}
 	mutated := func(change func(map[string]json.Value)) []byte {
@@ -111,7 +111,7 @@ func TestNullableFactsCommandStrictBoundary(t *testing.T) {
 		{"case-variant", mutated(func(v map[string]json.Value) { v["Family"] = v["family"]; delete(v, "family") })},
 		{"mixed-key-case", mutated(func(v map[string]json.Value) { v["Family"] = v["family"] })},
 		{"mixed-family", mutated(func(v map[string]json.Value) { v["family"] = json.Value("\"tsfg-owned-generic-package\"") })},
-		{"mixed-version", mutated(func(v map[string]json.Value) { v["version"] = json.Value("1") })},
+		{"mixed-version", mutated(func(v map[string]json.Value) { v["version"] = json.Value("2") })},
 		{"mixed-schema", mutated(func(v map[string]json.Value) {
 			v["schemaHash"] = json.Value("\"sha256:" + strings.Repeat("0", 64) + "\"")
 		})},
@@ -185,12 +185,12 @@ func TestNullableFactsCommandExportBoundary(t *testing.T) {
 func TestNullableFactsCommandCanceledBoundary(t *testing.T) {
 	input := nullableFactsBoundaryRequest(t, integerRequest(nullableFactsBoundarySource))
 	before := bytes.Clone(input)
-	if output, err := nullableFactsBoundaryRun(t.Context(), []string{"--nullable-facts-io-v2"}, input); err != nil || len(output) == 0 {
+	if output, err := nullableFactsBoundaryRun(t.Context(), []string{"--nullable-facts-io-v3"}, input); err != nil || len(output) == 0 {
 		t.Fatalf("noncanceled public control failed: %v; raw=%s", err, output)
 	}
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
-	output, err := nullableFactsBoundaryRun(ctx, []string{"--nullable-facts-io-v2"}, input)
+	output, err := nullableFactsBoundaryRun(ctx, []string{"--nullable-facts-io-v3"}, input)
 	if !errors.Is(err, context.Canceled) || len(output) != 0 || !bytes.Equal(input, before) {
 		t.Fatalf("pre-canceled call must fail without output or input mutation: err=%v output=%s", err, output)
 	}
@@ -217,7 +217,7 @@ func TestNullableFactsCommandFreshOwnershipBoundary(t *testing.T) {
 	acquire := func(r request, input []byte, entry string) ([]byte, packet) {
 		t.Helper()
 		before := bytes.Clone(input)
-		output, err := nullableFactsBoundaryRun(t.Context(), []string{"--nullable-facts-io-v2"}, input)
+		output, err := nullableFactsBoundaryRun(t.Context(), []string{"--nullable-facts-io-v3"}, input)
 		if err != nil || !bytes.Equal(input, before) {
 			t.Fatalf("fresh private acquisition failed or changed input: %v; raw=%s", err, output)
 		}
@@ -225,7 +225,7 @@ func TestNullableFactsCommandFreshOwnershipBoundary(t *testing.T) {
 		if err := json.Unmarshal(output, &got); err != nil || len(got.Payload.Exports) != 1 || got.Payload.Exports[0].Name != entry {
 			t.Fatalf("fresh export does not match this request: err=%v raw=%s", err, output)
 		}
-		sum := sha256.Sum256(append([]byte("tsfg.nullable-facts.request.v2\x00"), input...))
+		sum := sha256.Sum256(append([]byte("tsfg.nullable-facts.request.v3\x00"), input...))
 		if got.RequestID != "sha256:"+hex.EncodeToString(sum[:]) {
 			t.Fatal("request identity came from another acquisition")
 		}
