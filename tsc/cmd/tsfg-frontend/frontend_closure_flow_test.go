@@ -59,6 +59,7 @@ func TestFrontendCommandClosureFlowFacts(t *testing.T) {
 		{"calleeBeforeArgumentRebind", "export function entry(seed: bool): bool { function first(leftValue: bool): bool { return leftValue; } function other(rightValue: bool): bool { return !rightValue; } let selected: (argument: bool) => bool = first; return selected((selected = other)(seed)); }"},
 		{"mutualHigherOrder", "export function entry(seed: bool): bool { function leaf(): bool { return seed; } function left(fn: () => bool, again: bool): () => bool { if (again) { return right(fn, false); } return fn; } function right(next: () => bool, again: bool): () => bool { if (again) { return left(next, false); } return next; } const selected = left(leaf, seed); return selected(); }"},
 		{"externalAndFactoryActivations", "export function entry(external: () => bool, seed: bool): bool { function first(): bool { return seed; } function other(): bool { return false; } function make(fn: () => bool): () => bool { function invoke(): bool { return fn(); } return invoke; } const left = make(first); const right = make(other); return external() && left() && right(); }"},
+		{"transitiveExternalRootEnvironment", "export function entry(seed: bool): bool { function first(): bool { return seed; } function other(): bool { return false; } let selected: () => bool = first; function middle(): bool { function helper(): bool { return selected(); } return helper(); } return middle(); }"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := integerRequest(tc.source)
