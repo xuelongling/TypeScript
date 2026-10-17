@@ -65,6 +65,14 @@ func TestFrontendCommandClosureFlowFacts(t *testing.T) {
 		{"nestedParentParameterRead", "export function entry(seed: bool): bool { function first(): bool { return false; } function make(fn: () => bool): () => bool { function invoke(): bool { return fn() && seed; } return invoke; } const selected = make(first); return selected(); }"},
 		{"capturedCallableParameterWrites", "export function entry(selected: () => bool, replacement: () => bool): bool { function choose(fn: () => bool): () => bool { return fn; } function update(next: () => bool): bool { selected = choose(next); return (selected = choose(next))(); } return update(replacement); }"},
 		{"shortCircuitClosureRebind", "export function entry(seed: bool): bool { function first(): bool { return seed; } function other(): bool { return false; } let selected: () => bool = first; const before = seed && (selected = other)(); return selected() && before; }"},
+		{"initializedReturnedLocal", "export function entry(seed: bool): bool { function make(value: bool): () => bool { const before: bool = value; let state: bool = before; function read(): bool { return state; } return read; } const selected: () => bool = make(seed); return selected(); }"},
+		{"initializedCallbackLocal", "export function entry(seed: bool): bool { let state: bool = seed; function read(): bool { return state; } function invoke(fn: () => bool): bool { return fn(); } return invoke(read); }"},
+		{"recursiveFreshLocal", "export function entry(seed: bool): bool { function make(value: bool, again: bool): () => bool { let state: bool = value; function read(): bool { return state; } if (again) { return make(!value, false); } return read; } const selected: () => bool = make(seed, seed); return selected(); }"},
+		{"selfInitializerLocalRead", "export function entry(seed: bool): bool { function read(): bool { return state; } let state: bool = read(); return state; }"},
+		{"earlyTransitiveLocalRead", "export function entry(seed: bool): bool { function read(): bool { return state; } function middle(): bool { return read(); } const before: bool = middle(); let state: bool = seed; return before; }"},
+		{"earlyMakeThenInitialize", "export function entry(seed: bool): bool { function read(): bool { return state; } const selected: () => bool = read; let state: bool = seed; return selected(); }"},
+		{"callbackInitializerLocalWrite", "export function entry(seed: bool): bool { function write(next: bool): bool { state = next; return state; } function invoke(fn: (value: bool) => bool, value: bool): bool { return fn(value); } let state: bool = invoke(write, seed); return state; }"},
+		{"earlyTransitiveLocalMake", "export function entry(seed: bool): bool { function read(): bool { return state; } function middle(): () => bool { return read; } const selected: () => bool = middle(); let state: bool = seed; return selected(); }"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := integerRequest(tc.source)
