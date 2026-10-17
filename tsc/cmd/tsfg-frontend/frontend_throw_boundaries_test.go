@@ -86,24 +86,6 @@ func throwBoundaryCommandForTest(t *testing.T, r request) (response, []byte) {
 	return result, raw
 }
 
-func throwBoundaryCapabilityForTest(t *testing.T, source string, r request, want span) {
-	t.Helper()
-	result, raw := throwBoundaryCommandForTest(t, r)
-	if result.Status != "error" || len(result.Functions) != 0 || len(result.Diagnostics) != 1 {
-		t.Fatalf("finite throw boundary admitted or lost diagnostic: %+v; raw=%s", result, raw)
-	}
-	d := result.Diagnostics[0]
-	if d.Code != "r02b-d-unsupported" || d.Category != "unsupported" || d.Phase != "capability" ||
-		d.Severity != "error" || d.UpstreamCode != 0 || d.RuleID != "r01-ts-baseline" ||
-		d.File != r.RootFile || d.Primary.SourceID != r.RootFile || d.Range != want ||
-		d.Primary.Start != want.Start || d.Primary.End != want.End {
-		t.Fatalf("did not reach original whole throw/try capability gate: %+v; raw=%s", d, raw)
-	}
-	if text := sourceText(t, source, want); !strings.HasPrefix(text, "throw ") && !strings.HasPrefix(text, "try ") {
-		t.Fatalf("boundary anchor is not original throw/try: %q", text)
-	}
-}
-
 func TestFrontendThrowI32OwnedBoundaries(t *testing.T) {
 	positives := []struct {
 		name, source, payload, returnType string
@@ -313,8 +295,8 @@ func TestFrontendThrowI32OwnedBoundaries(t *testing.T) {
 		}
 	}
 
-	// Identical return controls prove the non-i32 declaration/expression is already
-	// projectable; an early parameter failure cannot impersonate the throw gate.
+	// Identical return controls prove each payload declaration/expression is already
+	// projectable before checking the same original reference as a throw payload.
 	for _, typ := range []string{"bool", "i16", "i32 | null", "i32 | undefined"} {
 		t.Run("finitePayload/"+typ, func(t *testing.T) {
 			source := "/* 😀 */ export function fail(value: " + typ + "): " + typ + " { throw value; }"
@@ -326,24 +308,7 @@ func TestFrontendThrowI32OwnedBoundaries(t *testing.T) {
 				t.Fatalf("existing payload control missing: %+v; raw=%s", old, raw)
 			}
 			r := integerRequest(source)
-			p := throwBoundaryProgramForTest(t, r)
-			throwBoundaryDiagnosticsForTest(t, p)
-			file := p.GetSourceFile(r.RootFile)
-			fn := file.Statements.Nodes[0].AsFunctionDeclaration()
-			node := fn.Body.AsBlock().Statements.Nodes[0]
-			if node.Kind != ast.KindThrowStatement || node.AsThrowStatement().Expression == nil {
-				t.Fatal("original throw missing")
-			}
-			check, release := p.GetTypeCheckerForFileExclusive(t.Context(), file)
-			declared := check.GetTypeFromTypeNode(fn.Parameters.Nodes[0].AsParameterDeclaration().Type)
-			sameType := declared != nil && check.GetTypeAtLocation(node.AsThrowStatement().Expression) == declared
-			release()
-			if !sameType {
-				t.Fatal("official rejected-payload precondition lost declared type identity")
-			}
-			start := strings.Index(source, "throw value;")
-			want := throwBoundarySpanForTest(source, start, start+len("throw value;"))
-			throwBoundaryCapabilityForTest(t, source, r, want)
+			throwReferencePayloadForTest(t, source, r, typ)
 		})
 	}
 	for _, body := range []string{
@@ -352,17 +317,7 @@ func TestFrontendThrowI32OwnedBoundaries(t *testing.T) {
 		"try { throw value; } catch { return value; } finally { const copy: i32 = value; }",
 	} {
 		t.Run(body, func(t *testing.T) {
-			source := "export function fail(value: i32): i32 { " + body + " }"
-			r := integerRequest(source)
-			p := throwBoundaryProgramForTest(t, r)
-			throwBoundaryDiagnosticsForTest(t, p)
-			file := p.GetSourceFile(r.RootFile)
-			node := file.Statements.Nodes[0].AsFunctionDeclaration().Body.AsBlock().Statements.Nodes[0]
-			if node.Kind != ast.KindTryStatement || sourceText(t, source, throwBoundaryNodeForTest(t, file, node)) != body {
-				t.Fatal("official try/catch/finally shape changed")
-			}
-			start := strings.Index(source, body)
-			throwBoundaryCapabilityForTest(t, source, r, throwBoundarySpanForTest(source, start, start+len(body)))
+			throwExceptionClausePresenceForTest(t, body)
 		})
 	}
 	for _, tc := range []struct {

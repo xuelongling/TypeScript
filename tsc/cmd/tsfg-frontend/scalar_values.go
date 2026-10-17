@@ -92,6 +92,21 @@ func explicitFloatOperand(file *ast.SourceFile, check *checker.Checker, node *as
 }
 
 func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Node, bindings map[*ast.Symbol]symbol, functions ...map[*ast.Symbol]functionInfo) (*expression, *response) {
+	if value, failure, handled := projectExceptionTypeTest(file, check, node, func(child *ast.Node, want string) (*expression, *response) {
+		var declared map[*ast.Symbol]functionInfo
+		if len(functions) != 0 {
+			declared = functions[0]
+		}
+		value, failure := projectExpression(file, check, child, want, bindings, declared)
+		return &value, failure
+	}); handled {
+		return value, failure
+	}
+	if value, failure, handled := projectUnknownWrite(file, check, node, bindings, func(child *ast.Node) (*expression, *response) {
+		return projectOperator(file, check, child, bindings, functions...)
+	}); handled {
+		return value, failure
+	}
 	if len(functions) != 0 {
 		if value, failure, handled := projectOrdinaryFunctionValue(file, check, node, "", bindings, functions[0]); handled {
 			return value, failure
@@ -122,7 +137,12 @@ func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Nod
 	if moduleReference(check, node) {
 		binding, ok := bindings[check.GetSymbolAtLocation(node)]
 		if ok && binding.Type != "" {
-			return &expression{Kind: "reference", Type: binding.Type, Symbol: binding.ID, Range: expressionOffset(file, node)}, nil
+			t := referenceUseType(check, node, binding)
+			if t == "" {
+				failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+				return nil, &failure
+			}
+			return &expression{Kind: "reference", Type: t, Symbol: binding.ID, Range: expressionOffset(file, node)}, nil
 		}
 	}
 	if node.Kind == ast.KindTrueKeyword || node.Kind == ast.KindFalseKeyword {

@@ -64,32 +64,25 @@ func directClosureCaptures(fn *function, bindings map[string]symbol) []closureCa
 			}
 		}
 	}
-	var statementsAccess func([]statement)
-	statementsAccess = func(body []statement) {
-		for _, item := range body {
-			if item.Kind == "functionDeclaration" {
-				// Child bodies live in the Functions table and have their own
-				// direct capture facts; declaration does not execute that body.
-				continue
-			}
-			if item.Kind == "assignment" {
-				expressionAccess(item.Target, false, true)
-				expressionAccess(item.Value, true, false)
-			} else {
-				expressionAccess(item.Target, true, false)
-				expressionAccess(item.Value, true, false)
-			}
-			expressionAccess(item.Initializer, true, false)
-			expressionAccess(item.Expression, true, false)
-			expressionAccess(item.Condition, true, false)
-			statementsAccess(item.Body)
-			statementsAccess(item.ThenBody)
-			statementsAccess(item.ElseBody)
-		}
-	}
 	for _, initializer := range fn.ParameterInitializers {
 		expressionAccess(initializer, true, false)
 	}
-	statementsAccess(fn.Body)
+	walkOwnedStatements(fn.Body, func(item *statement) {
+		if item.Kind == "functionDeclaration" {
+			// Child bodies live in the Functions table and have their own
+			// direct capture facts; declaration does not execute that body.
+			return
+		}
+		if item.Kind == "assignment" {
+			expressionAccess(item.Target, false, true)
+			expressionAccess(item.Value, true, false)
+		} else {
+			expressionAccess(item.Target, true, false)
+			expressionAccess(item.Value, true, false)
+		}
+		expressionAccess(item.Initializer, true, false)
+		expressionAccess(item.Expression, true, false)
+		expressionAccess(item.Condition, true, false)
+	})
 	return captures
 }

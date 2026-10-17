@@ -73,7 +73,7 @@ func integerHint(node *ast.Node, check *checker.Checker, refs map[*ast.Symbol]sy
 	switch node.Kind {
 	case ast.KindIdentifier, ast.KindPropertyAccessExpression:
 		if moduleReference(check, node) {
-			return refs[check.GetSymbolAtLocation(node)].Type
+			return referenceUseType(check, node, refs[check.GetSymbolAtLocation(node)])
 		}
 	case ast.KindCallExpression:
 		call := node.AsCallExpression()

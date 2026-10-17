@@ -135,10 +135,14 @@ func (p *projection) expr(node *ast.Node, expected string, presence ...*paramete
 		if !ok {
 			return nil, failAt("r02b-d-type", "error", p.file, node)
 		}
-		if expected != "" && s.Type != expected {
+		t := referenceUseType(p.check, node, s)
+		if t == "" {
+			return nil, failAt("r02b-d-unsupported", "unsupported", p.file, node)
+		}
+		if expected != "" && t != expected {
 			return nil, failAt("r01-d-scalar-type", "error", p.file, node)
 		}
-		return &expression{Kind: "reference", Type: s.Type, Symbol: s.ID, Range: offset(p.file, node)}, response{}
+		return &expression{Kind: "reference", Type: t, Symbol: s.ID, Range: offset(p.file, node)}, response{}
 	}
 	if node.Kind == ast.KindTrueKeyword || node.Kind == ast.KindFalseKeyword {
 		if expected != "" && expected != "bool" {
@@ -285,26 +289,21 @@ func (p *projection) statements(nodes []*ast.Node, returnType string, returns ..
 			if !s.Writable {
 				return nil, failAt("r01-d-scalar-type", "error", p.file, binary.Left)
 			}
-			value, failure := p.expr(binary.Right, target.Type, s.Presence)
+			expected := target.Type
+			if s.Type == "unknown" {
+				expected = ""
+			}
+			value, failure := p.expr(binary.Right, expected, s.Presence)
 			if failure.Status != "" {
 				return nil, failure
 			}
 			out = append(out, statement{Kind: "assignment", Target: target, Value: value, Range: offset(p.file, node)})
-		case ast.KindThrowStatement:
-			payload := node.AsThrowStatement().Expression
-			// Nullable payloads are an unsupported capability, not a scalar type error.
-			_, undefined, null, _ := finitePresence(p.check.GetTypeAtLocation(payload))
-			if undefined || null {
-				return nil, failAt("r02b-d-unsupported", "unsupported", p.file, node)
-			}
-			value, failure := p.expr(payload, "")
+		case ast.KindTryStatement, ast.KindThrowStatement:
+			projected, failure := p.exceptionStatement(node, returnType, returns...)
 			if failure.Status != "" {
 				return nil, failure
 			}
-			if value.Type != "i32" {
-				return nil, failAt("r02b-d-unsupported", "unsupported", p.file, node)
-			}
-			out = append(out, statement{Kind: "throw", Expression: value, Range: offset(p.file, node)})
+			out = append(out, projected)
 		case ast.KindReturnStatement:
 			if p.self != nil && node.AsReturnStatement().Expression == nil {
 				out = append(out, statement{Kind: "return", Range: offset(p.file, node)})
@@ -394,11 +393,16 @@ func projectExpression(file *ast.SourceFile, check *checker.Checker, node *ast.N
 			failure := failAt("r02b-d-type", "error", file, node)
 			return expression{}, &failure
 		}
-		if ref.Type != expected {
+		t := referenceUseType(check, node, ref)
+		if t == "" {
+			failure := failAt("r02b-d-unsupported", "unsupported", file, node)
+			return expression{}, &failure
+		}
+		if t != expected {
 			failure := failAt("r01-d-scalar-type", "error", file, node)
 			return expression{}, &failure
 		}
-		return expression{Kind: "reference", Type: ref.Type, Symbol: ref.ID, Range: offset(file, node)}, nil
+		return expression{Kind: "reference", Type: t, Symbol: ref.ID, Range: offset(file, node)}, nil
 	}
 	if node.Kind == ast.KindCallExpression {
 		call := node.AsCallExpression()

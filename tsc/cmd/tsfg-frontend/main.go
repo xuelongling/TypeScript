@@ -80,6 +80,7 @@ type symbol struct {
 }
 
 type expression struct {
+	TypeTest     *typeTestFact     `json:"typeTest,omitempty"`
 	Name         string            `json:"name,omitempty"`
 	Receiver     *expression       `json:"receiver,omitempty"`
 	Callee       *expression       `json:"callee,omitempty"`
@@ -121,17 +122,18 @@ type integerLiteral struct {
 }
 
 type statement struct {
-	Kind        string      `json:"kind"`
-	Expression  *expression `json:"expression,omitempty"`
-	Condition   *expression `json:"condition,omitempty"`
-	Symbol      *symbol     `json:"symbol,omitempty"`
-	Initializer *expression `json:"initializer,omitempty"`
-	Target      *expression `json:"target,omitempty"`
-	Value       *expression `json:"value,omitempty"`
-	Body        []statement `json:"body,omitempty"`
-	ThenBody    []statement `json:"thenBody,omitempty"`
-	ElseBody    []statement `json:"elseBody,omitempty"`
-	Range       span        `json:"range"`
+	Exception   *exceptionFact `json:"exception,omitempty"`
+	Kind        string         `json:"kind"`
+	Expression  *expression    `json:"expression,omitempty"`
+	Condition   *expression    `json:"condition,omitempty"`
+	Symbol      *symbol        `json:"symbol,omitempty"`
+	Initializer *expression    `json:"initializer,omitempty"`
+	Target      *expression    `json:"target,omitempty"`
+	Value       *expression    `json:"value,omitempty"`
+	Body        []statement    `json:"body,omitempty"`
+	ThenBody    []statement    `json:"thenBody,omitempty"`
+	ElseBody    []statement    `json:"elseBody,omitempty"`
+	Range       span           `json:"range"`
 }
 
 type function struct {

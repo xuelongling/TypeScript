@@ -328,19 +328,11 @@ func moduleAnnotate(file *ast.SourceFile, statements []statement) {
 			}
 		}
 	}
-	var body func([]statement)
-	body = func(items []statement) {
-		for i := range items {
-			s := &items[i]
-			expressionNames(s.Expression)
-			expressionNames(s.Initializer)
-			expressionNames(s.Target)
-			expressionNames(s.Value)
-			expressionNames(s.Condition)
-			body(s.Body)
-			body(s.ThenBody)
-			body(s.ElseBody)
-		}
-	}
-	body(statements)
+	walkOwnedStatements(statements, func(s *statement) {
+		expressionNames(s.Expression)
+		expressionNames(s.Initializer)
+		expressionNames(s.Target)
+		expressionNames(s.Value)
+		expressionNames(s.Condition)
+	})
 }

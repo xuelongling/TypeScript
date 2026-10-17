@@ -34,6 +34,22 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 	if node == nil {
 		return failureAt("r02b-d-unsupported", "unsupported", node)
 	}
+	if value, failure, handled := projectExceptionTypeTest(file, check, node, func(child *ast.Node, want string) (*expression, *response) {
+		return projectIntegerExpression(file, check, child, want, refs, functions, target)
+	}); handled {
+		if failure != nil {
+			return nil, failure
+		}
+		return finish(value)
+	}
+	if value, failure, handled := projectUnknownWrite(file, check, node, refs, func(child *ast.Node) (*expression, *response) {
+		return projectIntegerExpression(file, check, child, "", refs, functions, target, true)
+	}); handled {
+		if failure != nil {
+			return nil, failure
+		}
+		return finish(value)
+	}
 	var updateOperand *ast.Node
 	var updateOperator ast.Kind
 	prefixUpdate := node.Kind == ast.KindPrefixUnaryExpression
@@ -123,7 +139,11 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 		}
 		// Preserve officially checked scalar reference facts. Unsupported
 		// f64 signatures are still rejected by the owned HIR capability seam.
-		projected := &expression{Kind: "reference", Type: ref.Type, Symbol: ref.ID, Range: valueRange}
+		t := referenceUseType(check, node, ref)
+		if t == "" {
+			return failureAt("r02b-d-unsupported", "unsupported", node)
+		}
+		projected := &expression{Kind: "reference", Type: t, Symbol: ref.ID, Range: valueRange}
 		if ref.Presence != nil && (ref.Presence.Undefined || ref.Presence.Null) {
 			payload, u, n, valid := finitePresence(check.GetTypeAtLocation(node))
 			if !valid || payload != "" && payload != ref.Type || u && !ref.Presence.Undefined || n && !ref.Presence.Null {

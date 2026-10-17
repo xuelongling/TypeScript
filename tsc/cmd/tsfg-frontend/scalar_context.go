@@ -44,6 +44,18 @@ func visitStatements(nodes []*ast.Node, visit func(*ast.Node) bool) bool {
 			if visitStatements([]*ast.Node{node.AsWhileStatement().Statement}, visit) {
 				return true
 			}
+		case ast.KindTryStatement:
+			attempt := node.AsTryStatement()
+			blocks := []*ast.Node{attempt.TryBlock}
+			if attempt.CatchClause != nil {
+				blocks = append(blocks, attempt.CatchClause.AsCatchClause().Block)
+			}
+			if attempt.FinallyBlock != nil {
+				blocks = append(blocks, attempt.FinallyBlock)
+			}
+			if visitStatements(blocks, visit) {
+				return true
+			}
 		}
 	}
 	return false
@@ -190,7 +202,12 @@ func pendingLocalForm(nodes []*ast.Node) *ast.Node {
 	var walk func(*ast.Node) *ast.Node
 	walk = func(node *ast.Node) *ast.Node {
 		if node.Kind == ast.KindVariableDeclaration && node.AsVariableDeclaration().Initializer == nil && node.AsVariableDeclaration().Type == nil {
-			return node
+			// Catch declarations have no initializer; their actual binding is checked by
+			// the official checker and exception projection, not ordinary local admission.
+			parent := node.Parent
+			if parent == nil || parent.Kind != ast.KindCatchClause || parent.AsCatchClause().VariableDeclaration != node {
+				return node
+			}
 		}
 		if node.Kind == ast.KindBinaryExpression && ast.IsCompoundAssignment(node.AsBinaryExpression().OperatorToken.Kind) && ordinaryAssignmentOperator(node.AsBinaryExpression().OperatorToken.Kind) == "" {
 			return node
