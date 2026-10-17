@@ -73,6 +73,8 @@ func TestFrontendCommandClosureFlowFacts(t *testing.T) {
 		{"earlyMakeThenInitialize", "export function entry(seed: bool): bool { function read(): bool { return state; } const selected: () => bool = read; let state: bool = seed; return selected(); }"},
 		{"callbackInitializerLocalWrite", "export function entry(seed: bool): bool { function write(next: bool): bool { state = next; return state; } function invoke(fn: (value: bool) => bool, value: bool): bool { return fn(value); } let state: bool = invoke(write, seed); return state; }"},
 		{"earlyTransitiveLocalMake", "export function entry(seed: bool): bool { function read(): bool { return state; } function middle(): () => bool { return read; } const selected: () => bool = middle(); let state: bool = seed; return selected(); }"},
+		{"afterIfInitializerCall", "export function entry(seed: bool): bool { function identity(value: bool): bool { return value; } function read(): bool { return state; } let current: bool = seed; if (seed) { current = false; } let state: bool = identity(current); return read(); }"},
+		{"afterWhileLocalInitialization", "export function entry(seed: bool): bool { function read(): bool { return state; } let current: bool = seed; while (current) { current = false; } let state: bool = seed; return read(); }"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := integerRequest(tc.source)
