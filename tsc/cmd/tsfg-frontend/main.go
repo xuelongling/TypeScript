@@ -75,6 +75,7 @@ type symbol struct {
 	Range          span               `json:"range"`
 	Presence       *parameterPresence `json:"presence,omitempty"`
 	ReturnPresence *returnPresence    `json:"returnPresence,omitempty"`
+	LexicalOwner   string             `json:"lexicalOwner,omitempty"`
 }
 
 type expression struct {
@@ -130,15 +131,17 @@ type statement struct {
 }
 
 type function struct {
-	SourcePath            string          `json:"sourcePath,omitempty"`
-	Name                  string          `json:"name"`
-	Symbol                string          `json:"symbol"`
-	Parameters            []symbol        `json:"parameters"`
-	ReturnType            string          `json:"returnType"`
-	ReturnPresence        *returnPresence `json:"returnPresence,omitempty"`
-	Body                  []statement     `json:"body"`
-	Range                 span            `json:"range"`
-	ParameterInitializers []*expression   `json:"parameterInitializers,omitempty"`
+	SourcePath            string           `json:"sourcePath,omitempty"`
+	Name                  string           `json:"name"`
+	Symbol                string           `json:"symbol"`
+	Parameters            []symbol         `json:"parameters"`
+	ReturnType            string           `json:"returnType"`
+	ReturnPresence        *returnPresence  `json:"returnPresence,omitempty"`
+	Body                  []statement      `json:"body"`
+	Range                 span             `json:"range"`
+	ParameterInitializers []*expression    `json:"parameterInitializers,omitempty"`
+	LexicalParent         string           `json:"lexicalParent,omitempty"`
+	Captures              []closureCapture `json:"captures,omitempty"`
 }
 
 type functionInfo struct {

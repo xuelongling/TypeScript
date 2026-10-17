@@ -296,11 +296,12 @@ func analyze(r request) response {
 	if r.CompilationClosure != nil {
 		return projectModules(r, program, check, result, conversions)
 	}
+	nodes, closures := closureDeclarations(file)
 	functions := map[*ast.Symbol]functionInfo{}
 	if conversions != nil {
 		maps.Copy(functions, conversions.Functions)
 	}
-	for _, node := range file.Statements.Nodes {
+	for _, node := range nodes {
 		if aggregates != nil && node.Kind == ast.KindClassDeclaration {
 			continue
 		}
@@ -345,6 +346,7 @@ func analyze(r request) response {
 			ID: fmt.Sprintf("s%d", len(result.Symbols)+1), Name: node.Name().Text(),
 			Kind: "function", Type: returnType, Range: offset(file, node.Name()), ReturnPresence: returnShape,
 		}
+		closures.register(node, &s)
 		result.Symbols = append(result.Symbols, s)
 		if !hasPresence {
 			presence = nil
@@ -360,7 +362,7 @@ func analyze(r request) response {
 		}
 		result.AggregateFacts = aggregates.facts
 	}
-	for _, node := range file.Statements.Nodes {
+	for _, node := range nodes {
 		if aggregates != nil && node.Kind == ast.KindClassDeclaration {
 			continue
 		}
@@ -386,6 +388,7 @@ func analyze(r request) response {
 			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
 		}
 		project := projection{file: file, check: check, result: &result, bindings: map[*ast.Symbol]symbol{}, functions: functions, aggregates: aggregates}
+		closures.enter(node, &project)
 		if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" || r.Declarations.Version == conversionVersion {
 			project.integerTarget = r.Target
 		}
@@ -397,6 +400,7 @@ func analyze(r request) response {
 			return failure
 		}
 		fn.Body = projected
+		closures.complete(node, &fn, &project)
 		result.Functions = append(result.Functions, fn)
 	}
 	if len(result.Functions) == 0 {

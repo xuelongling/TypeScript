@@ -19,6 +19,8 @@ type projection struct {
 	result        *response
 	bindings      map[*ast.Symbol]symbol
 	functions     map[*ast.Symbol]functionInfo
+	closures      *closureProjection
+	closureOwner  string
 }
 
 func (p *projection) addSymbol(node *ast.Node, kind, t string, writable bool) (symbol, bool) {
@@ -30,6 +32,7 @@ func (p *projection) addSymbol(node *ast.Node, kind, t string, writable bool) (s
 		ID: fmt.Sprintf("s%d", len(p.result.Symbols)+1), Name: node.Text(),
 		Kind: kind, Type: t, Writable: writable, Range: offset(p.file, node),
 	}
+	s.LexicalOwner = p.closureOwner
 	if p.result.Modules != nil {
 		s.SourcePath = p.file.FileName()
 	}
@@ -160,6 +163,12 @@ func (p *projection) statements(nodes []*ast.Node, returnType string, returns ..
 	out := make([]statement, 0, len(nodes))
 	for _, node := range nodes {
 		switch node.Kind {
+		case ast.KindFunctionDeclaration:
+			declaration, failure := p.closureDeclaration(node)
+			if failure.Status != "" {
+				return nil, failure
+			}
+			out = append(out, declaration)
 		case ast.KindVariableStatement:
 			declarations := localDeclarations(node)
 			if len(declarations) == 0 {
