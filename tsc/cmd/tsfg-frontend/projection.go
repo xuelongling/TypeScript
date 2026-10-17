@@ -290,6 +290,21 @@ func (p *projection) statements(nodes []*ast.Node, returnType string, returns ..
 				return nil, failure
 			}
 			out = append(out, statement{Kind: "assignment", Target: target, Value: value, Range: offset(p.file, node)})
+		case ast.KindThrowStatement:
+			payload := node.AsThrowStatement().Expression
+			// Nullable payloads are an unsupported capability, not a scalar type error.
+			_, undefined, null, _ := finitePresence(p.check.GetTypeAtLocation(payload))
+			if undefined || null {
+				return nil, failAt("r02b-d-unsupported", "unsupported", p.file, node)
+			}
+			value, failure := p.expr(payload, "")
+			if failure.Status != "" {
+				return nil, failure
+			}
+			if value.Type != "i32" {
+				return nil, failAt("r02b-d-unsupported", "unsupported", p.file, node)
+			}
+			out = append(out, statement{Kind: "throw", Expression: value, Range: offset(p.file, node)})
 		case ast.KindReturnStatement:
 			if p.self != nil && node.AsReturnStatement().Expression == nil {
 				out = append(out, statement{Kind: "return", Range: offset(p.file, node)})
