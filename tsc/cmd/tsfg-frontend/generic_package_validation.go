@@ -45,8 +45,69 @@ func genericPackageOriginBoundary(source genericSource, origin genericOrigin) bo
 	return true
 }
 
+// Validate signature structure before conversion; root/call arguments retain
+// their independent leaf-only role even when a compound resolves to a scalar.
+func validateGenericPackageType(t genericPackageTypeDTO, count int, signature bool, origin genericOrigin) error {
+	leaf := t.CheckType == nil && t.ExtendsType == nil && t.TrueType == nil && t.FalseType == nil && t.Mapped == nil && t.Indexed == nil
+	if t.Kind == "indexed" {
+		if !signature {
+			return genericError("unsupported", "mapped/indexed type arguments are outside the signature slice", origin)
+		}
+		return validateGenericPackageIndexedType(t, count, origin)
+	}
+	if t.Kind == "conditional" {
+		if !signature || t.Parameter != 0 || t.Mapped != nil || t.Indexed != nil || t.CheckType == nil || t.ExtendsType == nil || t.TrueType == nil || t.FalseType == nil ||
+			t.CheckType.Kind != "parameter" || t.ExtendsType.Kind != "boolean" || t.TrueType.Kind != "boolean" || t.FalseType.Kind != "number" {
+			return genericError("input", "direct conditional signature metadata", origin)
+		}
+		for _, child := range []*genericPackageTypeDTO{t.CheckType, t.ExtendsType, t.TrueType, t.FalseType} {
+			if err := validateGenericPackageType(*child, count, false, origin); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if !leaf {
+		return genericError("input", "scalar/type-parameter leaf has compound fields", origin)
+	}
+	return validateGenericTypeReference(genericType{Kind: t.Kind, Parameter: t.Parameter}, count, origin)
+}
+
+// This validates wire children directly, before allocating owned wrappers.
+func validateGenericPackageIndexedType(t genericPackageTypeDTO, count int, origin genericOrigin) error {
+	bad := func() error { return genericError("input", "mapped/indexed signature metadata", origin) }
+	if count != 1 || t.Parameter != 0 || t.CheckType != nil || t.ExtendsType != nil || t.TrueType != nil || t.FalseType != nil ||
+		t.Mapped != nil || t.Indexed == nil {
+		return bad()
+	}
+	object := t.Indexed.Object
+	if object.Kind != "mapped" || object.Parameter != 0 || object.CheckType != nil || object.ExtendsType != nil ||
+		object.TrueType != nil || object.FalseType != nil || object.Indexed != nil || object.Mapped == nil {
+		return bad()
+	}
+	mapped := object.Mapped
+	if !genericIdentifier(mapped.Binder) || !genericPackageString(mapped.Binder) {
+		return bad()
+	}
+	if err := validateGenericPackageType(mapped.Value, count, false, origin); err != nil {
+		return err
+	}
+	if err := validateGenericKeyType(mapped.Keys.Kind, mapped.Keys.Literals, origin); err != nil {
+		return err
+	}
+	if err := validateGenericKeyType(t.Indexed.Index.Kind, t.Indexed.Index.Literals, origin); err != nil {
+		return err
+	}
+	for _, index := range t.Indexed.Index.Literals {
+		if !slices.Contains(mapped.Keys.Literals, index) {
+			return genericError("package-reference", "index literal outside mapped key domain", origin)
+		}
+	}
+	return nil
+}
+
 func validateGenericPackagePayload(p genericPackagePayloadDTO) error {
-	if !slices.Equal(p.Capabilities, []string{"explicit-type-arguments", "scalar-generics", "single-module"}) ||
+	if !slices.Equal(p.Capabilities, genericPackageCapabilities()) ||
 		p.SemanticProfile != genericSemantics || p.Environment.Profile != genericDeclarationProfile {
 		return genericPackageError("schema", "capability or semantic/declaration profile")
 	}
@@ -66,6 +127,17 @@ func validateGenericPackagePayload(p genericPackagePayloadDTO) error {
 		if len(d.TypeParameters) == 0 || len(d.TypeParameters) > 16 || len(d.Parameters) > 64 {
 			return genericPackageError("limit", "binder count")
 		}
+		if err := validateGenericPackageType(d.ReturnType, len(d.TypeParameters), true, genericPackageOwnedOrigin(d.Origin)); err != nil {
+			return err
+		}
+		for _, parameter := range d.Parameters {
+			if err := validateGenericPackageType(parameter.Type, len(d.TypeParameters), true, genericPackageOwnedOrigin(parameter.Origin)); err != nil {
+				return err
+			}
+		}
+		if d.ReturnType.Kind == "indexed" && d.ReturnType.Indexed.Object.Mapped.Binder == d.TypeParameters[0] {
+			return genericError("unsupported", "mapped binder shadows outer type parameter", genericPackageOwnedOrigin(d.Origin))
+		}
 		count := 0
 		var visit func(genericPackageExpressionDTO, int) error
 		visit = func(e genericPackageExpressionDTO, depth int) error {
@@ -73,6 +145,14 @@ func validateGenericPackagePayload(p genericPackagePayloadDTO) error {
 			total++
 			if depth > 64 || count > 1024 || total > genericPackageMaxExpressions || len(e.Arguments) > 64 || len(e.TypeArguments) > 16 {
 				return genericPackageError("limit", "expression depth/count/arity")
+			}
+			for _, argument := range e.TypeArguments {
+				if argument.Kind == "conditional" {
+					return genericError("unsupported", "conditional type arguments are outside the signature slice", genericPackageOwnedOrigin(e.Origin))
+				}
+				if err := validateGenericPackageType(argument, len(d.TypeParameters), false, genericPackageOwnedOrigin(e.Origin)); err != nil {
+					return err
+				}
 			}
 			for _, a := range e.Arguments {
 				if err := visit(a, depth+1); err != nil {

@@ -62,7 +62,7 @@ func genericPackageFactRequestsForTest(t *testing.T, g genericGraph) []genericPa
 func TestOwnedGenericPackageFactsFreshClosure(t *testing.T) {
 	t.Parallel()
 	data := genericPackageBytesForTest(t)
-	if genericTextDigest(string(data)) != "16feab4fa89d4baf5dea88d1f1c6e5aa11d56db4c07852d8264d9face05aba2c" {
+	if genericTextDigest(string(data)) != "435032b9aa3305df439dd11e9e639122f9a97c7f303aa75dd454992d1ae2a249" {
 		t.Fatal("instance fixture no longer matches the independently checked package fixture")
 	}
 	g, err := decodeGenericPackage(data)
@@ -138,7 +138,7 @@ func TestOwnedGenericPackageFactsFreshClosure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("TSFG_GENERIC_INSTANCE_FIXTURE " + base64.StdEncoding.EncodeToString(fixture))
+	t.Log("TSFG_GENERIC_INSTANCE_FIXTURE_V4 " + base64.StdEncoding.EncodeToString(fixture))
 }
 
 func TestOwnedGenericPackageFactsRecursiveInstances(t *testing.T) {

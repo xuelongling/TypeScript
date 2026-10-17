@@ -66,7 +66,7 @@ func validateGenericRequest(g genericGraph, r genericInstanceRequest) error {
 			break
 		}
 		for _, a := range r.TypeArguments {
-			if !genericValidType(a, 0) {
+			if !genericTypeLeaf(a) || a.Kind != "boolean" && a.Kind != "number" || !genericValidType(a, 0) {
 				return genericError("unsupported", "only concrete boolean/number arguments", d.Origin)
 			}
 		}

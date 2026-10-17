@@ -92,6 +92,20 @@ func (m *genericPackageFactMapper) expression(e genericConcreteExpression, param
 			return genericPackageBodyFact{}, genericError("package-reference", "checked parameter reference", e.Origin)
 		}
 		out.Parameter = e.Parameter
+	case "number-add":
+		if depth != 0 || e.Type != "f64" || e.Parameter != 0 || e.Callee != "" || len(e.Arguments) != 2 {
+			return genericPackageBodyFact{}, genericError("package-reference", "checked number-add root metadata", e.Origin)
+		}
+		for _, arg := range e.Arguments {
+			if arg.Kind != "parameter" || arg.Type != "f64" {
+				return genericPackageBodyFact{}, genericError("package-reference", "checked number-add parameter type", arg.Origin)
+			}
+			mapped, err := m.expression(arg, parameterCount, depth+1)
+			if err != nil {
+				return genericPackageBodyFact{}, err
+			}
+			out.Arguments = append(out.Arguments, mapped)
+		}
 	case "call":
 		if _, found := m.instances[e.Callee]; !found {
 			return genericPackageBodyFact{}, genericError("package-reference", "checked call closure", e.Origin)

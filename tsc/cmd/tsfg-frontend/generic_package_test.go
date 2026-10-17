@@ -133,7 +133,8 @@ func TestOwnedGenericPackageRejectsCorruptMetadataAndReferences(t *testing.T) {
 		mutate func(*genericPackageDTO)
 	}{
 		{"family", func(w *genericPackageDTO) { w.Family = "other-family" }},
-		{"version", func(w *genericPackageDTO) { w.Version = 2 }},
+		{"old version", func(w *genericPackageDTO) { w.Version = 1 }},
+		{"unknown version", func(w *genericPackageDTO) { w.Version = 999 }},
 		{"schema", func(w *genericPackageDTO) { w.SchemaHash = "wrong" }},
 		{"capability", func(w *genericPackageDTO) { w.Payload.Capabilities = []string{"cross-package"} }},
 		{"semantics", func(w *genericPackageDTO) { w.Payload.SemanticProfile = "different" }},

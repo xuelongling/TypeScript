@@ -187,6 +187,20 @@ func exportGenericType(check *checker.Checker, node *ast.Node, params map[*ast.S
 		return genericType{Kind: "boolean"}, nil
 	case ast.KindNumberKeyword:
 		return genericType{Kind: "number"}, nil
+	case ast.KindIndexedAccessType:
+		return exportGenericIndexedType(check, node, params)
+	case ast.KindConditionalType:
+		c := node.AsConditionalTypeNode()
+		if c.CheckType.Kind != ast.KindTypeReference || c.ExtendsType.Kind != ast.KindBooleanKeyword ||
+			c.TrueType.Kind != ast.KindBooleanKeyword || c.FalseType.Kind != ast.KindNumberKeyword {
+			return genericType{}, genericError("unsupported", "only direct T extends boolean ? boolean : number signatures", genericNodeOrigin(node))
+		}
+		bound, err := exportGenericType(check, c.CheckType, params)
+		if err != nil {
+			return genericType{}, err
+		}
+		return genericType{Kind: "conditional", CheckType: &bound, ExtendsType: &genericType{Kind: "boolean"},
+			TrueType: &genericType{Kind: "boolean"}, FalseType: &genericType{Kind: "number"}}, nil
 	case ast.KindTypeReference:
 		r := node.AsTypeReferenceNode()
 		if r.TypeName.Kind == ast.KindIdentifier && r.TypeArguments == nil {
@@ -196,6 +210,77 @@ func exportGenericType(check *checker.Checker, node *ast.Node, params map[*ast.S
 		}
 	}
 	return genericType{}, genericError("unsupported", "type outside scalar/type-parameter slice", genericNodeOrigin(node))
+}
+
+func exportGenericKeyType(node *ast.Node) (genericKeyType, error) {
+	keys := genericKeyType{Kind: "string-literal"}
+	nodes := []*ast.Node{node}
+	if node.Kind == ast.KindUnionType {
+		keys.Kind = "union"
+		nodes = node.AsUnionTypeNode().Types.Nodes
+	}
+	if len(nodes) > genericPackageMaxKeyMembers {
+		return genericKeyType{}, genericError("package-limit", "key union members", genericNodeOrigin(node))
+	}
+	for _, key := range nodes {
+		if key.Kind != ast.KindLiteralType || key.AsLiteralTypeNode().Literal.Kind != ast.KindStringLiteral {
+			return genericKeyType{}, genericError("unsupported", "mapped keys require string literals or a finite literal union", genericNodeOrigin(key))
+		}
+		keys.Literals = append(keys.Literals, key.AsLiteralTypeNode().Literal.Text())
+	}
+	if err := validateGenericKeyType(keys.Kind, keys.Literals, genericNodeOrigin(node)); err != nil {
+		return genericKeyType{}, err
+	}
+	return keys, nil
+}
+
+func exportGenericIndexedType(check *checker.Checker, node *ast.Node, params map[*ast.Symbol]int) (genericType, error) {
+	indexed := node.AsIndexedAccessTypeNode()
+	if len(params) != 1 || indexed.ObjectType.Kind != ast.KindMappedType {
+		return genericType{}, genericError("unsupported", "indexed signature requires one outer type parameter and a direct mapped object", genericNodeOrigin(node))
+	}
+	mapped := indexed.ObjectType.AsMappedTypeNode()
+	if mapped.ReadonlyToken != nil || mapped.QuestionToken != nil || mapped.NameType != nil || mapped.Members != nil && len(mapped.Members.Nodes) != 0 ||
+		mapped.TypeParameter == nil || mapped.Type == nil {
+		return genericType{}, genericError("unsupported", "mapped modifiers, remapping or members", genericNodeOrigin(indexed.ObjectType))
+	}
+	parameter := mapped.TypeParameter.AsTypeParameterDeclaration()
+	if parameter.Name().Kind != ast.KindIdentifier || parameter.Constraint == nil || parameter.Expression != nil ||
+		parameter.DefaultType != nil || mapped.TypeParameter.Modifiers() != nil {
+		return genericType{}, genericError("unsupported", "mapped key binder metadata", genericNodeOrigin(mapped.TypeParameter))
+	}
+	binder := check.GetSymbolAtLocation(parameter.Name())
+	if binder == nil {
+		return genericType{}, genericError("input", "missing mapped key binder symbol", genericNodeOrigin(mapped.TypeParameter))
+	}
+	for outer := range params {
+		if binder == outer || parameter.Name().Text() == outer.Name {
+			return genericType{}, genericError("unsupported", "mapped binder shadows outer type parameter", genericNodeOrigin(mapped.TypeParameter))
+		}
+	}
+	if mapped.Type.Kind != ast.KindBooleanKeyword && mapped.Type.Kind != ast.KindNumberKeyword && mapped.Type.Kind != ast.KindTypeReference {
+		return genericType{}, genericError("unsupported", "mapped value requires an outer parameter or scalar leaf", genericNodeOrigin(mapped.Type))
+	}
+	// exportGenericType accepts a parameter reference only by its real outer
+	// symbol. The independent mapped binder is deliberately absent from params.
+	value, err := exportGenericType(check, mapped.Type, params)
+	if err != nil {
+		return genericType{}, err
+	}
+	keys, err := exportGenericKeyType(parameter.Constraint)
+	if err != nil {
+		return genericType{}, err
+	}
+	index, err := exportGenericKeyType(indexed.IndexType)
+	if err != nil {
+		return genericType{}, err
+	}
+	result := genericType{Kind: "indexed", Indexed: &genericIndexedType{
+		Object: genericType{Kind: "mapped", Mapped: &genericMappedType{Binder: parameter.Name().Text(), Keys: keys, Value: value}}, Index: index}}
+	if err := validateGenericIndexedType(result, len(params), genericNodeOrigin(node)); err != nil {
+		return genericType{}, err
+	}
+	return result, nil
 }
 
 func exportGenericExpression(ctx context.Context, check *checker.Checker, node *ast.Node, types, params map[*ast.Symbol]int, defs map[*ast.Symbol]string, depth int) (genericExpression, error) {
@@ -212,6 +297,29 @@ func exportGenericExpression(ctx context.Context, check *checker.Checker, node *
 			return e, nil
 		}
 	}
+	if node.Kind == ast.KindBinaryExpression {
+		binary := node.AsBinaryExpression()
+		result := check.GetTypeAtLocation(node)
+		if depth != 0 || binary.OperatorToken.Kind != ast.KindPlusToken || result == nil ||
+			result.Flags()&checker.TypeFlagsNumber == 0 {
+			return genericExpression{}, genericError("unsupported", "number-add requires a root number PlusToken expression", e.Origin)
+		}
+		e.Kind = "number-add"
+		for _, operand := range []*ast.Node{binary.Left, binary.Right} {
+			symbol := check.GetSymbolAtLocation(operand)
+			_, bound := params[symbol]
+			value := check.GetTypeAtLocation(operand)
+			if operand.Kind != ast.KindIdentifier || !bound || value == nil || value.Flags()&checker.TypeFlagsNumber == 0 {
+				return genericExpression{}, genericError("unsupported", "number-add requires direct bound number parameters", genericNodeOrigin(operand))
+			}
+			argument, err := exportGenericExpression(ctx, check, operand, types, params, defs, depth+1)
+			if err != nil {
+				return genericExpression{}, err
+			}
+			e.Arguments = append(e.Arguments, argument)
+		}
+		return e, nil
+	}
 	if node.Kind == ast.KindCallExpression {
 		call := node.AsCallExpression()
 		if call.Expression.Kind == ast.KindIdentifier && call.QuestionDotToken == nil && call.TypeArguments != nil {
@@ -221,6 +329,12 @@ func exportGenericExpression(ctx context.Context, check *checker.Checker, node *
 				defs[check.GetSymbolAtLocation(resolved.Declaration().Name())] == key {
 				e.Kind, e.Definition = "call", key
 				for _, a := range call.TypeArguments.Nodes {
+					if a.Kind == ast.KindConditionalType {
+						return genericExpression{}, genericError("unsupported", "conditional type arguments are outside the signature slice", genericNodeOrigin(a))
+					}
+					if a.Kind == ast.KindMappedType || a.Kind == ast.KindIndexedAccessType {
+						return genericExpression{}, genericError("unsupported", "mapped/indexed type arguments are outside the signature slice", genericNodeOrigin(a))
+					}
 					t, err := exportGenericType(check, a, types)
 					if err != nil {
 						return genericExpression{}, err
@@ -238,7 +352,7 @@ func exportGenericExpression(ctx context.Context, check *checker.Checker, node *
 			}
 		}
 	}
-	return genericExpression{}, genericError("unsupported", "only parameter values and explicit generic direct calls", e.Origin)
+	return genericExpression{}, genericError("unsupported", "only parameter values, explicit generic direct calls and root number-add", e.Origin)
 }
 
 func genericSourceForFile(file *ast.SourceFile) genericSource {

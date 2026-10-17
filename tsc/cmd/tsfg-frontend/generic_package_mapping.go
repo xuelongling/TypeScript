@@ -22,10 +22,58 @@ func genericPackageSource(s genericSource) genericPackageSourceDTO {
 		PositionUnit: s.PositionUnit, SurrogateStarts: append([]int{}, s.SurrogateStarts...)}
 }
 
+// Both conversions allocate every child so protocol and domain ownership stay
+// independent. Callers have already applied the shared structural budget.
+func genericPackageType(t genericType) genericPackageTypeDTO {
+	out := genericPackageTypeDTO{Kind: t.Kind, Parameter: t.Parameter}
+	for _, child := range []struct {
+		in  *genericType
+		out **genericPackageTypeDTO
+	}{{t.CheckType, &out.CheckType}, {t.ExtendsType, &out.ExtendsType}, {t.TrueType, &out.TrueType}, {t.FalseType, &out.FalseType}} {
+		if child.in != nil {
+			value := genericPackageType(*child.in)
+			*child.out = &value
+		}
+	}
+	if t.Mapped != nil {
+		out.Mapped = &genericPackageMappedTypeDTO{Binder: t.Mapped.Binder,
+			Keys:  genericPackageKeyTypeDTO{Kind: t.Mapped.Keys.Kind, Literals: append([]string{}, t.Mapped.Keys.Literals...)},
+			Value: genericPackageType(t.Mapped.Value)}
+	}
+	if t.Indexed != nil {
+		out.Indexed = &genericPackageIndexedTypeDTO{Object: genericPackageType(t.Indexed.Object),
+			Index: genericPackageKeyTypeDTO{Kind: t.Indexed.Index.Kind, Literals: append([]string{}, t.Indexed.Index.Literals...)}}
+	}
+	return out
+}
+
+func genericPackageOwnedType(t genericPackageTypeDTO) genericType {
+	out := genericType{Kind: t.Kind, Parameter: t.Parameter}
+	for _, child := range []struct {
+		in  *genericPackageTypeDTO
+		out **genericType
+	}{{t.CheckType, &out.CheckType}, {t.ExtendsType, &out.ExtendsType}, {t.TrueType, &out.TrueType}, {t.FalseType, &out.FalseType}} {
+		if child.in != nil {
+			value := genericPackageOwnedType(*child.in)
+			*child.out = &value
+		}
+	}
+	if t.Mapped != nil {
+		out.Mapped = &genericMappedType{Binder: t.Mapped.Binder,
+			Keys:  genericKeyType{Kind: t.Mapped.Keys.Kind, Literals: slices.Clone(t.Mapped.Keys.Literals)},
+			Value: genericPackageOwnedType(t.Mapped.Value)}
+	}
+	if t.Indexed != nil {
+		out.Indexed = &genericIndexedType{Object: genericPackageOwnedType(t.Indexed.Object),
+			Index: genericKeyType{Kind: t.Indexed.Index.Kind, Literals: slices.Clone(t.Indexed.Index.Literals)}}
+	}
+	return out
+}
+
 func genericPackageTypes(types []genericType) []genericPackageTypeDTO {
 	result := make([]genericPackageTypeDTO, len(types))
 	for i, t := range types {
-		result[i] = genericPackageTypeDTO{Kind: t.Kind, Parameter: t.Parameter}
+		result[i] = genericPackageType(t)
 	}
 	return result
 }
@@ -42,7 +90,7 @@ func genericPackageExpression(e genericExpression) genericPackageExpressionDTO {
 
 func genericPackagePayload(g genericGraph) genericPackagePayloadDTO {
 	p := genericPackagePayloadDTO{Scope: g.Package, SemanticProfile: g.Semantics,
-		Capabilities: []string{"explicit-type-arguments", "scalar-generics", "single-module"},
+		Capabilities: genericPackageCapabilities(),
 		Source:       genericPackageSource(g.Source), Definitions: make([]genericPackageDefinitionDTO, len(g.Definitions)),
 		Environment: genericPackageEnvironmentDTO{Profile: g.Environment.Profile,
 			Files: make([]genericPackageDeclarationDTO, len(g.Environment.Files))}}
@@ -53,11 +101,11 @@ func genericPackagePayload(g genericGraph) genericPackagePayloadDTO {
 	for i, d := range g.Definitions {
 		p.Definitions[i] = genericPackageDefinitionDTO{Key: d.Key, Name: d.Name, Exported: d.Exported,
 			Origin: genericPackageOrigin(d.Origin), TypeParameters: append([]string{}, d.TypeParameters...),
-			ReturnType: genericPackageTypeDTO{Kind: d.Return.Kind, Parameter: d.Return.Parameter}, Body: genericPackageExpression(d.Body),
+			ReturnType: genericPackageType(d.Return), Body: genericPackageExpression(d.Body),
 			Parameters: make([]genericPackageParameterDTO, len(d.Parameters))}
 		for j, parameter := range d.Parameters {
 			p.Definitions[i].Parameters[j] = genericPackageParameterDTO{Name: parameter.Name,
-				Origin: genericPackageOrigin(parameter.Origin), Type: genericPackageTypeDTO{Kind: parameter.Type.Kind, Parameter: parameter.Type.Parameter}}
+				Origin: genericPackageOrigin(parameter.Origin), Type: genericPackageType(parameter.Type)}
 		}
 	}
 	slices.SortFunc(p.Definitions, func(a, b genericPackageDefinitionDTO) int { return strings.Compare(a.Key, b.Key) })
@@ -69,7 +117,7 @@ func genericPackageOwnedExpression(e genericPackageExpressionDTO) genericExpress
 		Origin: genericPackageOwnedOrigin(e.Origin), TypeArguments: make([]genericType, len(e.TypeArguments)),
 		Arguments: make([]genericExpression, len(e.Arguments))}
 	for i, t := range e.TypeArguments {
-		result.TypeArguments[i] = genericType{Kind: t.Kind, Parameter: t.Parameter}
+		result.TypeArguments[i] = genericPackageOwnedType(t)
 	}
 	for i, a := range e.Arguments {
 		result.Arguments[i] = genericPackageOwnedExpression(a)
@@ -89,11 +137,11 @@ func genericPackageOwnedGraph(p genericPackagePayloadDTO) genericGraph {
 	for i, d := range p.Definitions {
 		g.Definitions[i] = genericDefinition{Key: d.Key, Name: d.Name, Exported: d.Exported,
 			Origin: genericPackageOwnedOrigin(d.Origin), TypeParameters: slices.Clone(d.TypeParameters),
-			Return: genericType{Kind: d.ReturnType.Kind, Parameter: d.ReturnType.Parameter}, Body: genericPackageOwnedExpression(d.Body),
+			Return: genericPackageOwnedType(d.ReturnType), Body: genericPackageOwnedExpression(d.Body),
 			Parameters: make([]genericParameter, len(d.Parameters))}
 		for j, parameter := range d.Parameters {
 			g.Definitions[i].Parameters[j] = genericParameter{Name: parameter.Name, Origin: genericPackageOwnedOrigin(parameter.Origin),
-				Type: genericType{Kind: parameter.Type.Kind, Parameter: parameter.Type.Parameter}}
+				Type: genericPackageOwnedType(parameter.Type)}
 		}
 	}
 	g.Digest = genericPackageIdentity(genericPackageDomain, p)

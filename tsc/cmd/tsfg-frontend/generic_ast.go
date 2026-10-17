@@ -71,7 +71,47 @@ func (b *genericTree) list(nodes []*ast.Node, start int) *ast.NodeList {
 }
 
 func (b *genericTree) typeNode(t genericType, names []string, origin genericOrigin) *ast.Node {
+	return b.typeNodeWithArguments(t, names, nil, origin)
+}
+
+// Substitute outer parameter syntax leaves only. Compound type and key syntax
+// stays intact for the fresh official checker to determine the concrete type.
+func (b *genericTree) typeNodeWithArguments(t genericType, names []string, arguments []genericType, origin genericOrigin) *ast.Node {
 	start := b.pos()
+	if t.Kind == "indexed" {
+		object := b.typeNodeWithArguments(t.Indexed.Object, names, arguments, origin)
+		b.write("[")
+		index := b.keyTypeNode(t.Indexed.Index, origin)
+		b.write("]")
+		return b.mark(b.factory.NewIndexedAccessTypeNode(object, index), start, origin)
+	}
+	if t.Kind == "mapped" {
+		b.write("{ [")
+		parameterStart := b.pos()
+		name := b.identifier(t.Mapped.Binder, origin)
+		b.write(" in ")
+		constraint := b.keyTypeNode(t.Mapped.Keys, origin)
+		parameter := b.mark(b.factory.NewTypeParameterDeclaration(nil, name, constraint, nil, nil), parameterStart, origin)
+		b.write("]: ")
+		value := b.typeNodeWithArguments(t.Mapped.Value, names, arguments, origin)
+		// The official grammar checker dereferences Members even when empty.
+		members := b.list(nil, b.pos())
+		b.write(" }")
+		return b.mark(b.factory.NewMappedTypeNode(nil, parameter, nil, nil, value, members), start, origin)
+	}
+	if t.Kind == "conditional" {
+		check := b.typeNodeWithArguments(*t.CheckType, names, arguments, origin)
+		b.write(" extends ")
+		extends := b.typeNode(*t.ExtendsType, names, origin)
+		b.write(" ? ")
+		whenTrue := b.typeNode(*t.TrueType, names, origin)
+		b.write(" : ")
+		whenFalse := b.typeNode(*t.FalseType, names, origin)
+		return b.mark(b.factory.NewConditionalTypeNode(check, extends, whenTrue, whenFalse), start, origin)
+	}
+	if t.Kind == "parameter" && arguments != nil {
+		return b.typeNode(arguments[t.Parameter], nil, origin)
+	}
 	if t.Kind == "parameter" {
 		name := b.identifier(names[t.Parameter], origin)
 		return b.mark(b.factory.NewTypeReferenceNode(name, nil), start, origin)
@@ -84,7 +124,38 @@ func (b *genericTree) typeNode(t genericType, names []string, origin genericOrig
 	return b.mark(b.factory.NewKeywordTypeNode(kind), start, origin)
 }
 
+// Every union occurrence gets its own official literal node. Diagnostic text
+// carries positions only; StringLiteral.Text carries the validated key value.
+func (b *genericTree) keyTypeNode(t genericKeyType, origin genericOrigin) *ast.Node {
+	start := b.pos()
+	var nodes []*ast.Node
+	for i, text := range t.Literals {
+		if i > 0 {
+			b.write(" | ")
+		}
+		literalStart := b.pos()
+		b.write(strconv.Quote(text))
+		literal := b.mark(b.factory.NewStringLiteral(text, ast.TokenFlagsNone), literalStart, origin)
+		nodes = append(nodes, b.mark(b.factory.NewLiteralTypeNode(literal), literalStart, origin))
+	}
+	if t.Kind == "string-literal" {
+		return nodes[0]
+	}
+	return b.mark(b.factory.NewUnionTypeNode(b.list(nodes, start)), start, origin)
+}
+
 func (b *genericTree) expression(e genericExpression, d genericDefinition, defs map[string]genericDefinition) *ast.Node {
+	if e.Kind == "number-add" {
+		start := b.pos()
+		left := b.expression(e.Arguments[0], d, defs)
+		b.write(" ")
+		operatorStart := b.pos()
+		b.write("+")
+		operator := b.mark(b.factory.NewToken(ast.KindPlusToken), operatorStart, e.Origin)
+		b.write(" ")
+		right := b.expression(e.Arguments[1], d, defs)
+		return b.mark(b.factory.NewBinaryExpression(nil, left, nil, operator, right), start, e.Origin)
+	}
 	if e.Kind == "parameter" {
 		return b.identifier(d.Parameters[e.Parameter].Name, e.Origin)
 	}
@@ -188,11 +259,7 @@ func (b *genericTree) driver(d genericDefinition, request genericInstanceRequest
 		argumentNames = append(argumentNames, argumentName)
 		n := b.identifier(argumentName, p.Origin)
 		b.write(": ")
-		t := p.Type
-		if t.Kind == "parameter" {
-			t = request.TypeArguments[t.Parameter]
-		}
-		typeNode := b.typeNode(t, nil, p.Origin)
+		typeNode := b.typeNodeWithArguments(p.Type, nil, request.TypeArguments, p.Origin)
 		params = append(params, b.mark(b.factory.NewParameterDeclaration(nil, nil, n, nil, typeNode, nil), begin, p.Origin))
 	}
 	parameters := b.list(params, ps)

@@ -81,6 +81,27 @@ func (p *genericProjection) expression(node *ast.Node) (genericConcreteExpressio
 				return result, nil
 			}
 		}
+	case ast.KindBinaryExpression:
+		binary := node.AsBinaryExpression()
+		body := p.declaration.Body().AsBlock().Statements.Nodes[0].AsReturnStatement().Expression
+		if node != body || binary.OperatorToken.Kind != ast.KindPlusToken || t != "f64" {
+			return genericConcreteExpression{}, genericError("unsupported", "mapped number-add requires a root f64 PlusToken expression", result.Origin)
+		}
+		result.Kind = "number-add"
+		for _, operand := range []*ast.Node{binary.Left, binary.Right} {
+			if operand.Kind != ast.KindIdentifier {
+				return genericConcreteExpression{}, genericError("unsupported", "mapped number-add operand must be a direct parameter", p.tree.origins[operand])
+			}
+			argument, err := p.expression(operand)
+			if err != nil {
+				return genericConcreteExpression{}, err
+			}
+			if argument.Kind != "parameter" || argument.Type != "f64" {
+				return genericConcreteExpression{}, genericError("unsupported", "mapped number-add operand must be f64", argument.Origin)
+			}
+			result.Arguments = append(result.Arguments, argument)
+		}
+		return result, nil
 	case ast.KindCallExpression:
 		call := node.AsCallExpression()
 		sig := p.check.GetResolvedSignature(node)

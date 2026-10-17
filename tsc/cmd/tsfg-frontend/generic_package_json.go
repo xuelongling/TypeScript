@@ -99,7 +99,8 @@ func (b *genericCanonicalBudget) text(text string) error {
 
 func genericPackageFieldName(typ reflect.Type, field reflect.StructField) (string, error) {
 	if tag := field.Tag.Get("json"); tag != "" {
-		return tag, nil
+		name, _, _ := strings.Cut(tag, ",")
+		return name, nil
 	}
 	if typ == reflect.TypeFor[genericGraph]() {
 		switch field.Name {
@@ -203,6 +204,11 @@ func (b *genericCanonicalBudget) walk(v reflect.Value, depth int) error {
 	}
 	switch v.Kind() {
 	case reflect.Pointer:
+		if (v.Type() == reflect.TypeFor[*genericType]() || v.Type() == reflect.TypeFor[*genericPackageTypeDTO]() ||
+			v.Type() == reflect.TypeFor[*genericMappedType]() || v.Type() == reflect.TypeFor[*genericPackageMappedTypeDTO]() ||
+			v.Type() == reflect.TypeFor[*genericIndexedType]() || v.Type() == reflect.TypeFor[*genericPackageIndexedTypeDTO]()) && !v.IsNil() {
+			return b.walk(v.Elem(), depth)
+		}
 		if !b.policy.allowNull {
 			return genericPackageError("json", "unsupported DTO scalar")
 		}
@@ -232,13 +238,19 @@ func (b *genericCanonicalBudget) walk(v reflect.Value, depth int) error {
 		}
 		emitted := false
 		if v.Type() == reflect.TypeFor[genericGraph]() {
-			caps := []string{"explicit-type-arguments", "scalar-generics", "single-module"}
+			caps := genericPackageCapabilities()
 			if err := b.member("capabilities", reflect.ValueOf(caps), depth+1, false); err != nil {
 				return err
 			}
 			emitted = true
 		}
 		for i := 0; i < v.NumField(); i++ {
+			// Optional conditional children and mapped/indexed wrappers use omitempty.
+			// Their non-nil fields still consume the exact shared byte/token budget.
+			if (v.Type() == reflect.TypeFor[genericType]() || v.Type() == reflect.TypeFor[genericPackageTypeDTO]()) &&
+				v.Field(i).Kind() == reflect.Pointer && v.Field(i).IsNil() {
+				continue
+			}
 			name, err := genericPackageFieldName(v.Type(), v.Type().Field(i))
 			if err != nil {
 				return err

@@ -5,9 +5,9 @@
 package main
 
 const genericPackageFamily = "tsfg-owned-generic-package"
-const genericPackageVersion = 1
-const genericPackageSchema = "5f3e8a6e8e3b49dcbdf507db643c538a5810cc3a09f75ea7dc4db560086e9e4b"
-const genericPackageDomain = "tsfg-owned-generic-package/v1\n"
+const genericPackageVersion = 4
+const genericPackageSchema = "ec05631c15f280f54279ba9353fd8fc3ff779349a1f56f7cdb00eba22c767e20"
+const genericPackageDomain = "tsfg-owned-generic-package/v4\n"
 const genericDefinitionDomain = "tsfg:generic-definition:v1\n"
 const genericInstanceDomain = "tsfg:generic-instance:v1\n"
 const genericPackageMaxBytes = 8 << 20
@@ -15,6 +15,13 @@ const genericPackageMaxDepth = 160
 const genericPackageMaxTokens = 1_000_000
 const genericPackageMaxString = 1 << 20
 const genericPackageMaxExpressions = 32768
+const genericPackageMaxKeyBytes = 256
+const genericPackageMaxKeyMembers = 16
+
+// Return owned storage so callers cannot mutate protocol capabilities globally.
+func genericPackageCapabilities() []string {
+	return []string{"conditional-signature", "explicit-type-arguments", "mapped-indexed-signature", "number-add", "scalar-generics", "single-module"}
+}
 
 type genericPackageDTO struct {
 	Family     string                   `json:"family"`
@@ -75,8 +82,30 @@ type genericPackageParameterDTO struct {
 }
 
 type genericPackageTypeDTO struct {
-	Kind      string `json:"kind"`
-	Parameter int    `json:"parameter"`
+	Kind        string                        `json:"kind"`
+	Parameter   int                           `json:"parameter"`
+	CheckType   *genericPackageTypeDTO        `json:"checkType,omitempty"`
+	ExtendsType *genericPackageTypeDTO        `json:"extendsType,omitempty"`
+	TrueType    *genericPackageTypeDTO        `json:"trueType,omitempty"`
+	FalseType   *genericPackageTypeDTO        `json:"falseType,omitempty"`
+	Mapped      *genericPackageMappedTypeDTO  `json:"mapped,omitempty"`
+	Indexed     *genericPackageIndexedTypeDTO `json:"indexed,omitempty"`
+}
+
+type genericPackageKeyTypeDTO struct {
+	Kind     string   `json:"kind"`
+	Literals []string `json:"literals"`
+}
+
+type genericPackageMappedTypeDTO struct {
+	Binder string                   `json:"binder"`
+	Keys   genericPackageKeyTypeDTO `json:"keys"`
+	Value  genericPackageTypeDTO    `json:"value"`
+}
+
+type genericPackageIndexedTypeDTO struct {
+	Object genericPackageTypeDTO    `json:"object"`
+	Index  genericPackageKeyTypeDTO `json:"index"`
 }
 
 type genericPackageExpressionDTO struct {

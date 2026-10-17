@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -16,7 +17,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/scanner"
 )
 
-const genericSemantics = "tsfg-owned-scalar-generics-host-v1"
+const genericSemantics = "tsfg-owned-scalar-generics-host-v4"
 const genericDeclarationProfile = "minimal-scalars-v2"
 
 type genericOrigin struct {
@@ -33,8 +34,30 @@ type genericSource struct {
 }
 
 type genericType struct {
-	Kind      string // boolean, number, or parameter
-	Parameter int
+	Kind        string // scalar leaf, direct conditional, or mapped/indexed signature
+	Parameter   int
+	CheckType   *genericType        `json:"checkType,omitempty"`
+	ExtendsType *genericType        `json:"extendsType,omitempty"`
+	TrueType    *genericType        `json:"trueType,omitempty"`
+	FalseType   *genericType        `json:"falseType,omitempty"`
+	Mapped      *genericMappedType  `json:"mapped,omitempty"`
+	Indexed     *genericIndexedType `json:"indexed,omitempty"`
+}
+
+type genericKeyType struct {
+	Kind     string   `json:"kind"`
+	Literals []string `json:"literals"`
+}
+
+type genericMappedType struct {
+	Binder string         `json:"binder"`
+	Keys   genericKeyType `json:"keys"`
+	Value  genericType    `json:"value"`
+}
+
+type genericIndexedType struct {
+	Object genericType    `json:"object"`
+	Index  genericKeyType `json:"index"`
 }
 
 type genericParameter struct {
@@ -44,7 +67,7 @@ type genericParameter struct {
 }
 
 type genericExpression struct {
-	Kind          string // parameter or call
+	Kind          string // parameter, call, or root number-add
 	Parameter     int
 	Definition    string
 	TypeArguments []genericType
@@ -105,6 +128,9 @@ func genericTextDigest(text string) string {
 }
 
 func genericGraphDigest(g genericGraph) string {
+	if err := genericPackageBudget(g); err != nil {
+		panic(err)
+	} // Bound wrappers before recursive domain-to-DTO copies.
 	return genericPackageIdentity(genericPackageDomain, genericPackagePayload(g))
 }
 
@@ -123,7 +149,27 @@ func genericIdentifier(name string) bool {
 		!ast.IsNonContextualKeyword(scanner.StringToToken(name))
 }
 
+func genericTypeLeaf(t genericType) bool {
+	return genericConditionalFieldsEmpty(t) && t.Mapped == nil && t.Indexed == nil
+}
+
+func genericConditionalFieldsEmpty(t genericType) bool {
+	return t.CheckType == nil && t.ExtendsType == nil && t.TrueType == nil && t.FalseType == nil
+}
+
 func genericValidType(t genericType, count int) bool {
+	if t.Kind == "indexed" {
+		return validateGenericIndexedType(t, count, genericOrigin{}) == nil
+	}
+	if t.Kind == "conditional" {
+		return t.Parameter == 0 && t.Mapped == nil && t.Indexed == nil && t.CheckType != nil && t.ExtendsType != nil && t.TrueType != nil && t.FalseType != nil &&
+			t.CheckType.Kind == "parameter" && genericValidType(*t.CheckType, count) && genericTypeLeaf(*t.CheckType) &&
+			*t.ExtendsType == (genericType{Kind: "boolean"}) && *t.TrueType == (genericType{Kind: "boolean"}) &&
+			*t.FalseType == (genericType{Kind: "number"})
+	}
+	if !genericTypeLeaf(t) {
+		return false
+	}
 	switch t.Kind {
 	case "boolean", "number":
 		return t.Parameter == 0
@@ -131,6 +177,55 @@ func genericValidType(t genericType, count int) bool {
 		return t.Parameter >= 0 && t.Parameter < count
 	}
 	return false
+}
+
+// Key membership is a wire role check only; result typing remains official.
+// Count raw union occurrences, preserving duplicates and source order.
+func validateGenericKeyType(kind string, literals []string, origin genericOrigin) error {
+	if len(literals) > genericPackageMaxKeyMembers {
+		return genericError("package-limit", "key union members", origin)
+	}
+	if kind != "string-literal" && kind != "union" || kind == "string-literal" && len(literals) != 1 ||
+		kind == "union" && len(literals) < 2 {
+		return genericError("input", "literal/union key metadata", origin)
+	}
+	for _, literal := range literals {
+		if len(literal) > genericPackageMaxKeyBytes {
+			return genericError("package-limit", "key bytes", origin)
+		}
+		if !genericPackageString(literal) {
+			return genericError("input", "key Unicode or NUL", origin)
+		}
+	}
+	return nil
+}
+
+func validateGenericIndexedType(t genericType, count int, origin genericOrigin) error {
+	bad := func() error { return genericError("input", "mapped/indexed signature metadata", origin) }
+	if count != 1 || t.Parameter != 0 || !genericConditionalFieldsEmpty(t) || t.Mapped != nil || t.Indexed == nil {
+		return bad()
+	}
+	object := t.Indexed.Object
+	if object.Kind != "mapped" || object.Parameter != 0 || !genericConditionalFieldsEmpty(object) || object.Indexed != nil || object.Mapped == nil {
+		return bad()
+	}
+	mapped := object.Mapped
+	if !genericIdentifier(mapped.Binder) || !genericPackageString(mapped.Binder) ||
+		!genericTypeLeaf(mapped.Value) || !genericValidType(mapped.Value, count) {
+		return bad()
+	}
+	if err := validateGenericKeyType(mapped.Keys.Kind, mapped.Keys.Literals, origin); err != nil {
+		return err
+	}
+	if err := validateGenericKeyType(t.Indexed.Index.Kind, t.Indexed.Index.Literals, origin); err != nil {
+		return err
+	}
+	for _, index := range t.Indexed.Index.Literals {
+		if !slices.Contains(mapped.Keys.Literals, index) {
+			return genericError("package-reference", "index literal outside mapped key domain", origin)
+		}
+	}
+	return nil
 }
 
 func (g genericGraph) validate() error {
@@ -188,6 +283,24 @@ func (g genericGraph) validate() error {
 			}
 			valueNames[p.Name] = true
 		}
+		conditional, indexed := d.Return.Kind == "conditional", d.Return.Kind == "indexed"
+		for _, p := range d.Parameters {
+			conditional = conditional || p.Type.Kind == "conditional"
+			indexed = indexed || p.Type.Kind == "indexed"
+		}
+		if conditional || indexed {
+			kind, detail := "indexed", "mapped/indexed signature requires one type parameter and one directly returned parameter with the identical indexed type"
+			if conditional {
+				kind, detail = "conditional", "conditional signature requires one type parameter and one directly returned parameter with the identical conditional type"
+			}
+			if len(d.TypeParameters) != 1 || len(d.Parameters) != 1 || d.Return.Kind != kind ||
+				!reflect.DeepEqual(d.Parameters[0].Type, d.Return) || d.Body.Kind != "parameter" || d.Body.Parameter != 0 {
+				return genericError("unsupported", detail, d.Origin)
+			}
+			if indexed && d.Return.Indexed.Object.Mapped.Binder == d.TypeParameters[0] {
+				return genericError("unsupported", "mapped binder shadows outer type parameter", d.Origin)
+			}
+		}
 	}
 	for _, d := range g.Definitions {
 		nodes := 0
@@ -206,6 +319,25 @@ func (g genericGraph) validate() error {
 				if e.Parameter < 0 || e.Parameter >= len(d.Parameters) {
 					return genericError("package-reference", "parameter reference", e.Origin)
 				}
+			case "number-add":
+				if depth != 0 || e.Parameter != 0 || e.Definition != "" || len(e.TypeArguments) != 0 ||
+					len(e.Arguments) != 2 || d.Return != (genericType{Kind: "number"}) {
+					return bad("number-add root metadata or return type")
+				}
+				previous := e.Origin.Start
+				for _, a := range e.Arguments {
+					if a.Kind != "parameter" || a.Parameter < 0 || a.Parameter >= len(d.Parameters) ||
+						d.Parameters[a.Parameter].Type != (genericType{Kind: "number"}) {
+						return genericError("package-reference", "number-add requires declared number parameters", a.Origin)
+					}
+					if a.Origin.Start < previous || a.Origin.End > e.Origin.End {
+						return genericError("input", "number-add operand order or containment", a.Origin)
+					}
+					if err := visit(a, depth+1); err != nil {
+						return err
+					}
+					previous = a.Origin.End
+				}
 			case "call":
 				if e.Parameter != 0 {
 					return bad("call expression metadata")
@@ -220,6 +352,12 @@ func (g genericGraph) validate() error {
 					}
 				}
 				for _, a := range e.TypeArguments {
+					if !genericTypeLeaf(a) {
+						if a.Kind == "conditional" {
+							return genericError("unsupported", "conditional type arguments are outside the signature slice", e.Origin)
+						}
+						return genericError("unsupported", "mapped/indexed type arguments are outside the signature slice", e.Origin)
+					}
 					if err := validateGenericTypeReference(a, len(d.TypeParameters), e.Origin); err != nil {
 						return err
 					}
@@ -269,10 +407,14 @@ func (e genericDeclarationEnvironment) validate() error {
 
 // Binder resolution is distinct from the representation of a type node.
 func validateGenericTypeReference(t genericType, count int, origin genericOrigin) error {
+	if t.Kind == "indexed" {
+		return validateGenericIndexedType(t, count, origin)
+	}
 	if genericValidType(t, count) {
 		return nil
 	}
-	if t.Kind == "parameter" {
+	if t.Kind == "parameter" || t.Kind == "conditional" && t.CheckType != nil &&
+		t.CheckType.Kind == "parameter" && (t.CheckType.Parameter < 0 || t.CheckType.Parameter >= count) {
 		return genericError("package-reference", "type parameter reference", origin)
 	}
 	return genericError("input", "type metadata", origin)
