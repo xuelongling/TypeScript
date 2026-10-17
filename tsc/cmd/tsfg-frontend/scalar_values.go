@@ -92,6 +92,11 @@ func explicitFloatOperand(file *ast.SourceFile, check *checker.Checker, node *as
 }
 
 func projectOperator(file *ast.SourceFile, check *checker.Checker, node *ast.Node, bindings map[*ast.Symbol]symbol, functions ...map[*ast.Symbol]functionInfo) (*expression, *response) {
+	if len(functions) != 0 {
+		if value, failure, handled := projectOrdinaryFunctionValue(file, check, node, "", bindings, functions[0]); handled {
+			return value, failure
+		}
+	}
 	if node.Kind == ast.KindCallExpression && len(functions) != 0 {
 		call := node.AsCallExpression()
 		if moduleReference(check, call.Expression) {

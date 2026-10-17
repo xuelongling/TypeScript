@@ -76,11 +76,13 @@ type symbol struct {
 	Presence       *parameterPresence `json:"presence,omitempty"`
 	ReturnPresence *returnPresence    `json:"returnPresence,omitempty"`
 	LexicalOwner   string             `json:"lexicalOwner,omitempty"`
+	Signature      *signature         `json:"signature,omitempty"`
 }
 
 type expression struct {
 	Name         string            `json:"name,omitempty"`
 	Receiver     *expression       `json:"receiver,omitempty"`
+	Callee       *expression       `json:"callee,omitempty"`
 	FieldPath    []string          `json:"fieldPath,omitempty"`
 	OwnerType    string            `json:"ownerType,omitempty"`
 	Permission   *fieldPermission  `json:"permission,omitempty"`
@@ -105,10 +107,12 @@ type expression struct {
 }
 
 type signature struct {
-	Parameters     []string             `json:"parameters"`
-	ReturnType     string               `json:"returnType"`
-	Presence       []*parameterPresence `json:"presence,omitempty"`
-	ReturnPresence *returnPresence      `json:"returnPresence,omitempty"`
+	Parameters          []string             `json:"parameters"`
+	ReturnType          string               `json:"returnType"`
+	Presence            []*parameterPresence `json:"presence,omitempty"`
+	ReturnPresence      *returnPresence      `json:"returnPresence,omitempty"`
+	ParameterSignatures []*signature         `json:"parameterSignatures,omitempty"`
+	ReturnSignature     *signature           `json:"returnSignature,omitempty"`
 }
 
 type integerLiteral struct {
@@ -137,6 +141,7 @@ type function struct {
 	Parameters            []symbol         `json:"parameters"`
 	ReturnType            string           `json:"returnType"`
 	ReturnPresence        *returnPresence  `json:"returnPresence,omitempty"`
+	ReturnSignature       *signature       `json:"returnSignature,omitempty"`
 	Body                  []statement      `json:"body"`
 	Range                 span             `json:"range"`
 	ParameterInitializers []*expression    `json:"parameterInitializers,omitempty"`

@@ -82,6 +82,12 @@ func (c *closureProjection) complete(node *ast.Node, fn *function, p *projection
 	for _, owned := range p.bindings {
 		bindings[owned.ID] = owned
 	}
+	// Taking a named function as a value reads its lexical binding. A child
+	// declared in this function is local; ancestor and sibling bindings retain
+	// their original owner rather than becoming copied closure environments.
+	for _, owned := range c.definitions {
+		bindings[owned.ID] = owned
+	}
 	fn.Captures = directClosureCaptures(fn, bindings)
 }
 

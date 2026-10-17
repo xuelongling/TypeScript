@@ -84,30 +84,24 @@ func TestFrontendCommandClosureCaptureBoundaries(t *testing.T) {
 		})
 	}
 	for _, tc := range []struct {
-		name   string
-		source string
-		code   string
-		anchor string
+		name     string
+		source   string
+		returned bool
 	}{
 		{
-			name:   "functionValueStillUnsupported",
+			name:   "functionValueProjectsOwnedFacts",
 			source: "export function entry(seed: bool): bool { function read(): bool { return seed; } const selected = read; return selected(); }",
-			code:   "r02b-d-type", anchor: "read",
 		},
 		{
-			name:   "returnedClosureStillUnsupported",
-			source: "export function entry(seed: bool): () => bool { function read(): bool { return seed; } return read; }",
-			code:   "r02b-d-unsupported", anchor: "() => bool",
+			name:     "returnedClosureProjectsOwnedFacts",
+			source:   "export function entry(seed: bool): () => bool { function read(): bool { return seed; } return read; }",
+			returned: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := integerRequest(tc.source)
 			closureBoundaryOfficial(t, r, []closureBoundaryIdentity{{"seed", [][]int{{0, 1}}}, {"read", [][]int{{0, 1}}}})
-			result := closureBoundaryCommand(t, r)
-			if result.Status == "ok" || len(result.Diagnostics) != 1 || result.Diagnostics[0].Code != tc.code || sourceText(t, tc.source, result.Diagnostics[0].Range) != tc.anchor {
-				t.Fatalf("unsupported function-value boundary lost its concrete rejection and source anchor: %+v", result)
-			}
-			// These are capability boundaries, not a proof of escape safety.
+			functionValueMigratedClosureFacts(t, tc.source, r, tc.returned)
 		})
 	}
 }

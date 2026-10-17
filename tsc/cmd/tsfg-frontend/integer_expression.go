@@ -70,6 +70,17 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			return &expression{Kind: "absence", Type: expected, Absence: state, Range: valueRange}, nil
 		}
 	}
+	if value, failure, handled := projectFunctionValueExpression(file, check, node, expected, refs, functions, valueRange, func(child *ast.Node, want string) (*expression, *response) {
+		return projectIntegerExpression(file, check, child, want, refs, functions, target)
+	}); handled {
+		if failure != nil {
+			return nil, failure
+		}
+		if value.Type == "f64" && !target.floats {
+			return failureAt("r02b-d-unsupported", "unsupported", node)
+		}
+		return finish(value)
+	}
 	if target != nil && target.floats {
 		if token, ok := floatingNode(file, node); ok && (floatKind(expected) || expected == "" && floatDefaultHint(file, node) != "") {
 			kind := expected
@@ -320,6 +331,13 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 				}
 			}
 			projected := &expression{Kind: "write", Type: binding.Type, Operator: operator, Left: left, Right: right, Range: expressionOffset(file, node)}
+			if binding.Signature != nil {
+				var valid bool
+				projected.Signature, valid = functionValueType(check, check.GetTypeAtLocation(node))
+				if !valid {
+					return failureAt("r02b-d-unsupported", "unsupported", node)
+				}
+			}
 			if logical {
 				payload, u, n, valid := finitePresence(check.GetTypeAtLocation(node))
 				if !valid || payload != "" && payload != binding.Type {

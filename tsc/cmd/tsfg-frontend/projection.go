@@ -49,8 +49,13 @@ func (p *projection) parameters(fn *function, nodes []*ast.Node, hasPresence boo
 		if p.aggregates != nil && !valid {
 			t, shape, valid = p.aggregates.parameter(p.file, p.check, node)
 		}
+		var callable *signature
 		if !valid {
-			return failAt("r02b-d-unsupported", "unsupported", p.file, node)
+			callable, valid = functionValueParameter(p.check, node)
+			if !valid {
+				return failAt("r02b-d-unsupported", "unsupported", p.file, node)
+			}
+			t = "function"
 		}
 		s, ok := p.addSymbol(node.Name(), "parameter", t, true)
 		if !ok {
@@ -61,7 +66,7 @@ func (p *projection) parameters(fn *function, nodes []*ast.Node, hasPresence boo
 			}
 			return failAt("r02b-d-type", "error", p.file, anchor)
 		}
-		s.Presence = shape
+		s.Presence, s.Signature = shape, callable
 		p.result.Symbols[len(p.result.Symbols)-1] = s
 		p.bindings[p.check.GetSymbolAtLocation(node.Name())] = s
 		fn.Parameters = append(fn.Parameters, s)
@@ -104,6 +109,12 @@ func (p *projection) expr(node *ast.Node, expected string, presence ...*paramete
 	}
 	if node == nil {
 		return nil, fail("r02b-d-unsupported", "unsupported", p.file.FileName(), span{})
+	}
+	if projected, failure, handled := projectOrdinaryFunctionValue(p.file, p.check, node, expected, p.bindings, p.functions); handled {
+		if failure != nil {
+			return nil, *failure
+		}
+		return projected, response{}
 	}
 	if node.Kind == ast.KindCallExpression {
 		if moduleReference(p.check, node.AsCallExpression().Expression) {
@@ -184,6 +195,7 @@ func (p *projection) statements(nodes []*ast.Node, returnType string, returns ..
 				}
 				t := ""
 				var shape *parameterPresence
+				var callable *signature
 				if local.Type != nil {
 					var valid bool
 					if p.aggregates != nil {
@@ -195,7 +207,11 @@ func (p *projection) statements(nodes []*ast.Node, returnType string, returns ..
 						t, shape, valid = checkedLocalPresence(p.file, p.check, decl)
 					}
 					if !valid {
-						return nil, failAt("r02b-d-unsupported", "unsupported", p.file, local.Type)
+						callable, valid = functionValueType(p.check, p.check.GetTypeFromTypeNode(local.Type))
+						if !valid {
+							return nil, failAt("r02b-d-unsupported", "unsupported", p.file, local.Type)
+						}
+						t = "function"
 					}
 				}
 				var init *expression
@@ -208,6 +224,13 @@ func (p *projection) statements(nodes []*ast.Node, returnType string, returns ..
 				}
 				if t == "" {
 					t = init.Type
+					if t == "function" {
+						var valid bool
+						callable, valid = functionValueType(p.check, p.check.GetTypeOfSymbol(p.check.GetSymbolAtLocation(decl.Name())))
+						if !valid {
+							return nil, failAt("r02b-d-unsupported", "unsupported", p.file, decl)
+						}
+					}
 				}
 				writable := node.AsVariableStatement().DeclarationList.Flags&ast.NodeFlagsLet != 0
 				if !writable && node.AsVariableStatement().DeclarationList.Flags&ast.NodeFlagsConst == 0 {
@@ -217,8 +240,8 @@ func (p *projection) statements(nodes []*ast.Node, returnType string, returns ..
 				if !ok {
 					return nil, failAt("r02b-d-type", "error", p.file, decl.Name())
 				}
-				if shape != nil {
-					s.Presence = shape
+				if shape != nil || callable != nil {
+					s.Presence, s.Signature = shape, callable
 					p.result.Symbols[len(p.result.Symbols)-1] = s
 					p.bindings[p.check.GetSymbolAtLocation(decl.Name())] = s
 				}
@@ -328,6 +351,12 @@ func (p *projection) statements(nodes []*ast.Node, returnType string, returns ..
 func projectExpression(file *ast.SourceFile, check *checker.Checker, node *ast.Node, expected string,
 	refs map[*ast.Symbol]symbol, functions map[*ast.Symbol]functionInfo,
 ) (expression, *response) {
+	if projected, failure, handled := projectOrdinaryFunctionValue(file, check, node, expected, refs, functions); handled {
+		if failure != nil {
+			return expression{}, failure
+		}
+		return *projected, nil
+	}
 	if value, literal, ok := exactInteger(file, node); ok && expected == "i32" {
 		if !i32InRange(value) {
 			failure := failAt("r01-d-integer-range", "error", file, node)

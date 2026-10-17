@@ -320,23 +320,39 @@ func analyze(r request) response {
 		if aggregates != nil && returnType == "" {
 			returnType = aggregates.typeName(check.GetTypeFromTypeNode(decl.Type))
 		}
+		var returnSignature *signature
 		if returnType == "" {
-			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
+			if callable, valid := functionValueType(check, check.GetTypeFromTypeNode(decl.Type)); valid {
+				returnType, returnSignature = "function", callable
+			} else {
+				return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
+			}
 		}
 		parameters := make([]string, 0, len(decl.Parameters.Nodes))
 		presence := make([]*parameterPresence, 0, len(decl.Parameters.Nodes))
-		hasPresence := false
+		hasPresence, hasCallableParameter := false, false
+		parameterSignatures := make([]*signature, 0, len(decl.Parameters.Nodes))
 		for _, p := range decl.Parameters.Nodes {
 			t, shape, valid := checkedParameter(file, check, p)
 			if aggregates != nil && !valid {
 				t, shape, valid = aggregates.parameter(file, check, p)
 			}
+			var callable *signature
 			if !valid {
-				return failAt("r02b-d-unsupported", "unsupported", file, p)
+				callable, valid = functionValueParameter(check, p)
+				if !valid {
+					return failAt("r02b-d-unsupported", "unsupported", file, p)
+				}
+				t = "function"
 			}
+			parameterSignatures = append(parameterSignatures, callable)
+			hasCallableParameter = hasCallableParameter || callable != nil
 			parameters = append(parameters, t)
 			presence = append(presence, shape)
 			hasPresence = hasPresence || shape != nil
+		}
+		if (returnSignature != nil || hasCallableParameter) && decl.TypeParameters != nil {
+			return failAt("r02b-d-unsupported", "unsupported", file, node)
 		}
 		resolved := check.GetSymbolAtLocation(node.Name())
 		if resolved == nil {
@@ -351,7 +367,10 @@ func analyze(r request) response {
 		if !hasPresence {
 			presence = nil
 		}
-		functions[resolved] = functionInfo{ID: s.ID, Declaration: node, Signature: signature{Parameters: parameters, ReturnType: returnType, Presence: presence, ReturnPresence: returnShape}}
+		if !hasCallableParameter {
+			parameterSignatures = nil
+		}
+		functions[resolved] = functionInfo{ID: s.ID, Declaration: node, Signature: signature{Parameters: parameters, ReturnType: returnType, Presence: presence, ReturnPresence: returnShape, ParameterSignatures: parameterSignatures, ReturnSignature: returnSignature}}
 	}
 	if aggregates != nil {
 		if failure := aggregates.constructorBodies(file, check, &result, functions, r.Target); failure != nil {
@@ -377,16 +396,8 @@ func analyze(r request) response {
 		info := functions[check.GetSymbolAtLocation(node.Name())]
 		fn := function{Name: node.Name().Text(), Symbol: info.ID, Parameters: []symbol{}, Body: []statement{}, Range: offset(file, node)}
 		fn.ReturnPresence = info.Signature.ReturnPresence
-		fn.ReturnType = scalar(check.GetTypeFromTypeNode(decl.Type))
-		if fn.ReturnPresence != nil {
-			fn.ReturnType = info.Signature.ReturnType
-		}
-		if aggregates != nil && fn.ReturnType == "" {
-			fn.ReturnType = aggregates.typeName(check.GetTypeFromTypeNode(decl.Type))
-		}
-		if fn.ReturnType == "" {
-			return failAt("r02b-d-unsupported", "unsupported", file, decl.Type)
-		}
+		fn.ReturnType = info.Signature.ReturnType
+		fn.ReturnSignature = info.Signature.ReturnSignature
 		project := projection{file: file, check: check, result: &result, bindings: map[*ast.Symbol]symbol{}, functions: functions, aggregates: aggregates}
 		closures.enter(node, &project)
 		if r.Declarations.Version == "minimal-integers-v3" || r.Declarations.Version == "minimal-floats-v4" || r.Declarations.Version == conversionVersion {

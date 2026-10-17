@@ -39,6 +39,9 @@ func directClosureCaptures(fn *function, bindings map[string]symbol) []closureCa
 		case "reference":
 			add(value.Symbol, read, write)
 			return
+		case "functionReference":
+			add(value.Target, read, write)
+			return
 		case "group":
 			expressionAccess(value.Operand, read, write)
 			return
@@ -54,6 +57,7 @@ func directClosureCaptures(fn *function, bindings map[string]symbol) []closureCa
 		expressionAccess(value.Right, true, false)
 		expressionAccess(value.Operand, true, false)
 		expressionAccess(value.Receiver, true, false)
+		expressionAccess(value.Callee, true, false)
 		if value.Arguments != nil {
 			for index := range *value.Arguments {
 				expressionAccess(&(*value.Arguments)[index], true, false)
