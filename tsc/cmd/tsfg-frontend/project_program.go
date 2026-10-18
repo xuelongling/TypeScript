@@ -8,10 +8,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/microsoft/typescript-go/internal/ast"
-	"github.com/microsoft/typescript-go/internal/compiler"
-	"github.com/microsoft/typescript-go/internal/core"
-	"github.com/microsoft/typescript-go/internal/tsoptions"
-	"github.com/microsoft/typescript-go/internal/vfs/vfstest"
 	"maps"
 	"slices"
 	"strings"
@@ -28,44 +24,10 @@ func analyzeWithProjection(ctx context.Context, r request, finish ownedProjectio
 	if r.Target != nil {
 		r.Target.floats = r.Declarations.Version == "minimal-floats-v4" || r.Declarations.Version == conversionVersion
 	}
-	contents := map[string]string{}
-	for _, file := range r.Files {
-		contents[file.Path] = file.Content
+	program, file, consumed, inputFailure := newOwnedProgram(r)
+	if inputFailure != nil {
+		return *inputFailure
 	}
-	fileNames := append([]string{r.RootFile}, r.Declarations.Paths...)
-	if r.CompilationClosure != nil {
-		fileNames = nil
-		for _, input := range r.Files {
-			fileNames = append(fileNames, input.Path)
-		}
-	}
-	slices.Sort(fileNames)
-	fs := vfstest.FromMap(contents, true)
-	program := compiler.NewProgram(compiler.ProgramOptions{
-		Config: &tsoptions.ParsedCommandLine{ParsedConfig: &core.ParsedOptions{
-			FileNames:       fileNames,
-			CompilerOptions: &core.CompilerOptions{NoLib: core.TSTrue, NoEmit: core.TSTrue, Strict: core.TSTrue, Target: core.ScriptTargetESNext},
-		}},
-		Host:           compiler.NewCompilerHost(r.SourceRoot, fs, r.SourceRoot, nil, nil),
-		SingleThreaded: core.TSTrue,
-	})
-	file := program.GetSourceFile(r.RootFile)
-	if file == nil {
-		return fail("r02b-d-input", "input", r.RootFile, span{})
-	}
-	approved := map[string]bool{}
-	for name := range contents {
-		approved[name] = true
-	}
-	consumed := []string{}
-	for _, source := range program.GetSourceFiles() {
-		if !approved[source.FileName()] {
-			return fail("r02b-d-input", "input", source.FileName(), span{})
-		}
-		consumed = append(consumed, source.FileName())
-		delete(approved, source.FileName())
-	}
-	slices.Sort(consumed)
 	result := response{Status: "ok", Inputs: consumed, Functions: []function{}, Symbols: []symbol{}}
 	syntacticDiagnostics := program.GetSyntacticDiagnostics(ctx, nil)
 	check, release := program.GetTypeCheckerForFileExclusive(ctx, file)
