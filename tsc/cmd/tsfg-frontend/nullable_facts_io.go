@@ -29,6 +29,14 @@ func (r nullableFactsReader) Read(p []byte) (int, error) {
 }
 
 func runNullableFactsCandidate(ctx context.Context, input io.Reader, output io.Writer) error {
+	return runNullableFactsVersion(ctx, input, output, nullableFactsV3)
+}
+
+func runNullablePresenceFactsCandidate(ctx context.Context, input io.Reader, output io.Writer) error {
+	return runNullableFactsVersion(ctx, input, output, nullableFactsV4)
+}
+
+func runNullableFactsVersion(ctx context.Context, input io.Reader, output io.Writer, version nullableFactsVersion) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -36,7 +44,7 @@ func runNullableFactsCandidate(ctx context.Context, input io.Reader, output io.W
 	if err != nil {
 		return err
 	}
-	encoded, err := handleNullableFactsCandidate(ctx, data)
+	encoded, err := handleNullableFactsCandidate(ctx, data, version)
 	if err != nil {
 		return err
 	}
@@ -53,7 +61,7 @@ func runNullableFactsCandidate(ctx context.Context, input io.Reader, output io.W
 	return ctx.Err()
 }
 
-func handleNullableFactsCandidate(ctx context.Context, data []byte) (outputBytes []byte, err error) {
+func handleNullableFactsCandidate(ctx context.Context, data []byte, version nullableFactsVersion) (outputBytes []byte, err error) {
 	defer func() {
 		if canceled := ctx.Err(); canceled != nil {
 			outputBytes, err = nil, canceled
@@ -62,11 +70,14 @@ func handleNullableFactsCandidate(ctx context.Context, data []byte) (outputBytes
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	r, err := decodeNullableFactsRequest(data)
+	if version != nullableFactsV3 && version != nullableFactsV4 {
+		return nil, version.failure("schema", "selected nullable protocol")
+	}
+	r, err := decodeNullableFactsRequest(data, version)
 	if err != nil {
 		return nil, err
 	}
-	owned, inputID, files, err := nullableFactsInputs(r.Input)
+	owned, inputID, files, err := nullableFactsInputs(r.Input, version)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +89,7 @@ func handleNullableFactsCandidate(ctx context.Context, data []byte) (outputBytes
 	called := false
 	facts := analyzeWithProjection(ctx, owned, func(checked ownedProjectionContext) {
 		called = true
-		exports, projectionError = projectNullableFacts(checked.Root, checked.Checker, checked.Functions, checked.Facts)
+		exports, projectionError = projectNullableFacts(checked.Root, checked.Checker, checked.Functions, checked.Facts, version)
 	})
 	if err := ctx.Err(); err != nil {
 		return nil, err
@@ -88,31 +99,34 @@ func handleNullableFactsCandidate(ctx context.Context, data []byte) (outputBytes
 	if facts.Status != "ok" || len(facts.Diagnostics) != 0 {
 		if len(facts.Diagnostics) != 0 {
 			diagnostic := facts.Diagnostics[0]
+			if version == nullableFactsV4 {
+				return nil, &nullablePresenceFactsError{Kind: "source", Detail: diagnostic.Code, File: diagnostic.File, Range: diagnostic.Range}
+			}
 			return nil, nullableFactsError("source", diagnostic.Code+" at "+diagnostic.File)
 		}
-		return nil, nullableFactsError("source", "owned projection did not succeed")
+		return nil, version.failure("source", "owned projection did not succeed")
 	}
 	if projectionError != nil {
 		return nil, projectionError
 	}
 	if !called || len(facts.Inputs) != len(files) {
-		return nil, nullableFactsError("input", "incomplete actual consumed source closure")
+		return nil, version.failure("input", "incomplete actual consumed source closure")
 	}
 	for i, file := range files {
 		if facts.Inputs[i] != file.Path {
-			return nil, nullableFactsError("input", "actual consumed files differ from complete input closure")
+			return nil, version.failure("input", "actual consumed files differ from complete input closure")
 		}
 	}
 	payload := nullableFactsPayload{InputIdentity: inputID, Files: files, Facts: facts, Exports: exports}
-	payloadBytes, err := nullableFactsCanonical(payload)
+	payloadBytes, err := nullableFactsCanonical(payload, version)
 	if err != nil {
 		return nil, err
 	}
-	requestID := nullableFactsDigest(append([]byte("tsfg.nullable-facts.request.v3\x00"), data...))
-	preimage := append([]byte("tsfg.nullable-facts.package.v3\x00"+nullableFactsSchema+"\x00"), payloadBytes...)
-	result := nullableFactsPackage{Family: "tsfg.nullable-facts-package-candidate", Version: 3, SchemaHash: nullableFactsSchema,
+	requestID := nullableFactsDigest(append([]byte(version.requestDomain()), data...))
+	preimage := append([]byte(version.packageDomain()+version.schemaHash()+"\x00"), payloadBytes...)
+	result := nullableFactsPackage{Family: "tsfg.nullable-facts-package-candidate", Version: int(version), SchemaHash: version.schemaHash(),
 		RequestID: requestID, PackageID: nullableFactsDigest(preimage), Payload: payload}
-	encoded, err := nullableFactsCanonical(result)
+	encoded, err := nullableFactsCanonical(result, version)
 	if err != nil {
 		return nil, err
 	}

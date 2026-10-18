@@ -79,30 +79,30 @@ func nullableFactsError(kind, detail string) error {
 	return fmt.Errorf("[r03-nullable-facts-%s] %s", kind, detail)
 }
 
-func nullableFactsJSON(data []byte, allowNull bool) error {
+func nullableFactsJSON(data []byte, allowNull bool, version nullableFactsVersion) error {
 	policy := genericJSONPolicy{maxBytes: nullableFactsMaxBytes, maxDepth: 128,
 		maxTokens: 200000, maxString: 1048576, allowNUL: true, allowNull: allowNull}
 	if err := genericJSONPreflight(data, policy); err != nil {
 		var failure *genericFailure
 		if errors.As(err, &failure) {
-			return nullableFactsError(strings.TrimPrefix(failure.Kind, "package-"), failure.Detail)
+			return version.failure(strings.TrimPrefix(failure.Kind, "package-"), failure.Detail, err)
 		}
-		return nullableFactsError("json", "strict token preflight")
+		return version.failure("json", "strict token preflight", err)
 	}
 	return nil
 }
 
-func nullableFactsCanonical(value any) ([]byte, error) {
+func nullableFactsCanonical(value any, version nullableFactsVersion) ([]byte, error) {
 	data, err := json.Marshal(value)
 	if err != nil {
-		return nil, nullableFactsError("json", "DTO encoding")
+		return nil, version.failure("json", "DTO encoding", err)
 	}
-	if err := nullableFactsJSON(data, true); err != nil {
+	if err := nullableFactsJSON(data, true, version); err != nil {
 		return nil, err
 	}
 	canonical := json.Value(data)
 	if err := canonical.Canonicalize(); err != nil {
-		return nil, nullableFactsError("canonical", "JCS encoding")
+		return nil, version.failure("canonical", "JCS encoding", err)
 	}
 	return canonical, nil
 }
@@ -112,47 +112,47 @@ func nullableFactsDigest(data []byte) string {
 	return "sha256:" + hex.EncodeToString(sum[:])
 }
 
-func decodeNullableFactsRequest(data []byte) (nullableFactsRequest, error) {
+func decodeNullableFactsRequest(data []byte, version nullableFactsVersion) (nullableFactsRequest, error) {
 	var r nullableFactsRequest
-	if err := nullableFactsJSON(data, false); err != nil {
+	if err := nullableFactsJSON(data, false, version); err != nil {
 		return r, err
 	}
 	canonical := json.Value(bytes.Clone(data))
 	if err := canonical.Canonicalize(); err != nil || !bytes.Equal(canonical, data) {
-		return r, nullableFactsError("canonical", "request must be exact JCS")
+		return r, version.failure("canonical", "request must be exact JCS", err)
 	}
 	if err := json.Unmarshal(data, &r); err != nil {
-		return r, nullableFactsError("schema", "request DTO")
+		return r, version.failure("schema", "request DTO", err)
 	}
-	encoded, err := nullableFactsCanonical(r)
+	encoded, err := nullableFactsCanonical(r, version)
 	if err != nil {
 		return r, err
 	}
 	// Explicit false/empty fields survive DTO encoding. This rejects absent,
 	// unknown, case-variant and wrong-typed fields at every nested boundary.
 	if !bytes.Equal(encoded, data) {
-		return r, nullableFactsError("schema", "request exact fields and types")
+		return r, version.failure("schema", "request exact fields and types")
 	}
-	if r.Family != "tsfg.nullable-facts-request-candidate" || r.Version != 3 || r.SchemaHash != nullableFactsSchema {
-		return r, nullableFactsError("schema", "request family/version/schema")
+	if r.Family != "tsfg.nullable-facts-request-candidate" || r.Version != int(version) || r.SchemaHash != version.schemaHash() {
+		return r, version.failure("schema", "request family/version/schema")
 	}
 	return r, nil
 }
 
-func nullableFactsInputs(input nullableFactsInput) (request, string, []nullableFactsFile, error) {
+func nullableFactsInputs(input nullableFactsInput, version nullableFactsVersion) (request, string, []nullableFactsFile, error) {
 	// The legacy analyzer changes Target.floats. Decode a complete owned clone;
 	// neither that pointer nor sorted file slices may alias the incoming DTO.
-	data, err := nullableFactsCanonical(input)
+	data, err := nullableFactsCanonical(input, version)
 	if err != nil {
 		return request{}, "", nil, err
 	}
 	var owned request
 	if err := json.Unmarshal(data, &owned); err != nil {
-		return request{}, "", nil, nullableFactsError("schema", "legacy input conversion")
+		return request{}, "", nil, version.failure("schema", "legacy input conversion", err)
 	}
 	if !valid(owned) || input.Declarations.Version != "minimal-integers-v3" ||
 		len(input.Files) != len(input.Declarations.Paths)+1 || input.Declarations.Paths[0] != input.SourceRoot+"/minimal-integers-v3.d.ts" {
-		return request{}, "", nil, nullableFactsError("input", "required integer target/config/source/declaration closure")
+		return request{}, "", nil, version.failure("input", "required integer target/config/source/declaration closure")
 	}
 	identity := input
 	identity.Files = slices.Clone(input.Files)
@@ -165,13 +165,13 @@ func nullableFactsInputs(input nullableFactsInput) (request, string, []nullableF
 	for i, file := range identity.Files {
 		digest := nullableFactsDigest([]byte(file.Content))
 		if !declared[file.Path] || file.SHA256 != "" && file.SHA256 != digest {
-			return request{}, "", nil, nullableFactsError("identity", "source/declaration closure or content checksum")
+			return request{}, "", nil, version.failure("identity", "source/declaration closure or content checksum")
 		}
 		identity.Files[i].SHA256 = ""
 		files = append(files, nullableFactsFile{Path: file.Path, Digest: digest, ByteLength: len(file.Content),
 			Length: len(utf16.Encode([]rune(file.Content))), PositionUnit: "utf16"})
 	}
-	identityBytes, err := nullableFactsCanonical(identity)
+	identityBytes, err := nullableFactsCanonical(identity, version)
 	if err != nil {
 		return request{}, "", nil, err
 	}

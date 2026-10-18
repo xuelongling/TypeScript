@@ -23,6 +23,9 @@ func runFrontendCommand(ctx context.Context, args []string, input io.Reader, out
 	if len(args) == 1 && args[0] == "--exception-facts-io-v1" {
 		return runExceptionFactsCandidate(ctx, input, output)
 	}
+	if len(args) == 1 && args[0] == "--nullable-facts-io-v4" {
+		return runNullablePresenceFactsCandidate(ctx, input, output)
+	}
 	if len(args) == 1 && args[0] == "--nullable-facts-io-v3" {
 		return runNullableFactsCandidate(ctx, input, output)
 	}
