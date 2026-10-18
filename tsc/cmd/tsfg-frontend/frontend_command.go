@@ -11,6 +11,9 @@ import (
 )
 
 func runFrontendCommand(ctx context.Context, args []string, input io.Reader, output io.Writer) error {
+	if len(args) == 1 && args[0] == "--string-facts-io-v2" {
+		return runStringFactsConcatCandidate(ctx, input, output)
+	}
 	if len(args) == 1 && args[0] == "--string-facts-io-v1" {
 		return runStringFactsCandidate(ctx, input, output)
 	}

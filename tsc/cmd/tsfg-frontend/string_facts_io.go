@@ -23,19 +23,29 @@ func (r stringFactsReader) Read(p []byte) (int, error) {
 	}
 	return n, err
 }
-func runStringFactsCandidate(ctx context.Context, input io.Reader, output io.Writer) error {
+
+// Bounded read/cancellation semantics are identical for the two explicit versions.
+func readStringFactsCommand(ctx context.Context, input io.Reader) ([]byte, error) {
 	if err := ctx.Err(); err != nil {
-		return stringFactsError("canceled", "before read", err)
+		return nil, stringFactsError("canceled", "before read", err)
 	}
 	data, err := io.ReadAll(io.LimitReader(stringFactsReader{ctx, input}, stringFactsMaxBytes+1))
 	if canceled := ctx.Err(); canceled != nil {
 		if !errors.Is(err, canceled) {
 			err = errors.Join(err, canceled)
 		}
-		return stringFactsError("canceled", "after read", err)
+		return nil, stringFactsError("canceled", "after read", err)
 	}
 	if err != nil {
-		return stringFactsError("io", "request read", err)
+		return nil, stringFactsError("io", "request read", err)
+	}
+	return data, nil
+}
+
+func runStringFactsCandidate(ctx context.Context, input io.Reader, output io.Writer) error {
+	data, err := readStringFactsCommand(ctx, input)
+	if err != nil {
+		return err
 	}
 	r, err := decodeStringFactsRequest(data)
 	if err != nil {
@@ -59,6 +69,11 @@ func runStringFactsCandidate(ctx context.Context, input io.Reader, output io.Wri
 	packet := stringFactsPackage{Family: "tsfg.string-facts-package-candidate", Version: 1, SchemaHash: stringFactsSchema,
 		RequestID: "sha256:" + stringFactsSHA(append([]byte("tsfg.string-facts.request.v1\x00"), data...)),
 		PackageID: "sha256:" + stringFactsSHA(append([]byte("tsfg.string-facts.package.v1\x00"+stringFactsSchema+"\x00"), payloadBytes...)), Payload: payload}
+	return publishStringFactsPacket(ctx, output, packet)
+}
+
+// Canonicalize and publish once; a failed/short Write is reported, never retried.
+func publishStringFactsPacket(ctx context.Context, output io.Writer, packet any) error {
 	encoded, err := stringFactsCanonical(packet)
 	if err != nil {
 		return err

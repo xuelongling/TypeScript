@@ -128,6 +128,11 @@ func stringFactsSHA(data []byte) string {
 	return hex.EncodeToString(sum[:])
 }
 func decodeStringFactsRequest(data []byte) (stringFactsRequest, error) {
+	return decodeStringFactsVersionRequest(data, 1, stringFactsSchema, stringFactsSchemaBytes)
+}
+
+// Both explicit versions share the same closed input DTO and strict decoding rules.
+func decodeStringFactsVersionRequest(data []byte, version int, schema string, schemaBytes []byte) (stringFactsRequest, error) {
 	var r stringFactsRequest
 	if err := genericJSONPreflight(data, stringFactsPolicy(false)); err != nil {
 		return r, stringFactsJSONError(err)
@@ -153,7 +158,7 @@ func decodeStringFactsRequest(data []byte) (stringFactsRequest, error) {
 	if !bytes.Equal(encoded, raw) {
 		return r, stringFactsError("schema", "request exact fields and types", nil)
 	}
-	if r.Family != "tsfg.string-facts-request-candidate" || r.Version != 1 || "sha256:"+stringFactsSHA(stringFactsSchemaBytes) != stringFactsSchema {
+	if r.Family != "tsfg.string-facts-request-candidate" || r.Version != version || "sha256:"+stringFactsSHA(schemaBytes) != schema {
 		return r, stringFactsError("schema", "request family/version or embedded schema", nil)
 	}
 	return r, nil

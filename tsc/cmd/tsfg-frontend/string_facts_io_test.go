@@ -104,7 +104,7 @@ func TestStringFactsIOCancellationAndDispatch(t *testing.T) {
 			t.Fatal("one-shot post-write cancellation")
 		}
 	})
-	for _, args := range [][]string{{"--string-facts-io-v1", "extra"}, {"--string-facts-io-v2"}} {
+	for _, args := range [][]string{{"--string-facts-io-v1", "extra"}, {"--string-facts-io-v3"}} {
 		t.Run(args[0]+"invalidArgs", func(t *testing.T) {
 			r := &stringReaderProbe24{input: bytes.NewReader(input)}
 			w := &stringWriterProbe24{}
