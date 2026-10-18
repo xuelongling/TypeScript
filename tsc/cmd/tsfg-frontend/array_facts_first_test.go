@@ -14,9 +14,9 @@ import (
 	tsjson "github.com/microsoft/typescript-go/internal/json"
 )
 
-const arrayFirstOracleSHA25 = "877483469d61070970cd48a9053fb2efd2028f45d934fda326c43e4b272c1b9d"
-const arrayFirstSchemaSHA25 = "fbde82e304c30461ab69a2bb0c4d488fdeea0500c8d7d3f5dcda3764b03ec47e"
-const arrayFirstDtsSHA25 = "04a97584458d9212250e94d4fc517264c277a9ce635fbb14de11452194fd76b2"
+const arrayFirstOracleSHA25 = "046084092c8c963870fa4ebb4984abcec0b793b5bbe309cfd1d2d4bd1129c0e0"
+const arrayFirstSchemaSHA25 = "123a17462a14ed7a64e4f70fcd760a009e26540e2a73bbaeb906e61cc2cff89d"
+const arrayFirstDtsSHA25 = "6420493372913f019f64b094e181d1346afcca79e720ea85dc5e5026e03ba01e"
 
 type arrayFirstRange25 struct {
 	Start int `json:"start"`
@@ -35,6 +35,8 @@ type arrayFirstValue25 struct {
 	Elements       []arrayFirstValue25 `json:"elements"`
 	Array          *arrayFirstValue25  `json:"array"`
 	Index          *arrayFirstValue25  `json:"index"`
+	Property       string              `json:"property"`
+	NameRange      arrayFirstRange25   `json:"nameRange"`
 }
 type arrayFirstBinding25 struct {
 	ID                     string             `json:"id"`
@@ -47,12 +49,37 @@ type arrayFirstBinding25 struct {
 	AnnotationRange        *arrayFirstRange25 `json:"annotationRange"`
 	ElementAnnotationRange *arrayFirstRange25 `json:"elementAnnotationRange"`
 }
+type arrayFirstParameter25 struct {
+	ID               string            `json:"id"`
+	Name             string            `json:"name"`
+	Kind             string            `json:"kind"`
+	DeclaredType     string            `json:"declaredType"`
+	Writable         bool              `json:"writable"`
+	DeclarationRange arrayFirstRange25 `json:"declarationRange"`
+	NameRange        arrayFirstRange25 `json:"nameRange"`
+	AnnotationRange  arrayFirstRange25 `json:"annotationRange"`
+}
+type arrayFirstProperty25 struct {
+	ID               string            `json:"id"`
+	Kind             string            `json:"kind"`
+	Name             string            `json:"name"`
+	OwnerType        string            `json:"ownerType"`
+	OfficialType     string            `json:"officialType"`
+	WriteType        string            `json:"writeType"`
+	SourcePath       string            `json:"sourcePath"`
+	DeclarationRange arrayFirstRange25 `json:"declarationRange"`
+	NameRange        arrayFirstRange25 `json:"nameRange"`
+	TypeRange        arrayFirstRange25 `json:"typeRange"`
+}
 type arrayFirstStatement25 struct {
-	Kind        string             `json:"kind"`
-	Binding     string             `json:"binding"`
-	Range       arrayFirstRange25  `json:"range"`
-	Initializer *arrayFirstValue25 `json:"initializer"`
-	Value       *arrayFirstValue25 `json:"value"`
+	ExpressionRange arrayFirstRange25  `json:"expressionRange"`
+	OperatorRange   arrayFirstRange25  `json:"operatorRange"`
+	Target          *arrayFirstValue25 `json:"target"`
+	Kind            string             `json:"kind"`
+	Binding         string             `json:"binding"`
+	Range           arrayFirstRange25  `json:"range"`
+	Initializer     *arrayFirstValue25 `json:"initializer"`
+	Value           *arrayFirstValue25 `json:"value"`
 }
 type arrayFirstFunction25 struct {
 	ID                    string                  `json:"id"`
@@ -62,7 +89,7 @@ type arrayFirstFunction25 struct {
 	NameRange             arrayFirstRange25       `json:"nameRange"`
 	ReturnType            string                  `json:"returnType"`
 	ReturnAnnotationRange arrayFirstRange25       `json:"returnAnnotationRange"`
-	Parameters            []json.RawMessage       `json:"parameters"`
+	Parameters            []arrayFirstParameter25 `json:"parameters"`
 	Bindings              []arrayFirstBinding25   `json:"bindings"`
 	Body                  []arrayFirstStatement25 `json:"body"`
 }
@@ -91,9 +118,10 @@ type arrayFirstPackage25 struct {
 	RequestID  string `json:"requestId"`
 	PackageID  string `json:"packageId"`
 	Payload    struct {
-		Functions []arrayFirstFunction25 `json:"functions"`
-		Types     []arrayFirstType25     `json:"types"`
-		Exports   []struct {
+		ArrayLength arrayFirstProperty25   `json:"arrayLength"`
+		Functions   []arrayFirstFunction25 `json:"functions"`
+		Types       []arrayFirstType25     `json:"types"`
+		Exports     []struct {
 			Name       string `json:"name"`
 			FunctionID string `json:"functionId"`
 		} `json:"exports"`
@@ -118,7 +146,7 @@ func arrayFirstCanonical25(t *testing.T, value any) []byte {
 }
 func arrayFirstFixture25(t *testing.T) []arrayFirstCase25 {
 	t.Helper()
-	data, err := os.ReadFile("testdata/array-facts-v1/oracle.json")
+	data, err := os.ReadFile("testdata/array-facts-v2/oracle.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,8 +161,8 @@ func arrayFirstFixture25(t *testing.T) []arrayFirstCase25 {
 	if err := json.Unmarshal(data, &oracle); err != nil {
 		t.Fatal(err)
 	}
-	if oracle.Family != "tsfg.r03.array-facts-whole-oracle" || oracle.Version != 1 || len(oracle.Cases) != 4 {
-		t.Fatal("complete independent four-case oracle")
+	if oracle.Family != "tsfg.r03.array-facts-whole-oracle" || oracle.Version != 2 || len(oracle.Cases) != 8 {
+		t.Fatal("complete independent eight-case oracle")
 	}
 	for _, tc := range oracle.Cases {
 		for _, item := range []struct {
@@ -164,11 +192,11 @@ func arrayFirstDecode25(t *testing.T, tc arrayFirstCase25) (request, arrayFirstP
 	if json.Unmarshal([]byte(tc.RequestText), &envelope) != nil || json.Unmarshal([]byte(tc.PackageText), &packet) != nil {
 		t.Fatal("complete request/package decode")
 	}
-	if envelope.Family != "tsfg.array-facts-request-candidate" || envelope.Version != 1 || packet.Family != "tsfg.array-facts-package-candidate" || packet.Version != 1 || packet.SchemaHash != "sha256:"+arrayFirstSchemaSHA25 {
+	if envelope.Family != "tsfg.array-facts-request-candidate" || envelope.Version != 2 || packet.Family != "tsfg.array-facts-package-candidate" || packet.Version != 2 || packet.SchemaHash != "sha256:"+arrayFirstSchemaSHA25 {
 		t.Fatal("frozen family/version/schema")
 	}
 	r := envelope.Input
-	if len(r.Files) != 2 || len(r.Declarations.Paths) != 1 || r.Declarations.Version != "minimal-arrays-v1" || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS {
+	if len(r.Files) != 2 || len(r.Declarations.Paths) != 1 || r.Declarations.Version != "minimal-arrays-v2" || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS {
 		t.Fatal("closed request profile")
 	}
 	for _, file := range r.Files {
@@ -183,50 +211,28 @@ func arrayFirstDecode25(t *testing.T, tc arrayFirstCase25) (request, arrayFirstP
 	if json.Unmarshal([]byte(tc.PackageText), &whole) != nil {
 		t.Fatal("payload decode")
 	}
-	if packet.RequestID != "sha256:"+arrayFirstHash25(append([]byte("tsfg.array-facts.request.v1\x00"), []byte(tc.RequestText)...)) || packet.PackageID != "sha256:"+arrayFirstHash25(append([]byte("tsfg.array-facts.package.v1\x00"+packet.SchemaHash+"\x00"), arrayFirstCanonical25(t, whole["payload"])...)) {
+	if packet.RequestID != "sha256:"+arrayFirstHash25(append([]byte("tsfg.array-facts.request.v2\x00"), []byte(tc.RequestText)...)) || packet.PackageID != "sha256:"+arrayFirstHash25(append([]byte("tsfg.array-facts.package.v2\x00"+packet.SchemaHash+"\x00"), arrayFirstCanonical25(t, whole["payload"])...)) {
 		t.Fatal("independent whole identity preimages")
 	}
 	return r, packet
 }
 
-// Root retained the original natural RED before production. This final regression
-// preserves that precise old-path capability boundary; the new command is separate.
-func TestArrayFactsV1LegacyProjectionBoundary(t *testing.T) {
-	cases := arrayFirstFixture25(t)
-	for _, tc := range cases {
-		if !t.Run(tc.Name+"/officialCompleteControls", func(t *testing.T) {
-			r, packet := arrayFirstDecode25(t, tc)
-			arrayFirstOfficial25(t, r, packet)
-		}) {
-			return
-		}
+// Root preserved the v1 causal RED before the atomic v2 adoption. The active
+// command rejects its original envelope rather than providing a compatibility path.
+func TestArrayFactsV2RejectsV1Request(t *testing.T) {
+	input, err := os.ReadFile("testdata/array-dense-v2/first-v1-request.json")
+	if err != nil || len(input) != 935 || arrayFirstHash25(input) != "e18ca6f7ed8c6b5da40e6e57b5ec137218d25ee2067b2e1c38b2f9a5c0ed78aa" {
+		t.Fatalf("frozen baseline request: %v", err)
 	}
-	r, _ := arrayFirstDecode25(t, cases[0])
-	if cases[0].Name != "full-fresh-aliases" {
-		t.Fatal("legacy causal input order changed")
-	}
-	// Legacy admission accepts this DTS content, but its ordinary projection lacks Array.
-	// Keep the same exact source/DTS bytes; this control uses the old admitted profile name.
-	r.Declarations.Version = "minimal-scalars-v2"
-	if !valid(r) {
-		t.Fatal("legacy control request must pass existing admission before causal projection")
-	}
-	got := analyzeWithProjection(t.Context(), r, nil)
-	encoded, err := json.Marshal(got)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("TSFG_ARRAY_FACTS_V1_LEGACY_ACTUAL_BASE64=%s", base64.StdEncoding.EncodeToString(encoded))
-	if got.Status != "error" || len(got.Diagnostics) != 1 {
-		t.Fatalf("legacy capability boundary changed: %+v", got)
-	}
-	d := got.Diagnostics[0]
-	if d.Code != "r02b-d-unsupported" || d.RuleID != "r01-ts-baseline" || len(d.RuleIDs) != 1 || d.RuleIDs[0] != "r01-ts-baseline" || d.Phase != "capability" || d.Category != "unsupported" || d.Severity != "error" || d.File != r.RootFile || d.Range != (span{Start: 68, End: 73}) || d.Primary.Start != 68 || d.Primary.End != 73 || d.UpstreamCode != 0 {
-		t.Fatalf("exact old-path f64[] diagnostic changed: %+v", d)
+	var output arrayBoundaryWriter25
+	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v2"}, bytes.NewReader(input), &output)
+	owned := arrayBoundaryFailure25(t, err)
+	if owned.Code != "r03-array-facts-schema" || owned.Phase != "input" || owned.RuleID != "r01-input-boundary" || output.calls != 0 || output.Len() != 0 {
+		t.Fatalf("v1 request must fail at the v2 schema before publication: %+v", owned)
 	}
 }
 
-func TestArrayFactsV1CommandWholeFrozenPackage(t *testing.T) {
+func TestArrayFactsV2CommandWholeFrozenPackage(t *testing.T) {
 	for _, tc := range arrayFirstFixture25(t) {
 		t.Run(tc.Name, func(t *testing.T) {
 			r, packet := arrayFirstDecode25(t, tc)
@@ -234,11 +240,11 @@ func TestArrayFactsV1CommandWholeFrozenPackage(t *testing.T) {
 			input := []byte(tc.RequestText)
 			before := bytes.Clone(input)
 			var output bytes.Buffer
-			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v1"}, bytes.NewReader(input), &output)
+			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v2"}, bytes.NewReader(input), &output)
 			if tc.Name == "full-fresh-aliases" {
-				t.Logf("TSFG_ARRAY_FACTS_V1_ACTUAL_PACKAGE_BASE64=%s", base64.StdEncoding.EncodeToString(output.Bytes()))
+				t.Logf("TSFG_ARRAY_FACTS_V2_ACTUAL_PACKAGE_BASE64=%s", base64.StdEncoding.EncodeToString(output.Bytes()))
 			} else {
-				t.Logf("TSFG_ARRAY_FACTS_V1_CASE_ACTUAL_BASE64 name=%s data=%s", tc.Name, base64.StdEncoding.EncodeToString(output.Bytes()))
+				t.Logf("TSFG_ARRAY_FACTS_V2_CASE_ACTUAL_BASE64 name=%s data=%s", tc.Name, base64.StdEncoding.EncodeToString(output.Bytes()))
 			}
 			if !bytes.Equal(input, before) {
 				t.Fatal("caller input changed")
@@ -252,7 +258,7 @@ func TestArrayFactsV1CommandWholeFrozenPackage(t *testing.T) {
 			if !bytes.Equal(output.Bytes(), []byte(tc.PackageText)) {
 				t.Fatalf("whole independent package mismatch for %s\nactual=%s\nexpected=%s", tc.Name, output.Bytes(), tc.PackageText)
 			}
-			t.Logf("TSFG_ARRAY_FACTS_V1_WHOLE_PASS name=%s bytes=%d sha256=%s", tc.Name, output.Len(), arrayFirstHash25(output.Bytes()))
+			t.Logf("TSFG_ARRAY_FACTS_V2_WHOLE_PASS name=%s bytes=%d sha256=%s", tc.Name, output.Len(), arrayFirstHash25(output.Bytes()))
 		})
 	}
 }

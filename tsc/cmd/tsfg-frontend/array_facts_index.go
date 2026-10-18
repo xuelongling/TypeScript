@@ -9,7 +9,7 @@ import (
 
 // The official parser has already validated this NumericLiteral token's grammar.
 // Exponents are compared as digit strings; powers larger than the u32 domain are never built.
-func arrayFactsIndex(token string) (string, bool) {
+func arrayFactsUnsigned(token string, maximum uint64) (string, bool) {
 	text := strings.ReplaceAll(token, "_", "")
 	if len(text) >= 2 && text[0] == '0' {
 		base, width := 0, 0
@@ -39,7 +39,7 @@ func arrayFactsIndex(token string) (string, bool) {
 				return "", false
 			}
 			value, err := strconv.ParseUint(digits, base, 32)
-			if err != nil || value > 4294967294 {
+			if err != nil || value > maximum {
 				return "", false
 			}
 			return strconv.FormatUint(value, 10), true
@@ -81,7 +81,7 @@ func arrayFactsIndex(token string) (string, bool) {
 	}
 	digits := coefficient + strings.Repeat("0", scale)
 	value, err := strconv.ParseUint(digits, 10, 32)
-	if err != nil || value > 4294967294 {
+	if err != nil || value > maximum {
 		return "", false
 	}
 	return strconv.FormatUint(value, 10), true

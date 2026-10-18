@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Private ArrayFacts v1 owns its complete wire values; no legacy DTO changes.
+// Private ArrayFacts v2 owns its complete wire values; no legacy DTO changes.
 package main
 
 import (
@@ -15,13 +15,13 @@ import (
 )
 
 const arrayFactsMaxBytes = 2097152
-const arrayFactsSchema = "sha256:fbde82e304c30461ab69a2bb0c4d488fdeea0500c8d7d3f5dcda3764b03ec47e"
-const arrayFactsDtsSHA = "04a97584458d9212250e94d4fc517264c277a9ce635fbb14de11452194fd76b2"
+const arrayFactsSchema = "sha256:123a17462a14ed7a64e4f70fcd760a009e26540e2a73bbaeb906e61cc2cff89d"
+const arrayFactsDtsSHA = "6420493372913f019f64b094e181d1346afcca79e720ea85dc5e5026e03ba01e"
 
-//go:embed testdata/array-facts-v1/schema.json
+//go:embed testdata/array-facts-v2/schema.json
 var arrayFactsSchemaBytes []byte
 
-//go:embed testdata/array-facts-v1/minimal-arrays-v1.d.ts
+//go:embed testdata/array-facts-v2/minimal-arrays-v2.d.ts
 var arrayFactsDtsBytes []byte
 
 type arrayFactsConfig struct {
@@ -77,6 +77,28 @@ type arrayFactsBinding struct {
 	AnnotationRange        *span  `json:"annotationRange"`
 	ElementAnnotationRange *span  `json:"elementAnnotationRange"`
 }
+type arrayFactsParameter struct {
+	ID               string `json:"id"`
+	Name             string `json:"name"`
+	Kind             string `json:"kind"`
+	DeclaredType     string `json:"declaredType"`
+	Writable         bool   `json:"writable"`
+	DeclarationRange span   `json:"declarationRange"`
+	NameRange        span   `json:"nameRange"`
+	AnnotationRange  span   `json:"annotationRange"`
+}
+type arrayFactsLengthProperty struct {
+	ID               string `json:"id"`
+	Kind             string `json:"kind"`
+	Name             string `json:"name"`
+	OwnerType        string `json:"ownerType"`
+	OfficialType     string `json:"officialType"`
+	WriteType        string `json:"writeType"`
+	SourcePath       string `json:"sourcePath"`
+	DeclarationRange span   `json:"declarationRange"`
+	NameRange        span   `json:"nameRange"`
+	TypeRange        span   `json:"typeRange"`
+}
 type arrayFactsValue struct {
 	Kind           string             `json:"kind"`
 	Type           string             `json:"type,omitempty"`
@@ -91,12 +113,24 @@ type arrayFactsValue struct {
 	Array          *arrayFactsValue   `json:"array,omitempty"`
 	Index          *arrayFactsValue   `json:"index,omitempty"`
 }
+type arrayFactsTarget struct {
+	Kind      string           `json:"kind"`
+	Type      string           `json:"type"`
+	Range     span             `json:"range"`
+	Array     *arrayFactsValue `json:"array"`
+	Index     *arrayFactsValue `json:"index,omitempty"`
+	Property  string           `json:"property,omitempty"`
+	NameRange *span            `json:"nameRange,omitempty"`
+}
 type arrayFactsStatement struct {
-	Kind        string           `json:"kind"`
-	Range       span             `json:"range"`
-	Binding     string           `json:"binding,omitempty"`
-	Initializer *arrayFactsValue `json:"initializer,omitempty"`
-	Value       *arrayFactsValue `json:"value,omitempty"`
+	ExpressionRange *span             `json:"expressionRange,omitempty"`
+	OperatorRange   *span             `json:"operatorRange,omitempty"`
+	Target          *arrayFactsTarget `json:"target,omitempty"`
+	Kind            string            `json:"kind"`
+	Range           span              `json:"range"`
+	Binding         string            `json:"binding,omitempty"`
+	Initializer     *arrayFactsValue  `json:"initializer,omitempty"`
+	Value           *arrayFactsValue  `json:"value,omitempty"`
 }
 type arrayFactsFunction struct {
 	ID                    string                `json:"id"`
@@ -106,7 +140,7 @@ type arrayFactsFunction struct {
 	NameRange             span                  `json:"nameRange"`
 	ReturnType            string                `json:"returnType"`
 	ReturnAnnotationRange span                  `json:"returnAnnotationRange"`
-	Parameters            []string              `json:"parameters"`
+	Parameters            []arrayFactsParameter `json:"parameters"`
 	Bindings              []arrayFactsBinding   `json:"bindings"`
 	Body                  []arrayFactsStatement `json:"body"`
 }
@@ -115,16 +149,17 @@ type arrayFactsExport struct {
 	FunctionID string `json:"functionId"`
 }
 type arrayFactsPayload struct {
-	SourceRoot   string                 `json:"sourceRoot"`
-	RootFile     string                 `json:"rootFile"`
-	PositionUnit string                 `json:"positionUnit"`
-	Config       arrayFactsConfig       `json:"config"`
-	Declarations arrayFactsDeclarations `json:"declarations"`
-	Files        []arrayFactsOwnedFile  `json:"files"`
-	Types        []arrayFactsType       `json:"types"`
-	Functions    []arrayFactsFunction   `json:"functions"`
-	Exports      []arrayFactsExport     `json:"exports"`
-	Diagnostics  []diagnostic           `json:"diagnostics"`
+	ArrayLength  arrayFactsLengthProperty `json:"arrayLength"`
+	SourceRoot   string                   `json:"sourceRoot"`
+	RootFile     string                   `json:"rootFile"`
+	PositionUnit string                   `json:"positionUnit"`
+	Config       arrayFactsConfig         `json:"config"`
+	Declarations arrayFactsDeclarations   `json:"declarations"`
+	Files        []arrayFactsOwnedFile    `json:"files"`
+	Types        []arrayFactsType         `json:"types"`
+	Functions    []arrayFactsFunction     `json:"functions"`
+	Exports      []arrayFactsExport       `json:"exports"`
+	Diagnostics  []diagnostic             `json:"diagnostics"`
 }
 type arrayFactsPackage struct {
 	Family     string            `json:"family"`
@@ -197,7 +232,7 @@ func decodeArrayFactsRequest(data []byte) (arrayFactsRequest, error) {
 	if err != nil {
 		return r, err
 	}
-	if !bytes.Equal(encoded, raw) || r.Family != "tsfg.array-facts-request-candidate" || r.Version != 1 || "sha256:"+arrayFactsSHA(arrayFactsSchemaBytes) != arrayFactsSchema {
+	if !bytes.Equal(encoded, raw) || r.Family != "tsfg.array-facts-request-candidate" || r.Version != 2 || "sha256:"+arrayFactsSHA(arrayFactsSchemaBytes) != arrayFactsSchema {
 		return r, arrayFactsError("schema", "exact fields/types/family/version/embedded schema", nil)
 	}
 	return r, nil

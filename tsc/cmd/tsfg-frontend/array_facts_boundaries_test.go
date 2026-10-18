@@ -95,7 +95,7 @@ func arrayBoundaryFailure25(t *testing.T, err error) *arrayFactsFailure {
 func arrayBoundaryCall25(t *testing.T, input []byte) ([]byte, *arrayFactsFailure) {
 	t.Helper()
 	var output arrayBoundaryWriter25
-	err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v1"}, bytes.NewReader(input), &output)
+	err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v2"}, bytes.NewReader(input), &output)
 	if err == nil {
 		return append([]byte(nil), output.Bytes()...), nil
 	}
@@ -131,7 +131,7 @@ func TestArrayFactsBoundaryWireAndClosure(t *testing.T) {
 		change func(map[string]any)
 	}{
 		{"unknownTop", func(v map[string]any) { v["extra"] = true }},
-		{"version", func(v map[string]any) { v["version"] = 2 }},
+		{"version", func(v map[string]any) { v["version"] = 1 }},
 		{"foreignFamily", func(v map[string]any) { v["family"] = "foreign" }},
 		{"unknownInput", func(v map[string]any) { v["input"].(map[string]any)["extra"] = true }},
 		{"profile", func(v map[string]any) {
@@ -270,7 +270,7 @@ func TestArrayFactsBoundaryIOCancellationAndSelection(t *testing.T) {
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 		r, w := &arrayBoundaryReader25{input: bytes.NewReader(input)}, &arrayBoundaryWriter25{}
-		err := runFrontendCommand(ctx, []string{"--array-facts-io-v1"}, r, w)
+		err := runFrontendCommand(ctx, []string{"--array-facts-io-v2"}, r, w)
 		if !errors.Is(err, context.Canceled) || r.calls != 0 || w.calls != 0 {
 			t.Fatalf("pre-cancel: %v", err)
 		}
@@ -279,28 +279,28 @@ func TestArrayFactsBoundaryIOCancellationAndSelection(t *testing.T) {
 		ctx, cancel := context.WithCancel(t.Context())
 		defer cancel()
 		r, w := &arrayBoundaryReader25{input: bytes.NewReader(input), cancel: cancel}, &arrayBoundaryWriter25{}
-		err := runFrontendCommand(ctx, []string{"--array-facts-io-v1"}, r, w)
+		err := runFrontendCommand(ctx, []string{"--array-facts-io-v2"}, r, w)
 		if !errors.Is(err, context.Canceled) || w.calls != 0 {
 			t.Fatalf("read cancellation: %v", err)
 		}
 	})
 	t.Run("readFailure", func(t *testing.T) {
 		w := &arrayBoundaryWriter25{}
-		err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v1"}, &arrayBoundaryReader25{err: sentinel}, w)
+		err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v2"}, &arrayBoundaryReader25{err: sentinel}, w)
 		if !errors.Is(err, sentinel) || w.calls != 0 {
 			t.Fatal("reader error identity/zero write")
 		}
 	})
 	t.Run("writeFailure", func(t *testing.T) {
 		w := &arrayBoundaryWriter25{err: sentinel}
-		err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v1"}, bytes.NewReader(input), w)
+		err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v2"}, bytes.NewReader(input), w)
 		if !errors.Is(err, sentinel) || w.calls != 1 {
 			t.Fatal("writer error identity/single attempt")
 		}
 	})
 	t.Run("shortWrite", func(t *testing.T) {
 		w := &arrayBoundaryWriter25{short: true}
-		err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v1"}, bytes.NewReader(input), w)
+		err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v2"}, bytes.NewReader(input), w)
 		if !errors.Is(err, io.ErrShortWrite) || w.calls != 1 {
 			t.Fatal("short write retried or hidden")
 		}
@@ -309,12 +309,12 @@ func TestArrayFactsBoundaryIOCancellationAndSelection(t *testing.T) {
 		ctx, cancel := context.WithCancel(t.Context())
 		defer cancel()
 		w := &arrayBoundaryWriter25{cancel: cancel}
-		err := runFrontendCommand(ctx, []string{"--array-facts-io-v1"}, bytes.NewReader(input), w)
+		err := runFrontendCommand(ctx, []string{"--array-facts-io-v2"}, bytes.NewReader(input), w)
 		if !errors.Is(err, context.Canceled) || w.calls != 1 || w.Len() == 0 {
 			t.Fatal("completed sink write must remain recorded")
 		}
 	})
-	for _, args := range [][]string{{"--array-facts-io-v1", "extra"}, {"--array-facts-io-v2"}} {
+	for _, args := range [][]string{{"--array-facts-io-v2", "extra"}, {"--array-facts-io-v1"}} {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
 			r, w := &arrayBoundaryReader25{input: bytes.NewReader(input)}, &arrayBoundaryWriter25{}
 			if err := runFrontendCommand(t.Context(), args, r, w); err == nil || r.calls != 0 || w.calls != 0 {

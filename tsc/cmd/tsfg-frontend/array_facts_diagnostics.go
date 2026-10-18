@@ -24,9 +24,17 @@ func arrayFactsDiagnostics(kind, detail string, items []diagnostic) *arrayFactsF
 	return failure
 }
 func arrayFactsCapability(file *ast.SourceFile, node *ast.Node, detail string) error {
+	if node == nil {
+		node = file.AsNode()
+	}
 	where := expressionOffset(file, node)
 	item := diagnostic{Code: "r03-array-facts-capability", RuleID: "r01-ts-baseline", RuleIDs: []string{"r01-ts-baseline"}, Category: "unsupported", Phase: "capability", Severity: "error", File: file.FileName(), Range: where, Primary: sourcePosition(file, scanner.SkipTrivia(file.Text(), node.Pos()), node.End())}
 	return arrayFactsDiagnostics("capability", detail, []diagnostic{item})
+}
+func arrayFactsDensity(file *ast.SourceFile, node *ast.Node, detail string) error {
+	where := expressionOffset(file, node)
+	item := diagnostic{Code: "r03-array-facts-density", RuleID: "r01-ts-baseline", RuleIDs: []string{"r01-ts-baseline"}, Category: "error", Phase: "semantic", Severity: "error", File: file.FileName(), Range: where, Primary: sourcePosition(file, scanner.SkipTrivia(file.Text(), node.Pos()), node.End())}
+	return arrayFactsDiagnostics("density", detail, []diagnostic{item})
 }
 func arrayFactsOfficialDiagnostics(ctx context.Context, program *compiler.Program, root string) error {
 	groups := []struct {
