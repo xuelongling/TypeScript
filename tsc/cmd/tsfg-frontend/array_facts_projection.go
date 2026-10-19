@@ -12,6 +12,7 @@ import (
 )
 
 type arrayFactsProjection struct {
+	headers     map[*ast.Symbol]*arrayFactsHeader
 	ctx         context.Context
 	file        *ast.SourceFile
 	check       *checker.Checker
@@ -70,6 +71,21 @@ func arrayFactsSourceCounts(file *ast.SourceFile) error {
 		if decl.Body == nil || decl.Body.Kind != ast.KindBlock {
 			continue
 		}
+		calls := 0
+		var countCalls func(*ast.Node) bool
+		countCalls = func(node *ast.Node) bool {
+			if node.Kind == ast.KindCallExpression {
+				calls++
+			}
+			if calls > 32 {
+				return true
+			}
+			return node.ForEachChild(countCalls)
+		}
+		decl.Body.ForEachChild(countCalls)
+		if calls > 32 {
+			return arrayFactsError("limit", "raw call nodes per function", nil)
+		}
 		body := decl.Body.AsBlock().Statements.Nodes
 		if len(body) > 50 {
 			return arrayFactsError("limit", "raw body statements per function", nil)
@@ -79,7 +95,7 @@ func arrayFactsSourceCounts(file *ast.SourceFile) error {
 			if statement.Kind == ast.KindExpressionStatement {
 				mutations++
 				if mutations > 32 {
-					return arrayFactsError("limit", "raw mutation statements per function", nil)
+					return arrayFactsError("limit", "raw effect expression statements per function", nil)
 				}
 			}
 			if statement.Kind != ast.KindVariableStatement {
@@ -178,26 +194,43 @@ func projectArrayFacts(ctx context.Context, r request, input arrayFactsInput) (a
 	}
 	owners := map[*ast.Symbol]string{}
 	names := map[string]bool{}
+	p.headers = map[*ast.Symbol]*arrayFactsHeader{}
+	headers := []*arrayFactsHeader{}
+	expectedExports := 0
 	for _, node := range file.Statements.Nodes {
 		if err := ctx.Err(); err != nil {
-			return empty, arrayFactsError("canceled", "projection", err)
+			return empty, arrayFactsError("canceled", "function header inventory", err)
 		}
-		fn, symbol, err := p.function(node)
+		header, symbol, err := p.functionHeader(node)
 		if err != nil {
 			return empty, err
 		}
+		fn := header.function
 		if names[fn.Name] || owners[symbol] != "" {
 			return empty, arrayFactsCapability(file, node, "unique function declaration owner")
 		}
-		names[fn.Name], owners[symbol] = true, fn.ID
+		names[fn.Name], owners[symbol], p.headers[symbol] = true, fn.ID, header
+		headers = append(headers, header)
+		if node.ModifierFlags() == ast.ModifierFlagsExport {
+			expectedExports++
+		}
+	}
+	for _, header := range headers {
+		fn, err := p.function(header)
+		if err != nil {
+			return empty, err
+		}
 		payload.Functions = append(payload.Functions, fn)
+	}
+	if err := p.acyclic(headers); err != nil {
+		return empty, err
 	}
 	module := file.AsNode().Symbol()
 	if module == nil {
 		return empty, arrayFactsCapability(file, file.AsNode(), "actual external module symbol required")
 	}
 	exports := check.GetExportsOfModule(module)
-	if len(exports) != len(owners) {
+	if expectedExports == 0 || len(exports) != expectedExports {
 		return empty, arrayFactsCapability(file, file.AsNode(), "complete direct function exports required")
 	}
 	seen := map[string]bool{}
@@ -211,7 +244,7 @@ func projectArrayFacts(ctx context.Context, r request, input arrayFactsInput) (a
 		}
 		actual := check.GetSymbolAtLocation(node.Name())
 		id := owners[actual]
-		if id == "" || seen[id] || exported != actual && actual.ExportSymbol != exported {
+		if id == "" || seen[id] || node.ModifierFlags() != ast.ModifierFlagsExport || exported != actual && actual.ExportSymbol != exported {
 			return empty, arrayFactsCapability(file, node, "export joins its actual owned declaration")
 		}
 		seen[id] = true

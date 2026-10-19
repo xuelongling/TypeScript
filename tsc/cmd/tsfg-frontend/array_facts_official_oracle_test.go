@@ -269,5 +269,5 @@ func arrayFirstOfficial25(t *testing.T, r request, packet arrayFirstPackage25) {
 			t.Fatal("original direct export/definition/binding join")
 		}
 	}
-	t.Logf("TSFG_ARRAY_FACTS_V2_OFFICIAL_PASS functions=%d params_locals_mutations_property_ranges=complete allocationSites=%d diagnostics=4x0 fullClosure=%v", len(owners), len(literalSites), consumed)
+	t.Logf("TSFG_ARRAY_FACTS_OFFICIAL_PASS functions=%d params_locals_mutations_property_ranges=complete allocationSites=%d diagnostics=4x0 fullClosure=%v", len(owners), len(literalSites), consumed)
 }

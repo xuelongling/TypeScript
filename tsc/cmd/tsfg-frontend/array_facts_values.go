@@ -9,11 +9,15 @@ import (
 	"github.com/microsoft/typescript-go/internal/checker"
 )
 
-func (p *arrayFactsProjection) reference(node *ast.Node, bindings map[*ast.Symbol]arrayFactsBinding) (*arrayFactsValue, error) {
+func (p *arrayFactsProjection) reference(node *ast.Node, state *arrayFactsFunctionState) (*arrayFactsValue, error) {
 	if node == nil || node.Kind != ast.KindIdentifier {
 		return nil, arrayFactsCapability(p.file, node, "direct prior Array binding required")
 	}
-	binding, ok := bindings[p.check.GetSymbolAtLocation(node)]
+	symbol := p.check.GetSymbolAtLocation(node)
+	binding, ok := state.bindings[symbol]
+	if parameter, found := state.parameters[symbol]; found && parameter.DeclaredType == "array.f64" {
+		binding.ID, ok = parameter.ID, true
+	}
 	if !ok || !p.arrayType(p.check.GetTypeAtLocation(node), false) {
 		return nil, arrayFactsCapability(p.file, node, "original prior f64 Array symbol/use type required")
 	}
@@ -100,7 +104,7 @@ func (p *arrayFactsProjection) read(node *ast.Node, state *arrayFactsFunctionSta
 	if access.QuestionDotToken != nil {
 		return nil, arrayFactsCapability(p.file, node, "ordinary Array element access required")
 	}
-	array, err := p.reference(access.Expression, state.bindings)
+	array, err := p.reference(access.Expression, state)
 	if err != nil {
 		return nil, err
 	}

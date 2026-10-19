@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Private ArrayFacts v2 owns its complete wire values; no legacy DTO changes.
+// Private ArrayFacts v3 owns its complete wire values; no legacy DTO changes.
 package main
 
 import (
@@ -15,10 +15,10 @@ import (
 )
 
 const arrayFactsMaxBytes = 2097152
-const arrayFactsSchema = "sha256:123a17462a14ed7a64e4f70fcd760a009e26540e2a73bbaeb906e61cc2cff89d"
+const arrayFactsSchema = "sha256:69233ab57ae3d991c5806ab282b73c526632d75bb0052ff78049092a45da40e8"
 const arrayFactsDtsSHA = "6420493372913f019f64b094e181d1346afcca79e720ea85dc5e5026e03ba01e"
 
-//go:embed testdata/array-facts-v2/schema.json
+//go:embed testdata/array-facts-v3/schema.json
 var arrayFactsSchemaBytes []byte
 
 //go:embed testdata/array-facts-v2/minimal-arrays-v2.d.ts
@@ -78,14 +78,15 @@ type arrayFactsBinding struct {
 	ElementAnnotationRange *span  `json:"elementAnnotationRange"`
 }
 type arrayFactsParameter struct {
-	ID               string `json:"id"`
-	Name             string `json:"name"`
-	Kind             string `json:"kind"`
-	DeclaredType     string `json:"declaredType"`
-	Writable         bool   `json:"writable"`
-	DeclarationRange span   `json:"declarationRange"`
-	NameRange        span   `json:"nameRange"`
-	AnnotationRange  span   `json:"annotationRange"`
+	ElementAnnotationRange *span  `json:"elementAnnotationRange,omitempty"`
+	ID                     string `json:"id"`
+	Name                   string `json:"name"`
+	Kind                   string `json:"kind"`
+	DeclaredType           string `json:"declaredType"`
+	Writable               bool   `json:"writable"`
+	DeclarationRange       span   `json:"declarationRange"`
+	NameRange              span   `json:"nameRange"`
+	AnnotationRange        span   `json:"annotationRange"`
 }
 type arrayFactsLengthProperty struct {
 	ID               string `json:"id"`
@@ -100,6 +101,9 @@ type arrayFactsLengthProperty struct {
 	TypeRange        span   `json:"typeRange"`
 }
 type arrayFactsValue struct {
+	Callee         string             `json:"callee,omitempty"`
+	CalleeRange    *span              `json:"calleeRange,omitempty"`
+	Arguments      *[]arrayFactsValue `json:"arguments,omitzero"`
 	Kind           string             `json:"kind"`
 	Type           string             `json:"type,omitempty"`
 	Range          span               `json:"range"`
@@ -232,7 +236,7 @@ func decodeArrayFactsRequest(data []byte) (arrayFactsRequest, error) {
 	if err != nil {
 		return r, err
 	}
-	if !bytes.Equal(encoded, raw) || r.Family != "tsfg.array-facts-request-candidate" || r.Version != 2 || "sha256:"+arrayFactsSHA(arrayFactsSchemaBytes) != arrayFactsSchema {
+	if !bytes.Equal(encoded, raw) || r.Family != "tsfg.array-facts-request-candidate" || r.Version != 3 || "sha256:"+arrayFactsSHA(arrayFactsSchemaBytes) != arrayFactsSchema {
 		return r, arrayFactsError("schema", "exact fields/types/family/version/embedded schema", nil)
 	}
 	return r, nil

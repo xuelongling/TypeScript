@@ -32,7 +32,7 @@ func (p *arrayFactsProjection) mutation(statement *ast.Node, state *arrayFactsFu
 		if access.QuestionDotToken != nil {
 			return result, arrayFactsCapability(p.file, left, "ordinary Array element target required")
 		}
-		array, failure := p.reference(access.Expression, state.bindings)
+		array, failure := p.reference(access.Expression, state)
 		if failure != nil {
 			return result, failure
 		}
@@ -50,7 +50,7 @@ func (p *arrayFactsProjection) mutation(statement *ast.Node, state *arrayFactsFu
 		if access.QuestionDotToken != nil || left.Name() == nil || left.Name().Kind != ast.KindIdentifier || left.Name().Text() != "length" {
 			return result, arrayFactsCapability(p.file, left, "ordinary original Array.length target required")
 		}
-		array, failure := p.reference(access.Expression, state.bindings)
+		array, failure := p.reference(access.Expression, state)
 		if failure != nil {
 			return result, failure
 		}
@@ -84,10 +84,30 @@ func (p *arrayFactsProjection) density(facts []arrayFactsStatement, nodes []*ast
 		if err := p.ctx.Err(); err != nil {
 			return arrayFactsError("canceled", "dense source proof", err)
 		}
+		if fact.Value != nil && fact.Value.Kind == "directCall" {
+			// Arguments are atomic and ordered; only passed local roots lose exact length.
+			for _, argument := range *fact.Value.Arguments {
+				if argument.FlowType == "array.f64" {
+					owner := state.owners[argument.Binding]
+					if owner == nil {
+						return arrayFactsError("identity", "projected call owner invariant", nil)
+					}
+					owner.known = false
+				}
+			}
+		}
 		if fact.Kind != "elementAssignment" && fact.Kind != "lengthAssignment" {
 			continue
 		}
 		owner := state.owners[fact.Target.Array.Binding]
+		if owner == nil {
+			return arrayFactsError("identity", "projected mutation owner invariant", nil)
+		}
+		// Parameter slots can alias: even literal resize never establishes an exact length.
+		if owner.parameter {
+			owner.known = false
+			continue
+		}
 		binary := nodes[i].AsExpressionStatement().Expression.AsBinaryExpression()
 		if fact.Kind == "elementAssignment" {
 			if fact.Target.Index.Kind == "reference" {

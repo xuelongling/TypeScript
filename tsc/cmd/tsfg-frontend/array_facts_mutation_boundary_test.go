@@ -53,7 +53,7 @@ func TestArrayDenseMutation25dExcludedGrammar(t *testing.T) {
 		{"optionalParameter", base("i?: u32", decl, "a[0] = 3.0;")},
 		{"defaultParameter", base("i: u32 = 0", decl, "a[0] = 3.0;")},
 		{"restParameter", base("...i: u32[]", decl, "a[0] = 3.0;")},
-		{"arrayParameter", base("foreign: f64[]", decl, "foreign[0] = 3.0;")},
+		{"numberArrayParameter", base("foreign: number[]", decl, "foreign[0] = 3.0;")},
 		{"stringLengthTarget", base("", decl, "a[\"length\"] = 0;")},
 		{"fractionIndex", base("", decl, "a[1.0000000000000001] = 3.0;")},
 		{"fractionLength", base("", decl, "a.length = 1.0000000000000001;")},
@@ -142,7 +142,7 @@ func TestArrayDenseMutation25dSourceBudgets(t *testing.T) {
 			input := arrayBoundarySource25(t, source)
 			arrayDomainOfficialZero25(t, input)
 			var output arrayBoundaryWriter25
-			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v2"}, bytes.NewReader(input), &output)
+			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v3"}, bytes.NewReader(input), &output)
 			if !tc.accept {
 				owned := arrayBoundaryFailure25(t, err)
 				if owned.Code != "r03-array-facts-limit" || owned.Phase != "input" || owned.RuleID != "r01-input-boundary" || output.calls != 0 || output.Len() != 0 {

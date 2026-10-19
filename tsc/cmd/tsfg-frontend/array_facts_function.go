@@ -12,10 +12,12 @@ import (
 // Owners are source proofs, never physical runtime handles. Aliases share a
 // pointer so later declarations observe the current state of their original root.
 type arrayFactsLengthState struct {
-	known  bool
-	length uint64
+	parameter bool
+	known     bool
+	length    uint64
 }
 type arrayFactsFunctionState struct {
+	calls      []*ast.Node
 	bindings   map[*ast.Symbol]arrayFactsBinding
 	parameters map[*ast.Symbol]arrayFactsParameter
 	names      map[string]bool
@@ -36,18 +38,31 @@ func (p *arrayFactsProjection) parameters(nodes []*ast.Node, signature *checker.
 	for i, node := range nodes {
 		decl := node.AsParameterDeclaration()
 		kind := p.scalarAnnotation(decl.Type)
+		if kind == "" && decl.Type != nil && decl.Type.Kind == ast.KindArrayType && p.f64Annotation(decl.Type.AsArrayTypeNode().ElementType) && p.arrayType(p.check.GetTypeFromTypeNode(decl.Type), false) {
+			kind = "array.f64"
+		}
 		if node.Name() == nil || node.Name().Kind != ast.KindIdentifier || node.ModifierFlags() != 0 || decl.QuestionToken != nil || decl.Initializer != nil || decl.DotDotDotToken != nil || kind == "" || node.Name().Text() == "this" {
-			return nil, arrayFactsCapability(p.file, node, "required direct pinned scalar parameter required")
+			return nil, arrayFactsCapability(p.file, node, "required direct pinned scalar or Array parameter required")
 		}
 		symbol := p.check.GetSymbolAtLocation(node.Name())
-		if symbol == nil || len(symbol.Declarations) != 1 || symbol.Declarations[0] != node || symbol != signature.Parameters()[i] || p.check.GetTypeOfSymbol(symbol) != p.check.GetNumberType() || state.names[node.Name().Text()] {
-			return nil, arrayFactsCapability(p.file, node, "actual unique required scalar signature parameter required")
+		if symbol == nil || len(symbol.Declarations) != 1 || symbol.Declarations[0] != node || symbol != signature.Parameters()[i] || state.names[node.Name().Text()] {
+			return nil, arrayFactsCapability(p.file, node, "actual unique required signature parameter required")
+		}
+		typ := p.check.GetTypeOfSymbol(symbol)
+		if kind == "array.f64" && !p.arrayType(typ, false) || kind != "array.f64" && typ != p.check.GetNumberType() {
+			return nil, arrayFactsCapability(p.file, node, "actual pinned parameter type required")
 		}
 		id, err := p.bindingID(node.Name())
 		if err != nil {
 			return nil, err
 		}
 		value := arrayFactsParameter{ID: id, Name: strings.Clone(node.Name().Text()), Kind: "parameter", DeclaredType: kind, Writable: true, DeclarationRange: expressionOffset(p.file, node), NameRange: expressionOffset(p.file, node.Name()), AnnotationRange: expressionOffset(p.file, decl.Type)}
+		if kind == "array.f64" {
+			element := expressionOffset(p.file, decl.Type.AsArrayTypeNode().ElementType)
+			value.ElementAnnotationRange = &element
+			// Slots can alias each other, so none establishes a disjoint exact length.
+			state.owners[id] = &arrayFactsLengthState{parameter: true}
+		}
 		state.parameters[symbol], state.names[value.Name] = value, true
 		values = append(values, value)
 	}
@@ -96,7 +111,7 @@ func (p *arrayFactsProjection) local(statement *ast.Node, state *arrayFactsFunct
 			owner = &arrayFactsLengthState{known: true, length: uint64(len(*init.Elements))}
 		}
 	} else {
-		init, err = p.reference(local.Initializer, state.bindings)
+		init, err = p.reference(local.Initializer, state)
 		if err == nil {
 			owner = state.owners[init.Binding]
 		}
@@ -108,13 +123,20 @@ func (p *arrayFactsProjection) local(statement *ast.Node, state *arrayFactsFunct
 	result = arrayFactsStatement{Kind: "variable", Binding: binding.ID, Range: expressionOffset(p.file, statement), Initializer: init}
 	return binding, result, nil
 }
-func (p *arrayFactsProjection) function(node *ast.Node) (arrayFactsFunction, *ast.Symbol, error) {
-	var empty arrayFactsFunction
-	bad := func(at *ast.Node, detail string) (arrayFactsFunction, *ast.Symbol, error) {
-		return empty, nil, arrayFactsCapability(p.file, at, detail)
+
+type arrayFactsHeader struct {
+	node      *ast.Node
+	signature *checker.Signature
+	function  arrayFactsFunction
+	state     *arrayFactsFunctionState
+}
+
+func (p *arrayFactsProjection) functionHeader(node *ast.Node) (*arrayFactsHeader, *ast.Symbol, error) {
+	bad := func(at *ast.Node, detail string) (*arrayFactsHeader, *ast.Symbol, error) {
+		return nil, nil, arrayFactsCapability(p.file, at, detail)
 	}
-	if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Name().Kind != ast.KindIdentifier || node.ModifierFlags() != ast.ModifierFlagsExport {
-		return bad(node, "only named ordinary exported functions")
+	if node.Kind != ast.KindFunctionDeclaration || node.Name() == nil || node.Name().Kind != ast.KindIdentifier || node.ModifierFlags() != 0 && node.ModifierFlags() != ast.ModifierFlagsExport {
+		return bad(node, "only named ordinary functions with optional export")
 	}
 	decl := node.AsFunctionDeclaration()
 	if decl.TypeParameters != nil || decl.AsteriskToken != nil || decl.FullSignature != nil || decl.Parameters == nil || decl.Body == nil || decl.Body.Kind != ast.KindBlock || !p.f64Annotation(decl.Type) {
@@ -126,58 +148,75 @@ func (p *arrayFactsProjection) function(node *ast.Node) (arrayFactsFunction, *as
 	}
 	sigs := p.check.GetSignaturesOfType(p.check.GetTypeOfSymbol(actual), checker.SignatureKindCall)
 	if len(sigs) != 1 || sigs[0].Declaration() != node || len(sigs[0].Parameters()) != len(decl.Parameters.Nodes) || len(sigs[0].TypeParameters()) != 0 || sigs[0].ThisParameter() != nil || sigs[0].HasRestParameter() || sigs[0].MinArgumentCount() != len(decl.Parameters.Nodes) || p.check.GetReturnTypeOfSignature(sigs[0]) != p.check.GetNumberType() {
-		return bad(node, "official required scalar/f64 return signature required")
+		return bad(node, "official required parameters and f64 return signature required")
 	}
 	body := decl.Body.AsBlock().Statements.Nodes
-	if len(body) < 2 || body[len(body)-1].Kind != ast.KindReturnStatement {
-		return bad(decl.Body, "flat const Array/mutation body with one final return required")
+	if len(body) < 1 || body[len(body)-1].Kind != ast.KindReturnStatement {
+		return bad(decl.Body, "flat Array/call body with one final f64 return required")
 	}
 	id, err := p.bindingID(node.Name())
 	if err != nil {
-		return empty, nil, err
+		return nil, nil, err
 	}
 	fn := arrayFactsFunction{ID: id, Name: strings.Clone(node.Name().Text()), SourcePath: p.file.FileName(), DeclarationRange: expressionOffset(p.file, node), NameRange: expressionOffset(p.file, node.Name()), ReturnType: "f64", ReturnAnnotationRange: expressionOffset(p.file, decl.Type), Bindings: []arrayFactsBinding{}, Body: []arrayFactsStatement{}}
 	state := &arrayFactsFunctionState{bindings: map[*ast.Symbol]arrayFactsBinding{}, parameters: map[*ast.Symbol]arrayFactsParameter{}, names: map[string]bool{}, owners: map[string]*arrayFactsLengthState{}}
 	fn.Parameters, err = p.parameters(decl.Parameters.Nodes, sigs[0], state)
 	if err != nil {
-		return empty, nil, err
+		return nil, nil, err
 	}
+	return &arrayFactsHeader{node: node, signature: sigs[0], function: fn, state: state}, actual, nil
+}
+
+func (p *arrayFactsProjection) function(header *arrayFactsHeader) (arrayFactsFunction, error) {
+	var empty arrayFactsFunction
+	fn, state := header.function, header.state
+	body := header.node.AsFunctionDeclaration().Body.AsBlock().Statements.Nodes
 	for _, statement := range body[:len(body)-1] {
 		if err := p.ctx.Err(); err != nil {
-			return empty, nil, arrayFactsError("canceled", "ordered function statements", err)
+			return empty, arrayFactsError("canceled", "ordered function statements", err)
 		}
 		switch statement.Kind {
 		case ast.KindVariableStatement:
-			binding, fact, failure := p.local(statement, state)
-			if failure != nil {
-				return empty, nil, failure
+			binding, fact, err := p.local(statement, state)
+			if err != nil {
+				return empty, err
 			}
 			fn.Bindings = append(fn.Bindings, binding)
 			fn.Body = append(fn.Body, fact)
 		case ast.KindExpressionStatement:
-			fact, failure := p.mutation(statement, state)
-			if failure != nil {
-				return empty, nil, failure
+			expression := statement.AsExpressionStatement().Expression
+			if expression != nil && expression.Kind == ast.KindCallExpression {
+				call, err := p.call(expression, state)
+				if err != nil {
+					return empty, err
+				}
+				fn.Body = append(fn.Body, arrayFactsStatement{Kind: "call", Range: expressionOffset(p.file, statement), Value: call})
+			} else {
+				fact, err := p.mutation(statement, state)
+				if err != nil {
+					return empty, err
+				}
+				fn.Body = append(fn.Body, fact)
 			}
-			fn.Body = append(fn.Body, fact)
 		default:
-			return bad(statement, "only const Array declarations and ordinary mutation statements before return")
+			return empty, arrayFactsCapability(p.file, statement, "only const Array declarations, mutation and direct call statements before return")
 		}
 	}
-	if len(fn.Bindings) == 0 {
-		return bad(decl.Body, "at least one local Array root required")
-	}
 	tail := body[len(body)-1]
-	if tail.AsReturnStatement().Expression == nil {
-		return bad(tail, "final checked Array read required")
+	expression := tail.AsReturnStatement().Expression
+	var value *arrayFactsValue
+	var err error
+	if expression != nil && expression.Kind == ast.KindCallExpression {
+		value, err = p.call(expression, state)
+	} else {
+		value, err = p.rhs(expression, state)
 	}
-	read, err := p.read(tail.AsReturnStatement().Expression, state)
 	if err != nil {
-		return empty, nil, err
+		return empty, err
 	}
-	fn.Body = append(fn.Body, arrayFactsStatement{Kind: "return", Range: expressionOffset(p.file, tail), Value: read})
+	fn.Body = append(fn.Body, arrayFactsStatement{Kind: "return", Range: expressionOffset(p.file, tail), Value: value})
 	if err := p.density(fn.Body, body, state); err != nil {
-		return empty, nil, err
+		return empty, err
 	}
-	return fn, actual, nil
+	return fn, nil
 }
