@@ -16,9 +16,9 @@ func (p *arrayFactsProjection) reference(node *ast.Node, state *arrayFactsFuncti
 	symbol := p.check.GetSymbolAtLocation(node)
 	binding, ok := state.bindings[symbol]
 	if parameter, found := state.parameters[symbol]; found && parameter.DeclaredType == "array.f64" {
-		binding.ID, ok = parameter.ID, true
+		binding.ID, binding.DeclaredType, ok = parameter.ID, "array.f64", true
 	}
-	if !ok || !p.arrayType(p.check.GetTypeAtLocation(node), false) {
+	if !ok || binding.DeclaredType != "array.f64" || !p.arrayType(p.check.GetTypeAtLocation(node), false) {
 		return nil, arrayFactsCapability(p.file, node, "original prior f64 Array symbol/use type required")
 	}
 	return &arrayFactsValue{Kind: "reference", Binding: binding.ID, FlowType: "array.f64", Range: expressionOffset(p.file, node)}, nil
@@ -103,6 +103,9 @@ func (p *arrayFactsProjection) read(node *ast.Node, state *arrayFactsFunctionSta
 	access := node.AsElementAccessExpression()
 	if access.QuestionDotToken != nil {
 		return nil, arrayFactsCapability(p.file, node, "ordinary Array element access required")
+	}
+	if p.viewType(p.check.GetTypeAtLocation(access.Expression), p.check.GetNumberType()) {
+		return p.viewRead(node, state)
 	}
 	array, err := p.reference(access.Expression, state)
 	if err != nil {

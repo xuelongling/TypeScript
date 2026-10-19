@@ -142,7 +142,7 @@ func TestArrayDenseMutation25dSourceBudgets(t *testing.T) {
 			input := arrayBoundarySource25(t, source)
 			arrayDomainOfficialZero25(t, input)
 			var output arrayBoundaryWriter25
-			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v3"}, bytes.NewReader(input), &output)
+			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v4"}, bytes.NewReader(input), &output)
 			if !tc.accept {
 				owned := arrayBoundaryFailure25(t, err)
 				if owned.Code != "r03-array-facts-limit" || owned.Phase != "input" || owned.RuleID != "r01-input-boundary" || output.calls != 0 || output.Len() != 0 {

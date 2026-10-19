@@ -20,8 +20,8 @@ type arrayOwnerFrozenCase23e struct {
 
 func arrayOwnerFrozenBundles23e(t *testing.T) []arrayOwnerFrozenCase23e {
 	t.Helper()
-	data, err := os.ReadFile("testdata/array-parameter-owner-v3/official-packages.json")
-	if err != nil || len(data) != 1043001 || arrayFirstHash25(data) != "c1c98bdced16235e5ccb1d2694cf5c619142c09e8ebab1753bcb2ae14522145c" {
+	data, err := os.ReadFile("testdata/array-facts-v4/owner10-official-packages.json")
+	if err != nil || len(data) != 1066549 || arrayFirstHash25(data) != "08f2cf1a352e64ead3fd4524a72b0e33b69207b23ef8311a46be271af6f240c5" {
 		t.Fatalf("independent whole Source bundle bytes: %v", err)
 	}
 	var bundle struct{ Cases []arrayOwnerFrozenCase23e }
@@ -29,7 +29,7 @@ func arrayOwnerFrozenBundles23e(t *testing.T) []arrayOwnerFrozenCase23e {
 		t.Fatal("complete ten-case independent Source corpus")
 	}
 	for _, item := range bundle.Cases {
-		if item.ContractSHA256 != "f58dcc0f7e75c5ae739f7d2455815799f18e2c7a582d8aa7138276d862a246de" {
+		if item.ContractSHA256 != "f7dd26e2d3929d718dcf6fd930436b0b0d2c602a67c1e165badd9173ceabcc73" {
 			t.Fatal("frozen independent contract changed")
 		}
 	}
@@ -41,7 +41,7 @@ func TestArrayParameterOwner23ePublicWholeFrozenPackets(t *testing.T) {
 			input := []byte(item.RequestText)
 			before := bytes.Clone(input)
 			var output bytes.Buffer
-			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v3"}, bytes.NewReader(input), &output)
+			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v4"}, bytes.NewReader(input), &output)
 			if !bytes.Equal(before, input) {
 				t.Fatal("caller input mutated")
 			}
@@ -49,7 +49,7 @@ func TestArrayParameterOwner23ePublicWholeFrozenPackets(t *testing.T) {
 				if output.Len() != 0 {
 					t.Fatal("failed publication produced partial packet")
 				}
-				t.Fatalf("ordinary complete source must publish v3 facts: %v", err)
+				t.Fatalf("ordinary complete source must publish v4 facts: %v", err)
 			}
 			if !bytes.Equal(output.Bytes(), []byte(item.PackageText)) {
 				t.Logf("TSFG_ARRAY_OWNER_23E_MISMATCH name=%s actual=%s", item.Name, base64.StdEncoding.EncodeToString(output.Bytes()))
@@ -65,7 +65,7 @@ func TestArrayParameterOwner23eRetiredV2Rejected(t *testing.T) {
 		t.Fatalf("unchanged historical FIRST input: %v", err)
 	}
 	var output bytes.Buffer
-	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v3"}, bytes.NewReader(input), &output)
+	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v4"}, bytes.NewReader(input), &output)
 	failure := arrayBoundaryFailure25(t, err)
 	if failure.Code != "r03-array-facts-schema" || failure.Phase != "input" || output.Len() != 0 {
 		t.Fatalf("retired v2 envelope must be rejected, not adapted: %+v", failure)
@@ -119,5 +119,22 @@ func TestArrayParameterOwner23eUnsupportedCallsStayLocated(t *testing.T) {
 				t.Fatalf("official-valid unsupported call requires exact private located capability: %+v", failure)
 			}
 		})
+	}
+}
+
+func TestArrayParameterOwner23eRetiredV3Rejected(t *testing.T) {
+	input, err := os.ReadFile("testdata/array-parameter-owner-v3/first-v3-request.json")
+	if err != nil || len(input) != 1190 || arrayFirstHash25(input) != "d69ea6a2a9fafe0d92a9f0fa34a575ec8260ed0ab6d2c44303104189665195c2" {
+		t.Fatalf("unchanged historical v3 request: %v", err)
+	}
+	var output arrayBoundaryWriter25
+	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v4"}, bytes.NewReader(input), &output)
+	failure := arrayBoundaryFailure25(t, err)
+	if failure.Code != "r03-array-facts-schema" || failure.Phase != "input" || output.Len() != 0 || output.calls != 0 {
+		t.Fatalf("retired v3 envelope must fail before publication: %+v", failure)
+	}
+	reader, writer := &arrayBoundaryReader25{input: bytes.NewReader(input)}, &arrayBoundaryWriter25{}
+	if err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v3"}, reader, writer); err == nil || reader.calls != 0 || writer.calls != 0 {
+		t.Fatal("retired v3 flag touched IO or retained a shim")
 	}
 }

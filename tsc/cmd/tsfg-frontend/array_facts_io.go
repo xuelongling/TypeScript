@@ -50,8 +50,8 @@ func arrayFactsPath(path string) bool {
 }
 func arrayFactsInputs(input arrayFactsInput) (request, error) {
 	var owned request
-	root, dts := input.SourceRoot, input.SourceRoot+"/minimal-arrays-v2.d.ts"
-	if !arrayFactsPath(root) || !arrayFactsPath(input.RootFile) || !strings.HasPrefix(input.RootFile, root+"/") || !strings.HasSuffix(input.RootFile, ".ts") || strings.HasSuffix(input.RootFile, ".d.ts") || len(input.Files) != 2 || input.Declarations.Version != "minimal-arrays-v2" || len(input.Declarations.Paths) != 1 || input.Declarations.Paths[0] != dts || !input.Config.Strict || !input.Config.NoEmit || input.Config.AllowJS {
+	root, dts := input.SourceRoot, input.SourceRoot+"/minimal-arrays-v3.d.ts"
+	if !arrayFactsPath(root) || !arrayFactsPath(input.RootFile) || !strings.HasPrefix(input.RootFile, root+"/") || !strings.HasSuffix(input.RootFile, ".ts") || strings.HasSuffix(input.RootFile, ".d.ts") || len(input.Files) != 2 || input.Declarations.Version != "minimal-arrays-v3" || len(input.Declarations.Paths) != 1 || input.Declarations.Paths[0] != dts || !input.Config.Strict || !input.Config.NoEmit || input.Config.AllowJS {
 		return owned, arrayFactsError("input", "closed source/profile/config", nil)
 	}
 	if strings.HasPrefix(input.RootFile, dts+"/") || strings.HasPrefix(dts, input.RootFile+"/") {
@@ -129,7 +129,7 @@ func runArrayFactsCandidate(ctx context.Context, input io.Reader, output io.Writ
 		return arrayFactsError("canceled", "after checking", err)
 	}
 	// Check the entire future packet before either canonicalization or identity hashing.
-	packet := arrayFactsPackage{Family: "tsfg.array-facts-package-candidate", Version: 3, SchemaHash: arrayFactsSchema, RequestID: "sha256:" + strings.Repeat("0", 64), PackageID: "sha256:" + strings.Repeat("0", 64), Payload: payload}
+	packet := arrayFactsPackage{Family: "tsfg.array-facts-package-candidate", Version: 4, SchemaHash: arrayFactsSchema, RequestID: "sha256:" + strings.Repeat("0", 64), PackageID: "sha256:" + strings.Repeat("0", 64), Payload: payload}
 	if err := arrayFactsOutputBudget(packet); err != nil {
 		return err
 	}
@@ -137,8 +137,8 @@ func runArrayFactsCandidate(ctx context.Context, input io.Reader, output io.Writ
 	if err != nil {
 		return err
 	}
-	packet.RequestID = "sha256:" + arrayFactsSHA(append([]byte("tsfg.array-facts.request.v3\x00"), data...))
-	packet.PackageID = "sha256:" + arrayFactsSHA(append([]byte("tsfg.array-facts.package.v3\x00"+arrayFactsSchema+"\x00"), payloadBytes...))
+	packet.RequestID = "sha256:" + arrayFactsSHA(append([]byte("tsfg.array-facts.request.v4\x00"), data...))
+	packet.PackageID = "sha256:" + arrayFactsSHA(append([]byte("tsfg.array-facts.package.v4\x00"+arrayFactsSchema+"\x00"), payloadBytes...))
 	encoded, err := arrayFactsCanonical(packet)
 	if err != nil {
 		return err

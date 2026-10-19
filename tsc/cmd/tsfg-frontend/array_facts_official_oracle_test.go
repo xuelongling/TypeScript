@@ -196,7 +196,7 @@ func arrayFirstOfficial25(t *testing.T, r request, packet arrayFirstPackage25) {
 		t.Fatal("complete actual consumed two-file closure")
 	}
 	file, dts := program.GetSourceFile(r.RootFile), program.GetSourceFile(r.Declarations.Paths[0])
-	if file == nil || dts == nil || !ast.IsExternalModule(file) || len(dts.Statements.Nodes) != 12 || len(packet.Payload.Types) != 3 {
+	if file == nil || dts == nil || !ast.IsExternalModule(file) || len(dts.Statements.Nodes) != 14 || len(packet.Payload.Types) != 4 {
 		t.Fatal("actual source module/private DTS")
 	}
 	check, release := program.GetTypeCheckerForFileExclusive(t.Context(), file)
@@ -241,6 +241,7 @@ func arrayFirstOfficial25(t *testing.T, r request, packet arrayFirstPackage25) {
 		t.Fatal("actual original length property Symbol and Number annotation")
 	}
 
+	arrayFirstV4Origins25(t, file, dts, check, packet)
 	if len(file.Statements.Nodes) != len(packet.Payload.Functions) {
 		t.Fatal("complete original function table")
 	}

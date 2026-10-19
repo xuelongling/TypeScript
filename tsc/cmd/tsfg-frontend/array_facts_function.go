@@ -85,8 +85,11 @@ func (p *arrayFactsProjection) local(statement *ast.Node, state *arrayFactsFunct
 		return bad(localNode, "initialized direct const Array binding required")
 	}
 	symbol := p.check.GetSymbolAtLocation(localNode.Name())
-	if symbol == nil || len(symbol.Declarations) != 1 || symbol.Declarations[0] != localNode || !p.arrayType(p.check.GetTypeOfSymbol(symbol), false) || state.names[localNode.Name().Text()] {
+	if symbol == nil || len(symbol.Declarations) != 1 || symbol.Declarations[0] != localNode || !p.arrayType(p.check.GetTypeOfSymbol(symbol), false) && !p.viewType(p.check.GetTypeOfSymbol(symbol), p.check.GetNumberType()) || state.names[localNode.Name().Text()] {
 		return bad(localNode, "actual unique f64 Array local declaration required")
+	}
+	if p.viewType(p.check.GetTypeOfSymbol(symbol), p.check.GetNumberType()) {
+		return p.viewLocal(statement, localNode, symbol, state)
 	}
 	localID, err := p.bindingID(localNode.Name())
 	if err != nil {
@@ -191,6 +194,12 @@ func (p *arrayFactsProjection) function(header *arrayFactsHeader) (arrayFactsFun
 					return empty, err
 				}
 				fn.Body = append(fn.Body, arrayFactsStatement{Kind: "call", Range: expressionOffset(p.file, statement), Value: call})
+			} else if expression != nil && (expression.Kind == ast.KindElementAccessExpression || expression.Kind == ast.KindPropertyAccessExpression) {
+				fact, err := p.viewUse(statement, state)
+				if err != nil {
+					return empty, err
+				}
+				fn.Body = append(fn.Body, fact)
 			} else {
 				fact, err := p.mutation(statement, state)
 				if err != nil {

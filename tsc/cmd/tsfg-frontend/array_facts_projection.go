@@ -12,6 +12,7 @@ import (
 )
 
 type arrayFactsProjection struct {
+	view        arrayFactsViewOrigin
 	headers     map[*ast.Symbol]*arrayFactsHeader
 	ctx         context.Context
 	file        *ast.SourceFile
@@ -147,44 +148,21 @@ func projectArrayFacts(ctx context.Context, r request, input arrayFactsInput) (a
 		return empty, arrayFactsCapability(file, file.AsNode(), "explicit nonempty function module required")
 	}
 	dts := program.GetSourceFile(input.Declarations.Paths[0])
-	if dts == nil || len(dts.Statements.Nodes) != 12 {
+	if dts == nil || len(dts.Statements.Nodes) != 14 {
 		return empty, arrayFactsError("identity", "actual pinned declarations", nil)
 	}
 	check, release := program.GetTypeCheckerForFileExclusive(ctx, file)
 	defer release()
-	arrayNode, f64Node, u32Node := dts.Statements.Nodes[9], dts.Statements.Nodes[10], dts.Statements.Nodes[11]
-	if arrayNode.Kind != ast.KindInterfaceDeclaration || arrayNode.Name() == nil || arrayNode.Name().Text() != "Array" || f64Node.Kind != ast.KindTypeAliasDeclaration || f64Node.Name() == nil || f64Node.Name().Text() != "f64" || u32Node.Kind != ast.KindTypeAliasDeclaration || u32Node.Name() == nil || u32Node.Name().Text() != "u32" {
-		return empty, arrayFactsError("identity", "actual Array/f64 declaration kinds", nil)
-	}
-	arraySymbol, f64Symbol, u32Symbol := check.GetSymbolAtLocation(arrayNode.Name()), check.GetSymbolAtLocation(f64Node.Name()), check.GetSymbolAtLocation(u32Node.Name())
-	for _, pair := range []struct {
-		symbol *ast.Symbol
-		node   *ast.Node
-	}{{arraySymbol, arrayNode}, {f64Symbol, f64Node}, {u32Symbol, u32Node}} {
-		if pair.symbol == nil || len(pair.symbol.Declarations) != 1 || pair.symbol.Declarations[0] != pair.node || ast.GetSourceFileOfNode(pair.node) != dts {
-			return empty, arrayFactsError("identity", "unique pinned type binding", nil)
-		}
-	}
-	members := arrayNode.AsInterfaceDeclaration().Members.Nodes
-	if len(members) != 2 || members[0].Kind != ast.KindIndexSignature || members[1].Kind != ast.KindPropertySignature || check.GetTypeFromTypeNode(f64Node.AsTypeAliasDeclaration().Type) != check.GetNumberType() || check.GetTypeFromTypeNode(u32Node.AsTypeAliasDeclaration().Type) != check.GetNumberType() {
-		return empty, arrayFactsError("identity", "actual numeric indexer/f64 alias", nil)
-	}
-	lengthNode := members[1]
-	lengthDecl := lengthNode.AsPropertySignatureDeclaration()
-	if lengthNode.Name() == nil {
-		return empty, arrayFactsError("identity", "actual named length property", nil)
-	}
-	lengthSymbol := check.GetSymbolAtLocation(lengthNode.Name())
-	if lengthNode.Name() == nil || lengthNode.Name().Kind != ast.KindIdentifier || lengthNode.Name().Text() != "length" || lengthNode.ModifierFlags() != 0 || lengthDecl.PostfixToken != nil || lengthDecl.Type == nil || lengthDecl.Type.Kind != ast.KindNumberKeyword || lengthDecl.Initializer != nil || lengthSymbol == nil || len(lengthSymbol.Declarations) != 1 || lengthSymbol.Declarations[0] != lengthNode || check.GetTypeFromTypeNode(lengthDecl.Type) != check.GetNumberType() {
-		return empty, arrayFactsError("identity", "actual writable nonoptional length:number property", nil)
-	}
-	lengthID, err := arrayFactsBindingID(dts.FileName(), expressionOffset(dts, lengthNode.Name()))
+	origin, err := readArrayFactsOrigin(dts, check)
 	if err != nil {
 		return empty, err
 	}
-	p := arrayFactsProjection{ctx: ctx, file: file, check: check, arraySymbol: arraySymbol, f64Symbol: f64Symbol, u32Symbol: u32Symbol, indexNode: members[0], lengthNode: lengthNode, lengthID: lengthID}
-	indexRange := expressionOffset(dts, members[0])
-	payload := arrayFactsPayload{SourceRoot: input.SourceRoot, RootFile: input.RootFile, PositionUnit: "utf16", Config: input.Config, Declarations: arrayFactsDeclarations{Version: input.Declarations.Version, Paths: slices.Clone(input.Declarations.Paths)}, Files: []arrayFactsOwnedFile{}, Types: []arrayFactsType{{ID: "f64", Kind: "scalar", SourcePath: dts.FileName(), DeclarationRange: expressionOffset(dts, f64Node), NameRange: expressionOffset(dts, f64Node.Name())}, {ID: "array.f64", Kind: "array", ElementType: "f64", SourcePath: dts.FileName(), DeclarationRange: expressionOffset(dts, arrayNode), NameRange: expressionOffset(dts, arrayNode.Name()), IndexSignatureRange: &indexRange}, {ID: "u32", Kind: "scalar", SourcePath: dts.FileName(), DeclarationRange: expressionOffset(dts, u32Node), NameRange: expressionOffset(dts, u32Node.Name())}}, ArrayLength: arrayFactsLengthProperty{ID: lengthID, Kind: "property", Name: "length", OwnerType: "array.f64", OfficialType: "number", WriteType: "u32", SourcePath: dts.FileName(), DeclarationRange: expressionOffset(dts, lengthNode), NameRange: expressionOffset(dts, lengthNode.Name()), TypeRange: expressionOffset(dts, lengthDecl.Type)}, Functions: []arrayFactsFunction{}, Exports: []arrayFactsExport{}, Diagnostics: []diagnostic{}}
+	p := arrayFactsProjection{ctx: ctx, file: file, check: check, arraySymbol: origin.arraySymbol, f64Symbol: origin.f64Symbol, u32Symbol: origin.u32Symbol, indexNode: origin.indexNode, lengthNode: origin.lengthNode, lengthID: origin.lengthID}
+	if err := p.readSpanOrigin(dts); err != nil {
+		return empty, err
+	}
+	origin.types = append(origin.types, p.view.typeFact)
+	payload := arrayFactsPayload{ReadSpanLength: p.view.lengthFact, ReadSpanIntrinsic: p.view.intrinsicFact, SourceRoot: input.SourceRoot, RootFile: input.RootFile, PositionUnit: "utf16", Config: input.Config, Declarations: arrayFactsDeclarations{Version: input.Declarations.Version, Paths: slices.Clone(input.Declarations.Paths)}, Files: []arrayFactsOwnedFile{}, Types: origin.types, ArrayLength: origin.length, Functions: []arrayFactsFunction{}, Exports: []arrayFactsExport{}, Diagnostics: []diagnostic{}}
 	for _, entry := range input.Files {
 		actual := program.GetSourceFile(entry.Path)
 		if actual == nil || actual.Text() != entry.Content {

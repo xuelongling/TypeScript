@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Private ArrayFacts v3 owns its complete wire values; no legacy DTO changes.
+// Private ArrayFacts v4 owns its complete wire values; no legacy DTO changes.
 package main
 
 import (
@@ -15,13 +15,13 @@ import (
 )
 
 const arrayFactsMaxBytes = 2097152
-const arrayFactsSchema = "sha256:69233ab57ae3d991c5806ab282b73c526632d75bb0052ff78049092a45da40e8"
-const arrayFactsDtsSHA = "6420493372913f019f64b094e181d1346afcca79e720ea85dc5e5026e03ba01e"
+const arrayFactsSchema = "sha256:1364677f060da070ab1e14a589c1957d9ece10eaf8eb81744cea2a99e410a373"
+const arrayFactsDtsSHA = "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415"
 
-//go:embed testdata/array-facts-v3/schema.json
+//go:embed testdata/array-facts-v4/schema.json
 var arrayFactsSchemaBytes []byte
 
-//go:embed testdata/array-facts-v2/minimal-arrays-v2.d.ts
+//go:embed testdata/array-facts-v4/minimal-arrays-v3.d.ts
 var arrayFactsDtsBytes []byte
 
 type arrayFactsConfig struct {
@@ -61,6 +61,7 @@ type arrayFactsType struct {
 	ID                  string `json:"id"`
 	Kind                string `json:"kind"`
 	ElementType         string `json:"elementType,omitempty"`
+	Readonly            bool   `json:"readonly,omitzero"`
 	SourcePath          string `json:"sourcePath"`
 	DeclarationRange    span   `json:"declarationRange"`
 	NameRange           span   `json:"nameRange"`
@@ -100,7 +101,43 @@ type arrayFactsLengthProperty struct {
 	NameRange        span   `json:"nameRange"`
 	TypeRange        span   `json:"typeRange"`
 }
+type arrayFactsReadSpanLength struct {
+	ID               string `json:"id"`
+	Kind             string `json:"kind"`
+	Name             string `json:"name"`
+	OwnerType        string `json:"ownerType"`
+	OfficialType     string `json:"officialType"`
+	ReadType         string `json:"readType"`
+	Readonly         bool   `json:"readonly"`
+	SourcePath       string `json:"sourcePath"`
+	DeclarationRange span   `json:"declarationRange"`
+	NameRange        span   `json:"nameRange"`
+	TypeRange        span   `json:"typeRange"`
+}
+type arrayFactsIntrinsicParameter struct {
+	Name             string `json:"name"`
+	DeclarationRange span   `json:"declarationRange"`
+	NameRange        span   `json:"nameRange"`
+	TypeRange        span   `json:"typeRange"`
+}
+type arrayFactsIntrinsic struct {
+	ID                 string                         `json:"id"`
+	Kind               string                         `json:"kind"`
+	Name               string                         `json:"name"`
+	SourcePath         string                         `json:"sourcePath"`
+	DeclarationRange   span                           `json:"declarationRange"`
+	NameRange          span                           `json:"nameRange"`
+	TypeParameterRange span                           `json:"typeParameterRange"`
+	Parameters         []arrayFactsIntrinsicParameter `json:"parameters"`
+	ReturnTypeRange    span                           `json:"returnTypeRange"`
+}
 type arrayFactsValue struct {
+	View           *arrayFactsValue   `json:"view,omitempty"`
+	Start          *arrayFactsValue   `json:"start,omitempty"`
+	Length         *arrayFactsValue   `json:"length,omitempty"`
+	Intrinsic      string             `json:"intrinsic,omitempty"`
+	Property       string             `json:"property,omitempty"`
+	NameRange      *span              `json:"nameRange,omitempty"`
 	Callee         string             `json:"callee,omitempty"`
 	CalleeRange    *span              `json:"calleeRange,omitempty"`
 	Arguments      *[]arrayFactsValue `json:"arguments,omitzero"`
@@ -153,17 +190,19 @@ type arrayFactsExport struct {
 	FunctionID string `json:"functionId"`
 }
 type arrayFactsPayload struct {
-	ArrayLength  arrayFactsLengthProperty `json:"arrayLength"`
-	SourceRoot   string                   `json:"sourceRoot"`
-	RootFile     string                   `json:"rootFile"`
-	PositionUnit string                   `json:"positionUnit"`
-	Config       arrayFactsConfig         `json:"config"`
-	Declarations arrayFactsDeclarations   `json:"declarations"`
-	Files        []arrayFactsOwnedFile    `json:"files"`
-	Types        []arrayFactsType         `json:"types"`
-	Functions    []arrayFactsFunction     `json:"functions"`
-	Exports      []arrayFactsExport       `json:"exports"`
-	Diagnostics  []diagnostic             `json:"diagnostics"`
+	ReadSpanLength    arrayFactsReadSpanLength `json:"readSpanLength"`
+	ReadSpanIntrinsic arrayFactsIntrinsic      `json:"readSpanIntrinsic"`
+	ArrayLength       arrayFactsLengthProperty `json:"arrayLength"`
+	SourceRoot        string                   `json:"sourceRoot"`
+	RootFile          string                   `json:"rootFile"`
+	PositionUnit      string                   `json:"positionUnit"`
+	Config            arrayFactsConfig         `json:"config"`
+	Declarations      arrayFactsDeclarations   `json:"declarations"`
+	Files             []arrayFactsOwnedFile    `json:"files"`
+	Types             []arrayFactsType         `json:"types"`
+	Functions         []arrayFactsFunction     `json:"functions"`
+	Exports           []arrayFactsExport       `json:"exports"`
+	Diagnostics       []diagnostic             `json:"diagnostics"`
 }
 type arrayFactsPackage struct {
 	Family     string            `json:"family"`
@@ -199,11 +238,18 @@ func arrayFactsJSONError(err error) error {
 	return arrayFactsError("json", "strict JSON boundary", err)
 }
 func arrayFactsCanonical(value any) ([]byte, error) {
-	data, err := genericJSONCanonical(value, arrayFactsPolicy(true))
-	if err != nil {
-		return nil, arrayFactsJSONError(err)
+	if err := arrayFactsDTOBudget(value, 0); err != nil {
+		return nil, err
 	}
-	return data, nil
+	data, err := json.Marshal(value)
+	if err != nil {
+		return nil, arrayFactsError("json", "DTO encoding", err)
+	}
+	canonical := json.Value(data)
+	if err := canonical.Canonicalize(); err != nil {
+		return nil, arrayFactsError("json", "JCS encoding", err)
+	}
+	return []byte(canonical), nil
 }
 func arrayFactsSHA(data []byte) string { sum := sha256.Sum256(data); return hex.EncodeToString(sum[:]) }
 func arrayFactsID(domain string, value any) (string, error) {
@@ -236,7 +282,7 @@ func decodeArrayFactsRequest(data []byte) (arrayFactsRequest, error) {
 	if err != nil {
 		return r, err
 	}
-	if !bytes.Equal(encoded, raw) || r.Family != "tsfg.array-facts-request-candidate" || r.Version != 3 || "sha256:"+arrayFactsSHA(arrayFactsSchemaBytes) != arrayFactsSchema {
+	if !bytes.Equal(encoded, raw) || r.Family != "tsfg.array-facts-request-candidate" || r.Version != 4 || "sha256:"+arrayFactsSHA(arrayFactsSchemaBytes) != arrayFactsSchema {
 		return r, arrayFactsError("schema", "exact fields/types/family/version/embedded schema", nil)
 	}
 	return r, nil
