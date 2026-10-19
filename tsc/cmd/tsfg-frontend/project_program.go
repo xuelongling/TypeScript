@@ -31,6 +31,12 @@ func analyzeWithProjection(ctx context.Context, r request, finish ownedProjectio
 	result := response{Status: "ok", Inputs: consumed, Functions: []function{}, Symbols: []symbol{}}
 	syntacticDiagnostics := program.GetSyntacticDiagnostics(ctx, nil)
 	check, release := program.GetTypeCheckerForFileExclusive(ctx, file)
+	if r.moduleCallable {
+		if failure := moduleCallablePreflight(program); failure.Status != "" {
+			release()
+			return failure
+		}
+	}
 	contextFunctions := operatorFunctions(file, check)
 	if r.CompilationClosure != nil {
 		for _, source := range program.GetSourceFiles() {
@@ -260,6 +266,19 @@ func analyzeWithProjection(ctx context.Context, r request, finish ownedProjectio
 		return result
 	}
 	if r.CompilationClosure != nil {
+		if r.moduleCallable {
+			if failure := moduleCallableProfile(program, check); failure.Status != "" {
+				return failure
+			}
+			for _, source := range program.GetSourceFiles() {
+				if strings.HasSuffix(source.FileName(), ".d.ts") {
+					continue
+				}
+				if failure := moduleCallableDeclaredProfile(source); failure.Status != "" {
+					return failure
+				}
+			}
+		}
 		return projectModules(r, program, check, result, conversions, finish)
 	}
 	nodes, closures := closureDeclarations(file)

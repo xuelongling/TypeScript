@@ -17,6 +17,7 @@ type inputFile struct {
 }
 
 type request struct {
+	moduleCallable     bool
 	CompilationClosure *closureConfiguration `json:"compilationClosure,omitempty"`
 	HostImports        []hostImport          `json:"hostImports,omitempty"`
 	Target             *integerTarget        `json:"target,omitempty"`
@@ -152,10 +153,11 @@ type function struct {
 }
 
 type functionInfo struct {
-	Declaration *ast.Node
-	Conversion  *conversionOrigin
-	ID          string
-	Signature   signature
+	ModuleCallable bool
+	Declaration    *ast.Node
+	Conversion     *conversionOrigin
+	ID             string
+	Signature      signature
 }
 
 type response struct {

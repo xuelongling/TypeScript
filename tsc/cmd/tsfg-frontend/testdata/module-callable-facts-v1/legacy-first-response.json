@@ -1,0 +1,1 @@
+{"status":"error","symbols":null,"diagnostics":[{"code":"r02b-d-unsupported","ruleId":"r01-ts-baseline","ruleIds":["r01-ts-baseline"],"category":"unsupported","phase":"capability","severity":"error","file":"/src/app.ts","range":{"start":77,"end":87},"primary":{"sourceId":"/src/app.ts","start":77,"end":87,"startLine":1,"startColumn":42,"endLine":1,"endColumn":52}}]}

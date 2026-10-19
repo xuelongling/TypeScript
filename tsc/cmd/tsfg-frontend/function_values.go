@@ -28,7 +28,7 @@ func projectFunctionValueExpression(file *ast.SourceFile, check *checker.Checker
 		}
 		return value, nil, true
 	}
-	if node.Kind == ast.KindIdentifier {
+	if node.Kind == ast.KindIdentifier || moduleReference(check, node) && functions[check.GetSymbolAtLocation(node)].ModuleCallable {
 		upstream := check.GetSymbolAtLocation(node)
 		binding, bound := refs[upstream]
 		fn, declared := functions[upstream]

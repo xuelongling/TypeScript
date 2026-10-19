@@ -1,0 +1,332 @@
+{
+  "format": {
+    "family": "tsfg.module-callable-independent-star-scenario",
+    "version": 1
+  },
+  "case": {
+    "name": "first-resolving-star",
+    "group": "first-source-order-export-star",
+    "request": {
+      "family": "tsfg.module-callable-facts-request-candidate",
+      "version": 1,
+      "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+      "input": {
+        "sourceRoot": "/src",
+        "rootFile": "/src/app.ts",
+        "files": [
+          {
+            "path": "/src/app.ts",
+            "content": "import { chosen } from './barrel';\nexport function identity(fn: () => bool): () => bool { return fn; }\nexport function invoke(fn: () => bool): bool { return fn(); }\nexport function entry(): bool { const selected = identity(chosen); return invoke(selected); }\n",
+            "sha256": "8dbd2def3dd4348063a056810801d1c87be24ee12657123582e333834c9c1bb0"
+          },
+          {
+            "path": "/src/barrel.ts",
+            "content": "export * from './path1';\nexport * from './path2';\n",
+            "sha256": "34483fa3580e3ace6ecaa892d93160e5e95d71565876deab3f45680ec1fb89b3"
+          },
+          {
+            "path": "/src/minimal-integers-v3.d.ts",
+            "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+            "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+          },
+          {
+            "path": "/src/path1.ts",
+            "content": "export { read as chosen } from './state';\n",
+            "sha256": "80ca593fda83fd438b1edaf13d97302f0db64c9118f11de8d7ed178302b0b766"
+          },
+          {
+            "path": "/src/path2.ts",
+            "content": "export { read as chosen } from './state';\n",
+            "sha256": "80ca593fda83fd438b1edaf13d97302f0db64c9118f11de8d7ed178302b0b766"
+          },
+          {
+            "path": "/src/state.ts",
+            "content": "export let shared: bool = false;\nexport function read(): bool { return shared; }\n",
+            "sha256": "7e8b52ad5f0a64aa229e07d25db0ab0857448871cb0175e00e37235b51d3c8e5"
+          }
+        ],
+        "declarations": {
+          "version": "minimal-integers-v3",
+          "paths": [
+            "/src/minimal-integers-v3.d.ts"
+          ]
+        },
+        "config": {
+          "strict": true,
+          "noEmit": true,
+          "allowJs": false
+        },
+        "target": {
+          "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+          "pointerBits": "64",
+          "target": "windows-x86_64-msvc",
+          "triple": "x86_64-pc-windows-msvc"
+        },
+        "compilationClosure": {
+          "roots": [
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "entry"
+            },
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/state.ts",
+              "name": "read"
+            }
+          ],
+          "requiredRoots": []
+        },
+        "hostImports": []
+      }
+    },
+    "recipe": [
+      {
+        "path": "/src/app.ts",
+        "globals": [],
+        "functions": [
+          {
+            "name": "identity",
+            "signature": {
+              "parameters": [
+                "function"
+              ],
+              "returnType": "function",
+              "parameterSignatures": [
+                {
+                  "parameters": [],
+                  "returnType": "bool"
+                }
+              ],
+              "returnSignature": {
+                "parameters": [],
+                "returnType": "bool"
+              }
+            },
+            "parameters": [
+              "fn"
+            ],
+            "body": [
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "reference",
+                  "name": "fn"
+                }
+              }
+            ]
+          },
+          {
+            "name": "invoke",
+            "signature": {
+              "parameters": [
+                "function"
+              ],
+              "returnType": "bool",
+              "parameterSignatures": [
+                {
+                  "parameters": [],
+                  "returnType": "bool"
+                }
+              ]
+            },
+            "parameters": [
+              "fn"
+            ],
+            "body": [
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "indirectCall",
+                  "name": "fn",
+                  "callee": {
+                    "kind": "reference",
+                    "name": "fn"
+                  },
+                  "args": []
+                }
+              }
+            ]
+          },
+          {
+            "name": "entry",
+            "signature": {
+              "parameters": [],
+              "returnType": "bool"
+            },
+            "parameters": [],
+            "body": [
+              {
+                "kind": "local",
+                "name": "selected",
+                "value": {
+                  "kind": "call",
+                  "name": "identity",
+                  "target": "/src/app.ts#identity",
+                  "args": [
+                    {
+                      "kind": "functionReference",
+                      "name": "chosen",
+                      "target": "/src/state.ts#read"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "call",
+                  "name": "invoke",
+                  "target": "/src/app.ts#invoke",
+                  "args": [
+                    {
+                      "kind": "reference",
+                      "name": "selected"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "imports": [
+          {
+            "kind": "import",
+            "specifier": "./barrel",
+            "sourcePath": "/src/barrel.ts",
+            "bindings": [
+              {
+                "name": "chosen",
+                "target": "/src/state.ts#read"
+              }
+            ]
+          }
+        ],
+        "exports": [
+          {
+            "name": "identity",
+            "target": "/src/app.ts#identity"
+          },
+          {
+            "name": "invoke",
+            "target": "/src/app.ts#invoke"
+          },
+          {
+            "name": "entry",
+            "target": "/src/app.ts#entry"
+          }
+        ]
+      },
+      {
+        "path": "/src/barrel.ts",
+        "globals": [],
+        "functions": [],
+        "imports": [
+          {
+            "kind": "export",
+            "specifier": "./path1",
+            "sourcePath": "/src/path1.ts",
+            "bindings": [],
+            "star": true
+          },
+          {
+            "kind": "export",
+            "specifier": "./path2",
+            "sourcePath": "/src/path2.ts",
+            "bindings": [],
+            "star": true
+          }
+        ],
+        "exports": [
+          {
+            "name": "chosen",
+            "target": "/src/state.ts#read"
+          }
+        ]
+      },
+      {
+        "path": "/src/path1.ts",
+        "globals": [],
+        "functions": [],
+        "imports": [
+          {
+            "kind": "export",
+            "specifier": "./state",
+            "sourcePath": "/src/state.ts",
+            "bindings": []
+          }
+        ],
+        "exports": [
+          {
+            "name": "chosen",
+            "target": "/src/state.ts#read"
+          }
+        ]
+      },
+      {
+        "path": "/src/path2.ts",
+        "globals": [],
+        "functions": [],
+        "imports": [
+          {
+            "kind": "export",
+            "specifier": "./state",
+            "sourcePath": "/src/state.ts",
+            "bindings": []
+          }
+        ],
+        "exports": [
+          {
+            "name": "chosen",
+            "target": "/src/state.ts#read"
+          }
+        ]
+      },
+      {
+        "path": "/src/state.ts",
+        "globals": [
+          {
+            "name": "shared",
+            "type": "bool",
+            "writable": true,
+            "value": {
+              "kind": "boolean",
+              "boolean": false
+            }
+          }
+        ],
+        "functions": [
+          {
+            "name": "read",
+            "signature": {
+              "parameters": [],
+              "returnType": "bool"
+            },
+            "parameters": [],
+            "body": [
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "reference",
+                  "name": "shared",
+                  "target": "/src/state.ts#shared"
+                }
+              }
+            ]
+          }
+        ],
+        "imports": [],
+        "exports": [
+          {
+            "name": "read",
+            "target": "/src/state.ts#read"
+          },
+          {
+            "name": "shared",
+            "target": "/src/state.ts#shared"
+          }
+        ]
+      }
+    ]
+  }
+}

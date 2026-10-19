@@ -35,6 +35,14 @@ func projectModules(r request, program *compiler.Program, check *checker.Checker
 		}
 		for _, node := range file.Statements.Nodes {
 			if node.Kind == ast.KindFunctionDeclaration && node.Body() != nil {
+				if r.moduleCallable {
+					info, failure := moduleCallableHeader(file, check, node, &result)
+					if failure.Status != "" {
+						return failure
+					}
+					functions[moduleFunctionSymbol(check, node)] = info
+					continue
+				}
 				decl := node.AsFunctionDeclaration()
 				if decl.Type == nil || decl.Body.Kind != ast.KindBlock {
 					return failAt("r02b-d-unsupported", "unsupported", file, node)
@@ -214,12 +222,15 @@ func projectModules(r request, program *compiler.Program, check *checker.Checker
 				}
 				info := functions[moduleFunctionSymbol(check, node)]
 				fn := function{SourcePath: file.FileName(), Name: moduleFunctionName(node), Symbol: info.ID, Parameters: []symbol{}, Body: []statement{}, Range: offset(file, node), ReturnType: info.Signature.ReturnType}
+				if r.moduleCallable {
+					fn.ReturnSignature = info.Signature.ReturnSignature
+				}
 				bindings := map[*ast.Symbol]symbol{}
 				for s, b := range globals {
 					bindings[s] = b
 				}
 				p := projection{file: file, check: check, result: &result, bindings: bindings, functions: functions, integerTarget: r.Target}
-				if failure := p.parameters(&fn, decl.Parameters.Nodes, info.Signature.Presence != nil); failure.Status != "" {
+				if failure := p.parameters(&fn, decl.Parameters.Nodes, info.Signature.Presence != nil && !r.moduleCallable); failure.Status != "" {
 					return failure
 				}
 				body, failure := p.statements(decl.Body.AsBlock().Statements.Nodes, fn.ReturnType)
@@ -232,6 +243,9 @@ func projectModules(r request, program *compiler.Program, check *checker.Checker
 					annotations = append(annotations, statement{Expression: initializer})
 				}
 				moduleAnnotate(file, annotations)
+				if r.moduleCallable {
+					moduleCallableNames(file, annotations)
+				}
 				result.Functions = append(result.Functions, fn)
 			case ast.KindVariableStatement:
 				p := projection{file: file, check: check, result: &result, bindings: globals, functions: functions, integerTarget: r.Target}
@@ -287,6 +301,9 @@ func projectModules(r request, program *compiler.Program, check *checker.Checker
 			}
 		}
 		moduleAnnotate(file, m.Initialization)
+		if r.moduleCallable {
+			moduleCallableNames(file, m.Initialization)
+		}
 		result.Modules = append(result.Modules, m)
 	}
 	if finish != nil {

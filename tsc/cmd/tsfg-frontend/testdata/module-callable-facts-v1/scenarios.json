@@ -1,0 +1,3052 @@
+{
+  "format": {
+    "family": "tsfg.module-callable-independent-scenarios",
+    "version": 1
+  },
+  "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+  "cases": [
+    {
+      "name": "first-rr",
+      "group": "reexport-param-return",
+      "request": {
+        "family": "tsfg.module-callable-facts-request-candidate",
+        "version": 1,
+        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "input": {
+          "sourceRoot": "/src",
+          "rootFile": "/src/app.ts",
+          "files": [
+            {
+              "path": "/src/app.ts",
+              "content": "import { chosen } from './barrel';\nexport function identity(fn: () => bool): () => bool { return fn; }\nexport function invoke(fn: () => bool): bool { return fn(); }\nexport function entry(): bool { const selected = identity(chosen); return invoke(selected); }\n",
+              "sha256": "8dbd2def3dd4348063a056810801d1c87be24ee12657123582e333834c9c1bb0"
+            },
+            {
+              "path": "/src/barrel.ts",
+              "content": "export { read as chosen } from './state';\n",
+              "sha256": "80ca593fda83fd438b1edaf13d97302f0db64c9118f11de8d7ed178302b0b766"
+            },
+            {
+              "path": "/src/minimal-integers-v3.d.ts",
+              "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+              "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+            },
+            {
+              "path": "/src/state.ts",
+              "content": "export let shared: bool = false;\nexport function read(): bool { return shared; }\n",
+              "sha256": "7e8b52ad5f0a64aa229e07d25db0ab0857448871cb0175e00e37235b51d3c8e5"
+            }
+          ],
+          "declarations": {
+            "version": "minimal-integers-v3",
+            "paths": [
+              "/src/minimal-integers-v3.d.ts"
+            ]
+          },
+          "config": {
+            "strict": true,
+            "noEmit": true,
+            "allowJs": false
+          },
+          "target": {
+            "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+            "pointerBits": "64",
+            "target": "windows-x86_64-msvc",
+            "triple": "x86_64-pc-windows-msvc"
+          },
+          "compilationClosure": {
+            "roots": [
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "entry"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/state.ts",
+                "name": "read"
+              }
+            ],
+            "requiredRoots": []
+          },
+          "hostImports": []
+        }
+      },
+      "recipe": [
+        {
+          "path": "/src/app.ts",
+          "globals": [],
+          "functions": [
+            {
+              "name": "identity",
+              "signature": {
+                "parameters": [
+                  "function"
+                ],
+                "returnType": "function",
+                "parameterSignatures": [
+                  {
+                    "parameters": [],
+                    "returnType": "bool"
+                  }
+                ],
+                "returnSignature": {
+                  "parameters": [],
+                  "returnType": "bool"
+                }
+              },
+              "parameters": [
+                "fn"
+              ],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "fn"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "invoke",
+              "signature": {
+                "parameters": [
+                  "function"
+                ],
+                "returnType": "bool",
+                "parameterSignatures": [
+                  {
+                    "parameters": [],
+                    "returnType": "bool"
+                  }
+                ]
+              },
+              "parameters": [
+                "fn"
+              ],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "indirectCall",
+                    "name": "fn",
+                    "callee": {
+                      "kind": "reference",
+                      "name": "fn"
+                    },
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "entry",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "local",
+                  "name": "selected",
+                  "value": {
+                    "kind": "call",
+                    "name": "identity",
+                    "target": "/src/app.ts#identity",
+                    "args": [
+                      {
+                        "kind": "functionReference",
+                        "name": "chosen",
+                        "target": "/src/state.ts#read"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "invoke",
+                    "target": "/src/app.ts#invoke",
+                    "args": [
+                      {
+                        "kind": "reference",
+                        "name": "selected"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [
+            {
+              "kind": "import",
+              "specifier": "./barrel",
+              "sourcePath": "/src/barrel.ts",
+              "bindings": [
+                {
+                  "name": "chosen",
+                  "target": "/src/state.ts#read"
+                }
+              ]
+            }
+          ],
+          "exports": [
+            {
+              "name": "identity",
+              "target": "/src/app.ts#identity"
+            },
+            {
+              "name": "invoke",
+              "target": "/src/app.ts#invoke"
+            },
+            {
+              "name": "entry",
+              "target": "/src/app.ts#entry"
+            }
+          ]
+        },
+        {
+          "path": "/src/barrel.ts",
+          "globals": [],
+          "functions": [],
+          "imports": [
+            {
+              "kind": "export",
+              "specifier": "./state",
+              "sourcePath": "/src/state.ts",
+              "bindings": []
+            }
+          ],
+          "exports": [
+            {
+              "name": "chosen",
+              "target": "/src/state.ts#read"
+            }
+          ]
+        },
+        {
+          "path": "/src/state.ts",
+          "globals": [
+            {
+              "name": "shared",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": false
+              }
+            }
+          ],
+          "functions": [
+            {
+              "name": "read",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [],
+          "exports": [
+            {
+              "name": "read",
+              "target": "/src/state.ts#read"
+            },
+            {
+              "name": "shared",
+              "target": "/src/state.ts#shared"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "finite-conflicts",
+      "group": "finite-accesses",
+      "request": {
+        "family": "tsfg.module-callable-facts-request-candidate",
+        "version": 1,
+        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "input": {
+          "sourceRoot": "/src",
+          "rootFile": "/src/app.ts",
+          "files": [
+            {
+              "path": "/src/app.ts",
+              "content": "import { chosen, write, other } from './barrel';\nexport function choose(flag: bool): () => bool { if (flag) { return chosen; } return write; }\nexport function entry(flag: bool): bool { const selected = choose(flag); return selected(); }\nexport function reader(): bool { return chosen(); }\nexport function writer(): bool { return write(); }\nexport function disjoint(): bool { return other(); }\n",
+              "sha256": "f8382d080088fa053122ee0205e4aafd6f5c01dc3d8528145a7492cf3784b62e"
+            },
+            {
+              "path": "/src/barrel.ts",
+              "content": "export { read as chosen, write, other } from './state';\n",
+              "sha256": "44c674b16c8fa6cfa77728cf13da09bfcc589d9262f07f6375f87944961686c3"
+            },
+            {
+              "path": "/src/minimal-integers-v3.d.ts",
+              "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+              "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+            },
+            {
+              "path": "/src/state.ts",
+              "content": "export let shared: bool = false;\nexport let spare: bool = true;\nexport function read(): bool { return shared; }\nexport function write(): bool { shared = true; return shared; }\nexport function other(): bool { return spare; }\n",
+              "sha256": "59158bbf7aa0d2e5ce07aab1b1824bf8249b6e50c41af9b4c04524076d7e50bc"
+            }
+          ],
+          "declarations": {
+            "version": "minimal-integers-v3",
+            "paths": [
+              "/src/minimal-integers-v3.d.ts"
+            ]
+          },
+          "config": {
+            "strict": true,
+            "noEmit": true,
+            "allowJs": false
+          },
+          "target": {
+            "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+            "pointerBits": "64",
+            "target": "windows-x86_64-msvc",
+            "triple": "x86_64-pc-windows-msvc"
+          },
+          "compilationClosure": {
+            "roots": [
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "disjoint"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "entry"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "reader"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "writer"
+              }
+            ],
+            "requiredRoots": []
+          },
+          "hostImports": []
+        }
+      },
+      "recipe": [
+        {
+          "path": "/src/app.ts",
+          "globals": [],
+          "functions": [
+            {
+              "name": "choose",
+              "signature": {
+                "parameters": [
+                  "bool"
+                ],
+                "returnType": "function",
+                "returnSignature": {
+                  "parameters": [],
+                  "returnType": "bool"
+                }
+              },
+              "parameters": [
+                "flag"
+              ],
+              "body": [
+                {
+                  "kind": "if",
+                  "condition": {
+                    "kind": "reference",
+                    "name": "flag"
+                  },
+                  "then": [
+                    {
+                      "kind": "block",
+                      "body": [
+                        {
+                          "kind": "return",
+                          "value": {
+                            "kind": "functionReference",
+                            "name": "chosen",
+                            "target": "/src/state.ts#read"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "functionReference",
+                    "name": "write",
+                    "target": "/src/state.ts#write"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "entry",
+              "signature": {
+                "parameters": [
+                  "bool"
+                ],
+                "returnType": "bool"
+              },
+              "parameters": [
+                "flag"
+              ],
+              "body": [
+                {
+                  "kind": "local",
+                  "name": "selected",
+                  "value": {
+                    "kind": "call",
+                    "name": "choose",
+                    "target": "/src/app.ts#choose",
+                    "args": [
+                      {
+                        "kind": "reference",
+                        "name": "flag"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "indirectCall",
+                    "name": "selected",
+                    "callee": {
+                      "kind": "reference",
+                      "name": "selected"
+                    },
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "reader",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "chosen",
+                    "target": "/src/state.ts#read",
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "writer",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "write",
+                    "target": "/src/state.ts#write",
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "disjoint",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "other",
+                    "target": "/src/state.ts#other",
+                    "args": []
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [
+            {
+              "kind": "import",
+              "specifier": "./barrel",
+              "sourcePath": "/src/barrel.ts",
+              "bindings": [
+                {
+                  "name": "chosen",
+                  "target": "/src/state.ts#read"
+                },
+                {
+                  "name": "write",
+                  "target": "/src/state.ts#write"
+                },
+                {
+                  "name": "other",
+                  "target": "/src/state.ts#other"
+                }
+              ]
+            }
+          ],
+          "exports": [
+            {
+              "name": "choose",
+              "target": "/src/app.ts#choose"
+            },
+            {
+              "name": "entry",
+              "target": "/src/app.ts#entry"
+            },
+            {
+              "name": "reader",
+              "target": "/src/app.ts#reader"
+            },
+            {
+              "name": "writer",
+              "target": "/src/app.ts#writer"
+            },
+            {
+              "name": "disjoint",
+              "target": "/src/app.ts#disjoint"
+            }
+          ]
+        },
+        {
+          "path": "/src/barrel.ts",
+          "globals": [],
+          "functions": [],
+          "imports": [
+            {
+              "kind": "export",
+              "specifier": "./state",
+              "sourcePath": "/src/state.ts",
+              "bindings": []
+            }
+          ],
+          "exports": [
+            {
+              "name": "chosen",
+              "target": "/src/state.ts#read"
+            },
+            {
+              "name": "write",
+              "target": "/src/state.ts#write"
+            },
+            {
+              "name": "other",
+              "target": "/src/state.ts#other"
+            }
+          ]
+        },
+        {
+          "path": "/src/state.ts",
+          "globals": [
+            {
+              "name": "shared",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": false
+              }
+            },
+            {
+              "name": "spare",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": true
+              }
+            }
+          ],
+          "functions": [
+            {
+              "name": "read",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "write",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "assign",
+                  "name": "shared",
+                  "target": "/src/state.ts#shared",
+                  "value": {
+                    "kind": "boolean",
+                    "boolean": true
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "other",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "spare",
+                    "target": "/src/state.ts#spare"
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [],
+          "exports": [
+            {
+              "name": "read",
+              "target": "/src/state.ts#read"
+            },
+            {
+              "name": "shared",
+              "target": "/src/state.ts#shared"
+            },
+            {
+              "name": "write",
+              "target": "/src/state.ts#write"
+            },
+            {
+              "name": "other",
+              "target": "/src/state.ts#other"
+            },
+            {
+              "name": "spare",
+              "target": "/src/state.ts#spare"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fixed-wide",
+      "group": "fixed-stability",
+      "request": {
+        "family": "tsfg.module-callable-facts-request-candidate",
+        "version": 1,
+        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "input": {
+          "sourceRoot": "/src",
+          "rootFile": "/src/app.ts",
+          "files": [
+            {
+              "path": "/src/app.ts",
+              "content": "import { chosen, write, other, escape } from './barrel';\nexport function choose(flag: bool): () => bool { if (flag) { return chosen; } return write; }\nexport function entry(flag: bool): bool { const selected = choose(flag); return selected(); }\nexport function reader(): bool { return chosen(); }\nexport function writer(): bool { return write(); }\nexport function disjoint(): bool { return other(); }\n",
+              "sha256": "df0c6235ca79af1c4233b54aa59d9f7878cbd69805109cc9c5fb5611fdbd3dc9"
+            },
+            {
+              "path": "/src/barrel.ts",
+              "content": "export { read as chosen, write, other, escape } from './state';\n",
+              "sha256": "76e248fefcd79cad35ab366b9ffcc448eae6f25cb16af4dd0a66029882f684d2"
+            },
+            {
+              "path": "/src/minimal-integers-v3.d.ts",
+              "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+              "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+            },
+            {
+              "path": "/src/state.ts",
+              "content": "export let shared: bool = false;\nexport let spare: bool = true;\nexport let forbidden: bool = false;\nexport function read(): bool { return shared; }\nexport function write(): bool { shared = true; return shared; }\nexport function other(): bool { return spare; }\nexport function escape(): bool { forbidden = true; return shared; }\n",
+              "sha256": "15c88116491ccee1b9b71df144914788f808694e00fcb22b9bbeffb038ac18dd"
+            }
+          ],
+          "declarations": {
+            "version": "minimal-integers-v3",
+            "paths": [
+              "/src/minimal-integers-v3.d.ts"
+            ]
+          },
+          "config": {
+            "strict": true,
+            "noEmit": true,
+            "allowJs": false
+          },
+          "target": {
+            "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+            "pointerBits": "64",
+            "target": "windows-x86_64-msvc",
+            "triple": "x86_64-pc-windows-msvc"
+          },
+          "compilationClosure": {
+            "roots": [
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "disjoint"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "entry"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "reader"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "writer"
+              }
+            ],
+            "requiredRoots": []
+          },
+          "hostImports": []
+        }
+      },
+      "recipe": [
+        {
+          "path": "/src/app.ts",
+          "globals": [],
+          "functions": [
+            {
+              "name": "choose",
+              "signature": {
+                "parameters": [
+                  "bool"
+                ],
+                "returnType": "function",
+                "returnSignature": {
+                  "parameters": [],
+                  "returnType": "bool"
+                }
+              },
+              "parameters": [
+                "flag"
+              ],
+              "body": [
+                {
+                  "kind": "if",
+                  "condition": {
+                    "kind": "reference",
+                    "name": "flag"
+                  },
+                  "then": [
+                    {
+                      "kind": "block",
+                      "body": [
+                        {
+                          "kind": "return",
+                          "value": {
+                            "kind": "functionReference",
+                            "name": "chosen",
+                            "target": "/src/state.ts#read"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "functionReference",
+                    "name": "write",
+                    "target": "/src/state.ts#write"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "entry",
+              "signature": {
+                "parameters": [
+                  "bool"
+                ],
+                "returnType": "bool"
+              },
+              "parameters": [
+                "flag"
+              ],
+              "body": [
+                {
+                  "kind": "local",
+                  "name": "selected",
+                  "value": {
+                    "kind": "call",
+                    "name": "choose",
+                    "target": "/src/app.ts#choose",
+                    "args": [
+                      {
+                        "kind": "reference",
+                        "name": "flag"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "indirectCall",
+                    "name": "selected",
+                    "callee": {
+                      "kind": "reference",
+                      "name": "selected"
+                    },
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "reader",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "chosen",
+                    "target": "/src/state.ts#read",
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "writer",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "write",
+                    "target": "/src/state.ts#write",
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "disjoint",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "other",
+                    "target": "/src/state.ts#other",
+                    "args": []
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [
+            {
+              "kind": "import",
+              "specifier": "./barrel",
+              "sourcePath": "/src/barrel.ts",
+              "bindings": [
+                {
+                  "name": "chosen",
+                  "target": "/src/state.ts#read"
+                },
+                {
+                  "name": "write",
+                  "target": "/src/state.ts#write"
+                },
+                {
+                  "name": "other",
+                  "target": "/src/state.ts#other"
+                },
+                {
+                  "name": "escape",
+                  "target": "/src/state.ts#escape"
+                }
+              ]
+            }
+          ],
+          "exports": [
+            {
+              "name": "choose",
+              "target": "/src/app.ts#choose"
+            },
+            {
+              "name": "entry",
+              "target": "/src/app.ts#entry"
+            },
+            {
+              "name": "reader",
+              "target": "/src/app.ts#reader"
+            },
+            {
+              "name": "writer",
+              "target": "/src/app.ts#writer"
+            },
+            {
+              "name": "disjoint",
+              "target": "/src/app.ts#disjoint"
+            }
+          ]
+        },
+        {
+          "path": "/src/barrel.ts",
+          "globals": [],
+          "functions": [],
+          "imports": [
+            {
+              "kind": "export",
+              "specifier": "./state",
+              "sourcePath": "/src/state.ts",
+              "bindings": []
+            }
+          ],
+          "exports": [
+            {
+              "name": "chosen",
+              "target": "/src/state.ts#read"
+            },
+            {
+              "name": "write",
+              "target": "/src/state.ts#write"
+            },
+            {
+              "name": "other",
+              "target": "/src/state.ts#other"
+            },
+            {
+              "name": "escape",
+              "target": "/src/state.ts#escape"
+            }
+          ]
+        },
+        {
+          "path": "/src/state.ts",
+          "globals": [
+            {
+              "name": "shared",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": false
+              }
+            },
+            {
+              "name": "spare",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": true
+              }
+            },
+            {
+              "name": "forbidden",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": false
+              }
+            }
+          ],
+          "functions": [
+            {
+              "name": "read",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "write",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "assign",
+                  "name": "shared",
+                  "target": "/src/state.ts#shared",
+                  "value": {
+                    "kind": "boolean",
+                    "boolean": true
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "other",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "spare",
+                    "target": "/src/state.ts#spare"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "escape",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "assign",
+                  "name": "forbidden",
+                  "target": "/src/state.ts#forbidden",
+                  "value": {
+                    "kind": "boolean",
+                    "boolean": true
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [],
+          "exports": [
+            {
+              "name": "read",
+              "target": "/src/state.ts#read"
+            },
+            {
+              "name": "shared",
+              "target": "/src/state.ts#shared"
+            },
+            {
+              "name": "write",
+              "target": "/src/state.ts#write"
+            },
+            {
+              "name": "other",
+              "target": "/src/state.ts#other"
+            },
+            {
+              "name": "spare",
+              "target": "/src/state.ts#spare"
+            },
+            {
+              "name": "escape",
+              "target": "/src/state.ts#escape"
+            },
+            {
+              "name": "forbidden",
+              "target": "/src/state.ts#forbidden"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fixed-narrow",
+      "group": "fixed-stability",
+      "request": {
+        "family": "tsfg.module-callable-facts-request-candidate",
+        "version": 1,
+        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "input": {
+          "sourceRoot": "/src",
+          "rootFile": "/src/app.ts",
+          "files": [
+            {
+              "path": "/src/app.ts",
+              "content": "import { chosen, write, other, escape } from './barrel';\nexport function choose(flag: bool): () => bool { return chosen; }\nexport function entry(flag: bool): bool { const selected = choose(flag); return selected(); }\nexport function reader(): bool { return chosen(); }\nexport function writer(): bool { return write(); }\nexport function disjoint(): bool { return other(); }\n",
+              "sha256": "934be7108659011dc294c3f85b9334aa77bab6f23d28b97670317c94928dd159"
+            },
+            {
+              "path": "/src/barrel.ts",
+              "content": "export { read as chosen, write, other, escape } from './state';\n",
+              "sha256": "76e248fefcd79cad35ab366b9ffcc448eae6f25cb16af4dd0a66029882f684d2"
+            },
+            {
+              "path": "/src/minimal-integers-v3.d.ts",
+              "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+              "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+            },
+            {
+              "path": "/src/state.ts",
+              "content": "export let shared: bool = false;\nexport let spare: bool = true;\nexport let forbidden: bool = false;\nexport function read(): bool { return shared; }\nexport function write(): bool { shared = true; return shared; }\nexport function other(): bool { return spare; }\nexport function escape(): bool { forbidden = true; return shared; }\n",
+              "sha256": "15c88116491ccee1b9b71df144914788f808694e00fcb22b9bbeffb038ac18dd"
+            }
+          ],
+          "declarations": {
+            "version": "minimal-integers-v3",
+            "paths": [
+              "/src/minimal-integers-v3.d.ts"
+            ]
+          },
+          "config": {
+            "strict": true,
+            "noEmit": true,
+            "allowJs": false
+          },
+          "target": {
+            "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+            "pointerBits": "64",
+            "target": "windows-x86_64-msvc",
+            "triple": "x86_64-pc-windows-msvc"
+          },
+          "compilationClosure": {
+            "roots": [
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "disjoint"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "entry"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "reader"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "writer"
+              }
+            ],
+            "requiredRoots": []
+          },
+          "hostImports": []
+        }
+      },
+      "recipe": [
+        {
+          "path": "/src/app.ts",
+          "globals": [],
+          "functions": [
+            {
+              "name": "choose",
+              "signature": {
+                "parameters": [
+                  "bool"
+                ],
+                "returnType": "function",
+                "returnSignature": {
+                  "parameters": [],
+                  "returnType": "bool"
+                }
+              },
+              "parameters": [
+                "flag"
+              ],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "functionReference",
+                    "name": "chosen",
+                    "target": "/src/state.ts#read"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "entry",
+              "signature": {
+                "parameters": [
+                  "bool"
+                ],
+                "returnType": "bool"
+              },
+              "parameters": [
+                "flag"
+              ],
+              "body": [
+                {
+                  "kind": "local",
+                  "name": "selected",
+                  "value": {
+                    "kind": "call",
+                    "name": "choose",
+                    "target": "/src/app.ts#choose",
+                    "args": [
+                      {
+                        "kind": "reference",
+                        "name": "flag"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "indirectCall",
+                    "name": "selected",
+                    "callee": {
+                      "kind": "reference",
+                      "name": "selected"
+                    },
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "reader",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "chosen",
+                    "target": "/src/state.ts#read",
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "writer",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "write",
+                    "target": "/src/state.ts#write",
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "disjoint",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "other",
+                    "target": "/src/state.ts#other",
+                    "args": []
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [
+            {
+              "kind": "import",
+              "specifier": "./barrel",
+              "sourcePath": "/src/barrel.ts",
+              "bindings": [
+                {
+                  "name": "chosen",
+                  "target": "/src/state.ts#read"
+                },
+                {
+                  "name": "write",
+                  "target": "/src/state.ts#write"
+                },
+                {
+                  "name": "other",
+                  "target": "/src/state.ts#other"
+                },
+                {
+                  "name": "escape",
+                  "target": "/src/state.ts#escape"
+                }
+              ]
+            }
+          ],
+          "exports": [
+            {
+              "name": "choose",
+              "target": "/src/app.ts#choose"
+            },
+            {
+              "name": "entry",
+              "target": "/src/app.ts#entry"
+            },
+            {
+              "name": "reader",
+              "target": "/src/app.ts#reader"
+            },
+            {
+              "name": "writer",
+              "target": "/src/app.ts#writer"
+            },
+            {
+              "name": "disjoint",
+              "target": "/src/app.ts#disjoint"
+            }
+          ]
+        },
+        {
+          "path": "/src/barrel.ts",
+          "globals": [],
+          "functions": [],
+          "imports": [
+            {
+              "kind": "export",
+              "specifier": "./state",
+              "sourcePath": "/src/state.ts",
+              "bindings": []
+            }
+          ],
+          "exports": [
+            {
+              "name": "chosen",
+              "target": "/src/state.ts#read"
+            },
+            {
+              "name": "write",
+              "target": "/src/state.ts#write"
+            },
+            {
+              "name": "other",
+              "target": "/src/state.ts#other"
+            },
+            {
+              "name": "escape",
+              "target": "/src/state.ts#escape"
+            }
+          ]
+        },
+        {
+          "path": "/src/state.ts",
+          "globals": [
+            {
+              "name": "shared",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": false
+              }
+            },
+            {
+              "name": "spare",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": true
+              }
+            },
+            {
+              "name": "forbidden",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": false
+              }
+            }
+          ],
+          "functions": [
+            {
+              "name": "read",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "write",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "assign",
+                  "name": "shared",
+                  "target": "/src/state.ts#shared",
+                  "value": {
+                    "kind": "boolean",
+                    "boolean": true
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "other",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "spare",
+                    "target": "/src/state.ts#spare"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "escape",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "assign",
+                  "name": "forbidden",
+                  "target": "/src/state.ts#forbidden",
+                  "value": {
+                    "kind": "boolean",
+                    "boolean": true
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [],
+          "exports": [
+            {
+              "name": "read",
+              "target": "/src/state.ts#read"
+            },
+            {
+              "name": "shared",
+              "target": "/src/state.ts#shared"
+            },
+            {
+              "name": "write",
+              "target": "/src/state.ts#write"
+            },
+            {
+              "name": "other",
+              "target": "/src/state.ts#other"
+            },
+            {
+              "name": "spare",
+              "target": "/src/state.ts#spare"
+            },
+            {
+              "name": "escape",
+              "target": "/src/state.ts#escape"
+            },
+            {
+              "name": "forbidden",
+              "target": "/src/state.ts#forbidden"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fixed-exceed",
+      "group": "fixed-stability",
+      "request": {
+        "family": "tsfg.module-callable-facts-request-candidate",
+        "version": 1,
+        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "input": {
+          "sourceRoot": "/src",
+          "rootFile": "/src/app.ts",
+          "files": [
+            {
+              "path": "/src/app.ts",
+              "content": "import { chosen, write, other, escape } from './barrel';\nexport function choose(flag: bool): () => bool { return escape; }\nexport function entry(flag: bool): bool { const selected = choose(flag); return selected(); }\nexport function reader(): bool { return chosen(); }\nexport function writer(): bool { return write(); }\nexport function disjoint(): bool { return other(); }\n",
+              "sha256": "f2638681aed1df0c8b7ee4d365196470634facc48fad3ef8abee317023732f6c"
+            },
+            {
+              "path": "/src/barrel.ts",
+              "content": "export { read as chosen, write, other, escape } from './state';\n",
+              "sha256": "76e248fefcd79cad35ab366b9ffcc448eae6f25cb16af4dd0a66029882f684d2"
+            },
+            {
+              "path": "/src/minimal-integers-v3.d.ts",
+              "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+              "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+            },
+            {
+              "path": "/src/state.ts",
+              "content": "export let shared: bool = false;\nexport let spare: bool = true;\nexport let forbidden: bool = false;\nexport function read(): bool { return shared; }\nexport function write(): bool { shared = true; return shared; }\nexport function other(): bool { return spare; }\nexport function escape(): bool { forbidden = true; return shared; }\n",
+              "sha256": "15c88116491ccee1b9b71df144914788f808694e00fcb22b9bbeffb038ac18dd"
+            }
+          ],
+          "declarations": {
+            "version": "minimal-integers-v3",
+            "paths": [
+              "/src/minimal-integers-v3.d.ts"
+            ]
+          },
+          "config": {
+            "strict": true,
+            "noEmit": true,
+            "allowJs": false
+          },
+          "target": {
+            "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+            "pointerBits": "64",
+            "target": "windows-x86_64-msvc",
+            "triple": "x86_64-pc-windows-msvc"
+          },
+          "compilationClosure": {
+            "roots": [
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "disjoint"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "entry"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "reader"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "writer"
+              }
+            ],
+            "requiredRoots": []
+          },
+          "hostImports": []
+        }
+      },
+      "recipe": [
+        {
+          "path": "/src/app.ts",
+          "globals": [],
+          "functions": [
+            {
+              "name": "choose",
+              "signature": {
+                "parameters": [
+                  "bool"
+                ],
+                "returnType": "function",
+                "returnSignature": {
+                  "parameters": [],
+                  "returnType": "bool"
+                }
+              },
+              "parameters": [
+                "flag"
+              ],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "functionReference",
+                    "name": "escape",
+                    "target": "/src/state.ts#escape"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "entry",
+              "signature": {
+                "parameters": [
+                  "bool"
+                ],
+                "returnType": "bool"
+              },
+              "parameters": [
+                "flag"
+              ],
+              "body": [
+                {
+                  "kind": "local",
+                  "name": "selected",
+                  "value": {
+                    "kind": "call",
+                    "name": "choose",
+                    "target": "/src/app.ts#choose",
+                    "args": [
+                      {
+                        "kind": "reference",
+                        "name": "flag"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "indirectCall",
+                    "name": "selected",
+                    "callee": {
+                      "kind": "reference",
+                      "name": "selected"
+                    },
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "reader",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "chosen",
+                    "target": "/src/state.ts#read",
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "writer",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "write",
+                    "target": "/src/state.ts#write",
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "disjoint",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "other",
+                    "target": "/src/state.ts#other",
+                    "args": []
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [
+            {
+              "kind": "import",
+              "specifier": "./barrel",
+              "sourcePath": "/src/barrel.ts",
+              "bindings": [
+                {
+                  "name": "chosen",
+                  "target": "/src/state.ts#read"
+                },
+                {
+                  "name": "write",
+                  "target": "/src/state.ts#write"
+                },
+                {
+                  "name": "other",
+                  "target": "/src/state.ts#other"
+                },
+                {
+                  "name": "escape",
+                  "target": "/src/state.ts#escape"
+                }
+              ]
+            }
+          ],
+          "exports": [
+            {
+              "name": "choose",
+              "target": "/src/app.ts#choose"
+            },
+            {
+              "name": "entry",
+              "target": "/src/app.ts#entry"
+            },
+            {
+              "name": "reader",
+              "target": "/src/app.ts#reader"
+            },
+            {
+              "name": "writer",
+              "target": "/src/app.ts#writer"
+            },
+            {
+              "name": "disjoint",
+              "target": "/src/app.ts#disjoint"
+            }
+          ]
+        },
+        {
+          "path": "/src/barrel.ts",
+          "globals": [],
+          "functions": [],
+          "imports": [
+            {
+              "kind": "export",
+              "specifier": "./state",
+              "sourcePath": "/src/state.ts",
+              "bindings": []
+            }
+          ],
+          "exports": [
+            {
+              "name": "chosen",
+              "target": "/src/state.ts#read"
+            },
+            {
+              "name": "write",
+              "target": "/src/state.ts#write"
+            },
+            {
+              "name": "other",
+              "target": "/src/state.ts#other"
+            },
+            {
+              "name": "escape",
+              "target": "/src/state.ts#escape"
+            }
+          ]
+        },
+        {
+          "path": "/src/state.ts",
+          "globals": [
+            {
+              "name": "shared",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": false
+              }
+            },
+            {
+              "name": "spare",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": true
+              }
+            },
+            {
+              "name": "forbidden",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": false
+              }
+            }
+          ],
+          "functions": [
+            {
+              "name": "read",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "write",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "assign",
+                  "name": "shared",
+                  "target": "/src/state.ts#shared",
+                  "value": {
+                    "kind": "boolean",
+                    "boolean": true
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "other",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "spare",
+                    "target": "/src/state.ts#spare"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "escape",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "assign",
+                  "name": "forbidden",
+                  "target": "/src/state.ts#forbidden",
+                  "value": {
+                    "kind": "boolean",
+                    "boolean": true
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [],
+          "exports": [
+            {
+              "name": "read",
+              "target": "/src/state.ts#read"
+            },
+            {
+              "name": "shared",
+              "target": "/src/state.ts#shared"
+            },
+            {
+              "name": "write",
+              "target": "/src/state.ts#write"
+            },
+            {
+              "name": "other",
+              "target": "/src/state.ts#other"
+            },
+            {
+              "name": "spare",
+              "target": "/src/state.ts#spare"
+            },
+            {
+              "name": "escape",
+              "target": "/src/state.ts#escape"
+            },
+            {
+              "name": "forbidden",
+              "target": "/src/state.ts#forbidden"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "indirect-scc",
+      "group": "recursive-targets",
+      "request": {
+        "family": "tsfg.module-callable-facts-request-candidate",
+        "version": 1,
+        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "input": {
+          "sourceRoot": "/src",
+          "rootFile": "/src/app.ts",
+          "files": [
+            {
+              "path": "/src/app.ts",
+              "content": "import { chosen } from './barrel';\nexport function relayA(fn: () => bool, again: bool): () => bool { if (again) { const next = relayB; return next(fn, false); } return fn; }\nexport function relayB(fn: () => bool, again: bool): () => bool { const next = relayA; return next(fn, again); }\nexport function entry(seed: bool): bool { const selected = relayA(chosen, seed); return selected(); }\n",
+              "sha256": "3d5093b7e7e2a140f864b773b52609b767224ca32b17a56fee3b4270d3f1f9bf"
+            },
+            {
+              "path": "/src/barrel.ts",
+              "content": "export { read as chosen } from './state';\n",
+              "sha256": "80ca593fda83fd438b1edaf13d97302f0db64c9118f11de8d7ed178302b0b766"
+            },
+            {
+              "path": "/src/minimal-integers-v3.d.ts",
+              "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+              "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+            },
+            {
+              "path": "/src/state.ts",
+              "content": "export let shared: bool = false;\nexport function read(): bool { return shared; }\n",
+              "sha256": "7e8b52ad5f0a64aa229e07d25db0ab0857448871cb0175e00e37235b51d3c8e5"
+            }
+          ],
+          "declarations": {
+            "version": "minimal-integers-v3",
+            "paths": [
+              "/src/minimal-integers-v3.d.ts"
+            ]
+          },
+          "config": {
+            "strict": true,
+            "noEmit": true,
+            "allowJs": false
+          },
+          "target": {
+            "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+            "pointerBits": "64",
+            "target": "windows-x86_64-msvc",
+            "triple": "x86_64-pc-windows-msvc"
+          },
+          "compilationClosure": {
+            "roots": [
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "entry"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/state.ts",
+                "name": "read"
+              }
+            ],
+            "requiredRoots": []
+          },
+          "hostImports": []
+        }
+      },
+      "recipe": [
+        {
+          "path": "/src/app.ts",
+          "globals": [],
+          "functions": [
+            {
+              "name": "relayA",
+              "signature": {
+                "parameters": [
+                  "function",
+                  "bool"
+                ],
+                "returnType": "function",
+                "parameterSignatures": [
+                  {
+                    "parameters": [],
+                    "returnType": "bool"
+                  },
+                  null
+                ],
+                "returnSignature": {
+                  "parameters": [],
+                  "returnType": "bool"
+                }
+              },
+              "parameters": [
+                "fn",
+                "again"
+              ],
+              "body": [
+                {
+                  "kind": "if",
+                  "condition": {
+                    "kind": "reference",
+                    "name": "again"
+                  },
+                  "then": [
+                    {
+                      "kind": "block",
+                      "body": [
+                        {
+                          "kind": "local",
+                          "name": "next",
+                          "value": {
+                            "kind": "functionReference",
+                            "name": "relayB",
+                            "target": "/src/app.ts#relayB"
+                          }
+                        },
+                        {
+                          "kind": "return",
+                          "value": {
+                            "kind": "indirectCall",
+                            "name": "next",
+                            "callee": {
+                              "kind": "reference",
+                              "name": "next"
+                            },
+                            "args": [
+                              {
+                                "kind": "reference",
+                                "name": "fn"
+                              },
+                              {
+                                "kind": "boolean",
+                                "boolean": false
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "fn"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "relayB",
+              "signature": {
+                "parameters": [
+                  "function",
+                  "bool"
+                ],
+                "returnType": "function",
+                "parameterSignatures": [
+                  {
+                    "parameters": [],
+                    "returnType": "bool"
+                  },
+                  null
+                ],
+                "returnSignature": {
+                  "parameters": [],
+                  "returnType": "bool"
+                }
+              },
+              "parameters": [
+                "fn",
+                "again"
+              ],
+              "body": [
+                {
+                  "kind": "local",
+                  "name": "next",
+                  "value": {
+                    "kind": "functionReference",
+                    "name": "relayA",
+                    "target": "/src/app.ts#relayA"
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "indirectCall",
+                    "name": "next",
+                    "callee": {
+                      "kind": "reference",
+                      "name": "next"
+                    },
+                    "args": [
+                      {
+                        "kind": "reference",
+                        "name": "fn"
+                      },
+                      {
+                        "kind": "reference",
+                        "name": "again"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "entry",
+              "signature": {
+                "parameters": [
+                  "bool"
+                ],
+                "returnType": "bool"
+              },
+              "parameters": [
+                "seed"
+              ],
+              "body": [
+                {
+                  "kind": "local",
+                  "name": "selected",
+                  "value": {
+                    "kind": "call",
+                    "name": "relayA",
+                    "target": "/src/app.ts#relayA",
+                    "args": [
+                      {
+                        "kind": "functionReference",
+                        "name": "chosen",
+                        "target": "/src/state.ts#read"
+                      },
+                      {
+                        "kind": "reference",
+                        "name": "seed"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "indirectCall",
+                    "name": "selected",
+                    "callee": {
+                      "kind": "reference",
+                      "name": "selected"
+                    },
+                    "args": []
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [
+            {
+              "kind": "import",
+              "specifier": "./barrel",
+              "sourcePath": "/src/barrel.ts",
+              "bindings": [
+                {
+                  "name": "chosen",
+                  "target": "/src/state.ts#read"
+                }
+              ]
+            }
+          ],
+          "exports": [
+            {
+              "name": "relayA",
+              "target": "/src/app.ts#relayA"
+            },
+            {
+              "name": "relayB",
+              "target": "/src/app.ts#relayB"
+            },
+            {
+              "name": "entry",
+              "target": "/src/app.ts#entry"
+            }
+          ]
+        },
+        {
+          "path": "/src/barrel.ts",
+          "globals": [],
+          "functions": [],
+          "imports": [
+            {
+              "kind": "export",
+              "specifier": "./state",
+              "sourcePath": "/src/state.ts",
+              "bindings": []
+            }
+          ],
+          "exports": [
+            {
+              "name": "chosen",
+              "target": "/src/state.ts#read"
+            }
+          ]
+        },
+        {
+          "path": "/src/state.ts",
+          "globals": [
+            {
+              "name": "shared",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": false
+              }
+            }
+          ],
+          "functions": [
+            {
+              "name": "read",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [],
+          "exports": [
+            {
+              "name": "read",
+              "target": "/src/state.ts#read"
+            },
+            {
+              "name": "shared",
+              "target": "/src/state.ts#shared"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown-locality",
+      "group": "unknown-callback",
+      "request": {
+        "family": "tsfg.module-callable-facts-request-candidate",
+        "version": 1,
+        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "input": {
+          "sourceRoot": "/src",
+          "rootFile": "/src/app.ts",
+          "files": [
+            {
+              "path": "/src/app.ts",
+              "content": "import { chosen } from './barrel';\nexport function identity(fn: () => bool): () => bool { return fn; }\nexport function invoke(fn: () => bool): bool { return fn(); }\nexport function entry(): bool { const selected = identity(chosen); return invoke(selected); }\nexport function open(fn: () => bool): bool { return fn(); }\nexport function wrapper(fn: () => bool): bool { return open(fn); }\nexport function pure(): bool { return true; }\n",
+              "sha256": "06faedd449378f9ac890f8ac721028b30a4d7179882dbf4877eb91b403f58ffc"
+            },
+            {
+              "path": "/src/barrel.ts",
+              "content": "export { read as chosen } from './state';\n",
+              "sha256": "80ca593fda83fd438b1edaf13d97302f0db64c9118f11de8d7ed178302b0b766"
+            },
+            {
+              "path": "/src/minimal-integers-v3.d.ts",
+              "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+              "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+            },
+            {
+              "path": "/src/state.ts",
+              "content": "export let shared: bool = false;\nexport function read(): bool { return shared; }\n",
+              "sha256": "7e8b52ad5f0a64aa229e07d25db0ab0857448871cb0175e00e37235b51d3c8e5"
+            }
+          ],
+          "declarations": {
+            "version": "minimal-integers-v3",
+            "paths": [
+              "/src/minimal-integers-v3.d.ts"
+            ]
+          },
+          "config": {
+            "strict": true,
+            "noEmit": true,
+            "allowJs": false
+          },
+          "target": {
+            "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+            "pointerBits": "64",
+            "target": "windows-x86_64-msvc",
+            "triple": "x86_64-pc-windows-msvc"
+          },
+          "compilationClosure": {
+            "roots": [
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "entry"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "open"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "pure"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "wrapper"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/state.ts",
+                "name": "read"
+              }
+            ],
+            "requiredRoots": []
+          },
+          "hostImports": []
+        }
+      },
+      "recipe": [
+        {
+          "path": "/src/app.ts",
+          "globals": [],
+          "functions": [
+            {
+              "name": "identity",
+              "signature": {
+                "parameters": [
+                  "function"
+                ],
+                "returnType": "function",
+                "parameterSignatures": [
+                  {
+                    "parameters": [],
+                    "returnType": "bool"
+                  }
+                ],
+                "returnSignature": {
+                  "parameters": [],
+                  "returnType": "bool"
+                }
+              },
+              "parameters": [
+                "fn"
+              ],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "fn"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "invoke",
+              "signature": {
+                "parameters": [
+                  "function"
+                ],
+                "returnType": "bool",
+                "parameterSignatures": [
+                  {
+                    "parameters": [],
+                    "returnType": "bool"
+                  }
+                ]
+              },
+              "parameters": [
+                "fn"
+              ],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "indirectCall",
+                    "name": "fn",
+                    "callee": {
+                      "kind": "reference",
+                      "name": "fn"
+                    },
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "entry",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "local",
+                  "name": "selected",
+                  "value": {
+                    "kind": "call",
+                    "name": "identity",
+                    "target": "/src/app.ts#identity",
+                    "args": [
+                      {
+                        "kind": "functionReference",
+                        "name": "chosen",
+                        "target": "/src/state.ts#read"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "invoke",
+                    "target": "/src/app.ts#invoke",
+                    "args": [
+                      {
+                        "kind": "reference",
+                        "name": "selected"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "open",
+              "signature": {
+                "parameters": [
+                  "function"
+                ],
+                "returnType": "bool",
+                "parameterSignatures": [
+                  {
+                    "parameters": [],
+                    "returnType": "bool"
+                  }
+                ]
+              },
+              "parameters": [
+                "fn"
+              ],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "indirectCall",
+                    "name": "fn",
+                    "callee": {
+                      "kind": "reference",
+                      "name": "fn"
+                    },
+                    "args": []
+                  }
+                }
+              ]
+            },
+            {
+              "name": "wrapper",
+              "signature": {
+                "parameters": [
+                  "function"
+                ],
+                "returnType": "bool",
+                "parameterSignatures": [
+                  {
+                    "parameters": [],
+                    "returnType": "bool"
+                  }
+                ]
+              },
+              "parameters": [
+                "fn"
+              ],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "open",
+                    "target": "/src/app.ts#open",
+                    "args": [
+                      {
+                        "kind": "reference",
+                        "name": "fn"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "pure",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "boolean",
+                    "boolean": true
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [
+            {
+              "kind": "import",
+              "specifier": "./barrel",
+              "sourcePath": "/src/barrel.ts",
+              "bindings": [
+                {
+                  "name": "chosen",
+                  "target": "/src/state.ts#read"
+                }
+              ]
+            }
+          ],
+          "exports": [
+            {
+              "name": "identity",
+              "target": "/src/app.ts#identity"
+            },
+            {
+              "name": "invoke",
+              "target": "/src/app.ts#invoke"
+            },
+            {
+              "name": "entry",
+              "target": "/src/app.ts#entry"
+            },
+            {
+              "name": "open",
+              "target": "/src/app.ts#open"
+            },
+            {
+              "name": "wrapper",
+              "target": "/src/app.ts#wrapper"
+            },
+            {
+              "name": "pure",
+              "target": "/src/app.ts#pure"
+            }
+          ]
+        },
+        {
+          "path": "/src/barrel.ts",
+          "globals": [],
+          "functions": [],
+          "imports": [
+            {
+              "kind": "export",
+              "specifier": "./state",
+              "sourcePath": "/src/state.ts",
+              "bindings": []
+            }
+          ],
+          "exports": [
+            {
+              "name": "chosen",
+              "target": "/src/state.ts#read"
+            }
+          ]
+        },
+        {
+          "path": "/src/state.ts",
+          "globals": [
+            {
+              "name": "shared",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": false
+              }
+            }
+          ],
+          "functions": [
+            {
+              "name": "read",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [],
+          "exports": [
+            {
+              "name": "read",
+              "target": "/src/state.ts#read"
+            },
+            {
+              "name": "shared",
+              "target": "/src/state.ts#shared"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "official-nonexact",
+      "group": "candidate-capability",
+      "request": {
+        "family": "tsfg.module-callable-facts-request-candidate",
+        "version": 1,
+        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "input": {
+          "sourceRoot": "/src",
+          "rootFile": "/src/app.ts",
+          "files": [
+            {
+              "path": "/src/app.ts",
+              "content": "import { chosen } from './barrel';\nexport function identity(fn: (flag: bool) => bool): (flag: bool) => bool { return fn; }\nexport function invoke(fn: (flag: bool) => bool): bool { return fn(true); }\nexport function entry(): bool { const selected = identity(chosen); return invoke(selected); }\n",
+              "sha256": "56c8d1a0678d5b870bc1cd0bce3bee346ed5686ea5c91b1dadfb961ddc91a88f"
+            },
+            {
+              "path": "/src/barrel.ts",
+              "content": "export { read as chosen } from './state';\n",
+              "sha256": "80ca593fda83fd438b1edaf13d97302f0db64c9118f11de8d7ed178302b0b766"
+            },
+            {
+              "path": "/src/minimal-integers-v3.d.ts",
+              "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+              "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+            },
+            {
+              "path": "/src/state.ts",
+              "content": "export let shared: bool = false;\nexport function read(): bool { return shared; }\n",
+              "sha256": "7e8b52ad5f0a64aa229e07d25db0ab0857448871cb0175e00e37235b51d3c8e5"
+            }
+          ],
+          "declarations": {
+            "version": "minimal-integers-v3",
+            "paths": [
+              "/src/minimal-integers-v3.d.ts"
+            ]
+          },
+          "config": {
+            "strict": true,
+            "noEmit": true,
+            "allowJs": false
+          },
+          "target": {
+            "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+            "pointerBits": "64",
+            "target": "windows-x86_64-msvc",
+            "triple": "x86_64-pc-windows-msvc"
+          },
+          "compilationClosure": {
+            "roots": [
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "entry"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/state.ts",
+                "name": "read"
+              }
+            ],
+            "requiredRoots": []
+          },
+          "hostImports": []
+        }
+      },
+      "recipe": [
+        {
+          "path": "/src/app.ts",
+          "globals": [],
+          "functions": [
+            {
+              "name": "identity",
+              "signature": {
+                "parameters": [
+                  "function"
+                ],
+                "returnType": "function",
+                "parameterSignatures": [
+                  {
+                    "parameters": [
+                      "bool"
+                    ],
+                    "returnType": "bool"
+                  }
+                ],
+                "returnSignature": {
+                  "parameters": [
+                    "bool"
+                  ],
+                  "returnType": "bool"
+                }
+              },
+              "parameters": [
+                "fn"
+              ],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "fn"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "invoke",
+              "signature": {
+                "parameters": [
+                  "function"
+                ],
+                "returnType": "bool",
+                "parameterSignatures": [
+                  {
+                    "parameters": [
+                      "bool"
+                    ],
+                    "returnType": "bool"
+                  }
+                ]
+              },
+              "parameters": [
+                "fn"
+              ],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "indirectCall",
+                    "name": "fn",
+                    "callee": {
+                      "kind": "reference",
+                      "name": "fn"
+                    },
+                    "args": [
+                      {
+                        "kind": "boolean",
+                        "boolean": true
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "entry",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "local",
+                  "name": "selected",
+                  "value": {
+                    "kind": "call",
+                    "name": "identity",
+                    "target": "/src/app.ts#identity",
+                    "args": [
+                      {
+                        "kind": "functionReference",
+                        "name": "chosen",
+                        "target": "/src/state.ts#read"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "call",
+                    "name": "invoke",
+                    "target": "/src/app.ts#invoke",
+                    "args": [
+                      {
+                        "kind": "reference",
+                        "name": "selected"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [
+            {
+              "kind": "import",
+              "specifier": "./barrel",
+              "sourcePath": "/src/barrel.ts",
+              "bindings": [
+                {
+                  "name": "chosen",
+                  "target": "/src/state.ts#read"
+                }
+              ]
+            }
+          ],
+          "exports": [
+            {
+              "name": "identity",
+              "target": "/src/app.ts#identity"
+            },
+            {
+              "name": "invoke",
+              "target": "/src/app.ts#invoke"
+            },
+            {
+              "name": "entry",
+              "target": "/src/app.ts#entry"
+            }
+          ]
+        },
+        {
+          "path": "/src/barrel.ts",
+          "globals": [],
+          "functions": [],
+          "imports": [
+            {
+              "kind": "export",
+              "specifier": "./state",
+              "sourcePath": "/src/state.ts",
+              "bindings": []
+            }
+          ],
+          "exports": [
+            {
+              "name": "chosen",
+              "target": "/src/state.ts#read"
+            }
+          ]
+        },
+        {
+          "path": "/src/state.ts",
+          "globals": [
+            {
+              "name": "shared",
+              "type": "bool",
+              "writable": true,
+              "value": {
+                "kind": "boolean",
+                "boolean": false
+              }
+            }
+          ],
+          "functions": [
+            {
+              "name": "read",
+              "signature": {
+                "parameters": [],
+                "returnType": "bool"
+              },
+              "parameters": [],
+              "body": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "reference",
+                    "name": "shared",
+                    "target": "/src/state.ts#shared"
+                  }
+                }
+              ]
+            }
+          ],
+          "imports": [],
+          "exports": [
+            {
+              "name": "read",
+              "target": "/src/state.ts#read"
+            },
+            {
+              "name": "shared",
+              "target": "/src/state.ts#shared"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

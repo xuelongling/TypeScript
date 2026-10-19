@@ -1,0 +1,144 @@
+{
+  "format": {
+    "family": "tsfg.module-callable-independent-i32-scenario",
+    "version": 1
+  },
+  "case": {
+    "name": "i32-callback",
+    "group": "nominal-i32-function-value",
+    "request": {
+      "family": "tsfg.module-callable-facts-request-candidate",
+      "version": 1,
+      "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+      "input": {
+        "sourceRoot": "/src",
+        "rootFile": "/src/app.ts",
+        "files": [
+          {
+            "path": "/src/app.ts",
+            "content": "export function identity(value: i32): i32 { return value; }\nexport function use(value: i32): i32 { const selected: (value: i32) => i32 = identity; return selected(value); }\n",
+            "sha256": "afcb3bab4894533fe9ba5684e2f9d3c6c499fecd8303af40586e118a537c4b10"
+          },
+          {
+            "path": "/src/minimal-integers-v3.d.ts",
+            "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+            "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+          }
+        ],
+        "declarations": {
+          "version": "minimal-integers-v3",
+          "paths": [
+            "/src/minimal-integers-v3.d.ts"
+          ]
+        },
+        "config": {
+          "strict": true,
+          "noEmit": true,
+          "allowJs": false
+        },
+        "target": {
+          "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+          "pointerBits": "64",
+          "target": "windows-x86_64-msvc",
+          "triple": "x86_64-pc-windows-msvc"
+        },
+        "compilationClosure": {
+          "roots": [
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "identity"
+            },
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "use"
+            }
+          ],
+          "requiredRoots": []
+        },
+        "hostImports": []
+      }
+    },
+    "recipe": [
+      {
+        "path": "/src/app.ts",
+        "globals": [],
+        "imports": [],
+        "exports": [
+          {
+            "name": "identity",
+            "target": "/src/app.ts#identity"
+          },
+          {
+            "name": "use",
+            "target": "/src/app.ts#use"
+          }
+        ],
+        "functions": [
+          {
+            "name": "identity",
+            "signature": {
+              "parameters": [
+                "i32"
+              ],
+              "returnType": "i32"
+            },
+            "parameters": [
+              "value"
+            ],
+            "body": [
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "reference",
+                  "name": "value"
+                }
+              }
+            ]
+          },
+          {
+            "name": "use",
+            "signature": {
+              "parameters": [
+                "i32"
+              ],
+              "returnType": "i32"
+            },
+            "parameters": [
+              "value"
+            ],
+            "body": [
+              {
+                "kind": "local",
+                "name": "selected",
+                "value": {
+                  "kind": "functionReference",
+                  "name": "identity",
+                  "target": "/src/app.ts#identity"
+                }
+              },
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "indirectCall",
+                  "name": "selected",
+                  "callee": {
+                    "kind": "reference",
+                    "name": "selected"
+                  },
+                  "args": [
+                    {
+                      "kind": "reference",
+                      "name": "value"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
