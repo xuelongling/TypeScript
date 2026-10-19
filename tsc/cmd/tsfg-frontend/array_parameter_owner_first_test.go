@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Active success explicitly adopts v4; Root retains original v2 FIRST/RED unchanged.
+// Active success explicitly adopts v5; Root retains original v2 FIRST/RED unchanged.
 package main
 
 import (
@@ -294,22 +294,22 @@ func arrayOwnerFirstOfficial23e(t *testing.T, r request) {
 	t.Logf("TSFG_ARRAY_OWNER_23E_OFFICIAL_PASS diagnostics=4x0 functions=2 parameters=5 allocations=1 aliases=1 calls=1 full_utf16_anchors=%d closure=%v", len(frozen), consumed)
 }
 
-func TestArrayParameterOwner23eFirstPublicV4Success(t *testing.T) {
-	input, err := os.ReadFile("testdata/array-facts-v4/first-owner-request.json")
-	if err != nil || len(input) != 1345 || arrayFirstHash25(input) != "391f904346c61e8f5689283823b9d98296f3e057b9b90b737ec8624679d49118" {
-		t.Fatalf("frozen explicit migrated v4 FIRST request bytes: %v", err)
+func TestArrayParameterOwner23eFirstPublicV5Success(t *testing.T) {
+	input, err := os.ReadFile("testdata/array-facts-v5/first-owner-request.json")
+	if err != nil || len(input) != 1345 || arrayFirstHash25(input) != "4efd1922ba2c803e5f1a1a5dfea809c15983d5d856bfa7114df3bb9dab09d339" {
+		t.Fatalf("frozen explicit migrated v5 FIRST request bytes: %v", err)
 	}
 	var envelope struct {
 		Family  string  `json:"family"`
 		Version int     `json:"version"`
 		Input   request `json:"input"`
 	}
-	if json.Unmarshal(input, &envelope) != nil || envelope.Family != "tsfg.array-facts-request-candidate" || envelope.Version != 4 || !bytes.Equal(input, append(arrayFirstCanonical25(t, envelope), '\n')) {
-		t.Fatal("explicit migrated v4 JCS+LF envelope")
+	if json.Unmarshal(input, &envelope) != nil || envelope.Family != "tsfg.array-facts-request-candidate" || envelope.Version != 5 || !bytes.Equal(input, append(arrayFirstCanonical25(t, envelope), '\n')) {
+		t.Fatal("explicit migrated v5 JCS+LF envelope")
 	}
 	r := envelope.Input
 	if len(r.Files) != 2 || len(r.Declarations.Paths) != 1 || r.Declarations.Version != "minimal-arrays-v3" || !r.Config.Strict || !r.Config.NoEmit || r.Config.AllowJS {
-		t.Fatal("complete declarations3/facts4 input profile")
+		t.Fatal("complete declarations3/facts5 input profile")
 	}
 	for _, file := range r.Files {
 		if arrayFirstHash25([]byte(file.Content)) != file.SHA256 {
@@ -323,7 +323,7 @@ func TestArrayParameterOwner23eFirstPublicV4Success(t *testing.T) {
 	before := bytes.Clone(input)
 	t.Logf("TSFG_ARRAY_OWNER_23E_FIRST_REQUEST_BASE64=%s", base64.StdEncoding.EncodeToString(input))
 	var output bytes.Buffer
-	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v4"}, bytes.NewReader(input), &output)
+	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v5"}, bytes.NewReader(input), &output)
 	if !bytes.Equal(before, input) {
 		t.Fatal("caller-owned original request mutated")
 	}
@@ -331,11 +331,11 @@ func TestArrayParameterOwner23eFirstPublicV4Success(t *testing.T) {
 		if output.Len() != 0 {
 			t.Fatal("failed public Source command published a partial packet")
 		}
-		t.Fatalf("ordinary legal Array parameter/direct-call source must succeed through public v4 command: %v", err)
+		t.Fatalf("ordinary legal Array parameter/direct-call source must succeed through public v5 command: %v", err)
 	}
 	expected := arrayOwnerFrozenBundles23e(t)[0]
 	if expected.Name != "first-touch-alias" || !bytes.Equal(output.Bytes(), []byte(expected.PackageText)) {
-		t.Fatal("complete independently frozen v4 FIRST packet differs")
+		t.Fatal("complete independently frozen v5 FIRST packet differs")
 	}
 	t.Logf("TSFG_ARRAY_OWNER_23E_FIRST_ACTUAL_BASE64=%s", base64.StdEncoding.EncodeToString(output.Bytes()))
 }

@@ -41,15 +41,29 @@ func (p *arrayFactsProjection) parameters(nodes []*ast.Node, signature *checker.
 		if kind == "" && decl.Type != nil && decl.Type.Kind == ast.KindArrayType && p.f64Annotation(decl.Type.AsArrayTypeNode().ElementType) && p.arrayType(p.check.GetTypeFromTypeNode(decl.Type), false) {
 			kind = "array.f64"
 		}
+		var viewElement *ast.Node
+		if kind == "" {
+			viewElement = p.viewAnnotation(decl.Type)
+			if viewElement != nil {
+				kind = "readspan.f64"
+			}
+		}
 		if node.Name() == nil || node.Name().Kind != ast.KindIdentifier || node.ModifierFlags() != 0 || decl.QuestionToken != nil || decl.Initializer != nil || decl.DotDotDotToken != nil || kind == "" || node.Name().Text() == "this" {
-			return nil, arrayFactsCapability(p.file, node, "required direct pinned scalar or Array parameter required")
+			return nil, arrayFactsCapability(p.file, node, "required direct pinned scalar, Array or ReadSpan parameter required")
 		}
 		symbol := p.check.GetSymbolAtLocation(node.Name())
 		if symbol == nil || len(symbol.Declarations) != 1 || symbol.Declarations[0] != node || symbol != signature.Parameters()[i] || state.names[node.Name().Text()] {
 			return nil, arrayFactsCapability(p.file, node, "actual unique required signature parameter required")
 		}
 		typ := p.check.GetTypeOfSymbol(symbol)
-		if kind == "array.f64" && !p.arrayType(typ, false) || kind != "array.f64" && typ != p.check.GetNumberType() {
+		validType := typ == p.check.GetNumberType()
+		switch kind {
+		case "array.f64":
+			validType = p.arrayType(typ, false)
+		case "readspan.f64":
+			validType = p.viewType(typ, p.check.GetNumberType())
+		}
+		if !validType {
 			return nil, arrayFactsCapability(p.file, node, "actual pinned parameter type required")
 		}
 		id, err := p.bindingID(node.Name())
@@ -62,6 +76,10 @@ func (p *arrayFactsProjection) parameters(nodes []*ast.Node, signature *checker.
 			value.ElementAnnotationRange = &element
 			// Slots can alias each other, so none establishes a disjoint exact length.
 			state.owners[id] = &arrayFactsLengthState{parameter: true}
+		} else if kind == "readspan.f64" {
+			element := expressionOffset(p.file, viewElement)
+			value.ElementAnnotationRange, value.Writable = &element, false
+			// A view parameter carries readonly provenance, never an Array density owner.
 		}
 		state.parameters[symbol], state.names[value.Name] = value, true
 		values = append(values, value)

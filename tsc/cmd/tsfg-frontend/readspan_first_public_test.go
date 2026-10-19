@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-// Whole packets were frozen from fresh official objects before any v4 producer output.
-// A missing v4 mode is a protocol-migration RED, never a borrow-consumer RED.
+// Historical official-only v4 payloads are unchanged; only the frozen envelope
+// and identity domains are migrated to v5 by pure data, without producer output.
 package main
 
 import (
@@ -24,13 +24,13 @@ func (w *readSpanFirstPublicWriter26) Write(data []byte) (int, error) {
 func readSpanFirstPublicHash26(data []byte) string {
 	return fmt.Sprintf("%x", sha256.Sum256(data))
 }
-func TestReadSpan26aV4PublicWholeFrozenPair(t *testing.T) {
+func TestReadSpan26aV5PublicWholeFrozenPair(t *testing.T) {
 	for _, item := range []struct{ name, requestHash, packageHash string }{
-		{"before", "d2020f72eb5ab4944d4a7a96e511a4e30fc282b9cdcc7f835d05dfaaa87d3d26", "5832c826f5907114dfa921a5ef5595d4dbe3eedf53ba364980b015fc0e231c07"},
-		{"after", "731ca4cf803970886ca1c7c7b6c1ee60bfe62a1588c4b9434478ac798d9c0e0f", "1b03a5ad4263f055c1fa0545f9a17ca53fe63742c4f79ed07d62ad6d0f3d1357"},
+		{"before", "3f2dbdffa9a3c370d159e9b8dce63a511a9c711bb59f93922b94be82c0bdda90", "6ab3f31d925af9f600dc5cf6ff97b87554247c108053ab94fb6afe476b708c45"},
+		{"after", "5a4368adaee1897e18f2c27fdd7861d86f5af46a677e1b0e77b7c67866e226d9", "97f7cd88951612271b4e06e7dd94cf203ecf648de856dd7ae4a6df28d818b0ee"},
 	} {
 		t.Run(item.name, func(t *testing.T) {
-			prefix := "testdata/readspan-last-use-v4/" + item.name
+			prefix := "testdata/readspan-last-use-v5/" + item.name
 			request, err := os.ReadFile(prefix + "-request.json")
 			if err != nil {
 				t.Fatal(err)
@@ -44,7 +44,7 @@ func TestReadSpan26aV4PublicWholeFrozenPair(t *testing.T) {
 			}
 			inputBefore := bytes.Clone(request)
 			var output readSpanFirstPublicWriter26
-			err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v4"}, bytes.NewReader(request), &output)
+			err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v5"}, bytes.NewReader(request), &output)
 			t.Logf("TSFG_READSPAN_26A_PUBLIC_REQUEST name=%s bytes=%d sha256=%s base64=%s", item.name, len(request), readSpanFirstPublicHash26(request), base64.StdEncoding.EncodeToString(request))
 			t.Logf("TSFG_READSPAN_26A_PUBLIC_ACTUAL name=%s bytes=%d sha256=%s writes=%d base64=%s", item.name, output.Len(), readSpanFirstPublicHash26(output.Bytes()), output.writes, base64.StdEncoding.EncodeToString(output.Bytes()))
 			if !bytes.Equal(request, inputBefore) {
@@ -54,7 +54,7 @@ func TestReadSpan26aV4PublicWholeFrozenPair(t *testing.T) {
 				if output.Len() != 0 || output.writes != 0 {
 					t.Fatalf("failure published partial facts: writes=%d bytes=%d error=%v", output.writes, output.Len(), err)
 				}
-				t.Fatalf("official-valid complete source must publish v4 facts (protocol migration, not borrow decision): %v", err)
+				t.Fatalf("official-valid complete source must publish v5 facts (protocol migration, not borrow decision): %v", err)
 			}
 			if output.writes != 1 {
 				t.Fatalf("whole facts publication requires one complete write, got %d", output.writes)

@@ -1,0 +1,2504 @@
+{
+  "schema": "r03.readspan26b.adjacent-source-design.v1",
+  "status": "MANUALLY_AUTHORED_EXPECTATIONS_ONLY_OFFICIAL_AND_WHOLE_ORACLE_PENDING_NO_PRODUCER_RELEASE",
+  "frozenInterface": {
+    "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/M26b-required-readspan-parameters-checks-20261019/interface-frozen.json",
+    "revision": 2,
+    "bytes": 432866,
+    "sha256": "0b0cbffa7efc0d44589ba45bc71f5380d7cc7a089a6303dc2f224e9cc7505081"
+  },
+  "pins": {
+    "facts": "sha256:28909daecb794e9d1969a8e97758a2cf6de5c2d6f309266339777a87f9f69a5a",
+    "hir": "sha256:e9d687ce59c5920d33a7cf03e09902d6d0f065d4efe5033ca183f2a175d9d458",
+    "analysis": "sha256:bc9590cf0fd60491b394af68cf5c0a627847f6dff63496dfd48c81e81b56ebc6",
+    "coreNoLf": "sha256:0411c646cc819836c03327ee44327c62e5c6aae668e8492e2b917acfa8dabb08"
+  },
+  "declarations": {
+    "version": "minimal-arrays-v3",
+    "bytes": 484,
+    "sha256": "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415",
+    "contentSource": "Exact frozen interface declarations.content; no fourth metadata/no-view source case"
+  },
+  "scope": "16 small independent source cases; all text offsets and flags are authored from frozen rules, not a production conversion/output",
+  "commonExpectations": {
+    "official4x0": "Expected for all16 but NOT RUN; preserve actual official diagnostic groups before private refusal.",
+    "identity": "Function names/ownerDesign strings are descriptive references only, never wire IDs; independent oracle must build actual complete IDs, upper digests, facts/HIR/plan/summary and diagnostics from official objects.",
+    "source": "No borrow liveness. Accepted sources must emit complete facts, including Product conflict and contract cases.",
+    "sourceNegatives": "No legal selected Product facts exists. Upper intent for rejected bodies is not an issued context; unsupported annotation/optional rows explicitly have no nominal selected signature.",
+    "product": "Pass/conflict/contract refers to mandatory static HIR/owner/borrow consumer. View Core still capability-refuses after prior validation; no VM/native/bounds-trap execution credit.",
+    "densityPrecision": "Source invalidates exact length only for actual Array arguments. Product may conservatively invalidate every owner-bearing Array/view actual; these cases add no post-view-call direct mutation requiring equal precision.",
+    "budgets": "All original domain/JSONv2/16384/global-first1024 budgets unchanged; no long provider or new boundary maximum. Old1024/1025 witnesses may be independently migrated separately.",
+    "safetyBoundary": "FileAPI reads/scratch writes and pure data/string/hash calculations only. No OS child, SUT import, production edit, test, first-fixture write, observer change or historical STOP replay."
+  },
+  "cases": [
+    {
+      "id": "required-checked-read",
+      "coverage": [
+        "required nominal formal",
+        "checked parameter receiver",
+        "caller read substitution"
+      ],
+      "text": "function read(v: ReadSpan<f64>): f64 {\n  return v[0];\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  const v: ReadSpan<f64> = readSpan(a, 0, 1);\n  return read(v);\n}\n",
+      "sourceExpected": {
+        "outcome": "accept-complete-facts",
+        "reason": "Official-valid selected finite grammar; Source does not decide borrow liveness."
+      },
+      "productExpected": {
+        "outcome": "pass",
+        "reason": "Formal checked read contributes R at original slot0; fixed R covers it and maps to entry.a. No structural candidate.",
+        "retained": [
+          "checked read receiver/index/bounds/load obligation",
+          "creation start and length checks"
+        ],
+        "lastUseAnchor": "call",
+        "lastUseCandidate": {
+          "sourcePath": "/readspan26b-adjacent/required-checked-read/app.ts",
+          "range": {
+            "start": 168,
+            "end": 175
+          },
+          "sourceText": "read(v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "sourceRoot": "/readspan26b-adjacent/required-checked-read",
+      "sourcePath": "/readspan26b-adjacent/required-checked-read/app.ts",
+      "declarationPath": "/readspan26b-adjacent/required-checked-read/minimal-arrays-v3.d.ts",
+      "bytes": 179,
+      "utf16Length": 179,
+      "sha256": "7aab6ef5eacd90f5e6200fabd06d1c38d13391d28c1a4a640b2359acc2e1eb38",
+      "anchorCandidates": {
+        "formal": {
+          "sourcePath": "/readspan26b-adjacent/required-checked-read/app.ts",
+          "range": {
+            "start": 14,
+            "end": 30
+          },
+          "sourceText": "v: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "checkedRead": {
+          "sourcePath": "/readspan26b-adjacent/required-checked-read/app.ts",
+          "range": {
+            "start": 48,
+            "end": 52
+          },
+          "sourceText": "v[0]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "create": {
+          "sourcePath": "/readspan26b-adjacent/required-checked-read/app.ts",
+          "range": {
+            "start": 140,
+            "end": 157
+          },
+          "sourceText": "readSpan(a, 0, 1)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "call": {
+          "sourcePath": "/readspan26b-adjacent/required-checked-read/app.ts",
+          "range": {
+            "start": 168,
+            "end": 175
+          },
+          "sourceText": "read(v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": true,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "read",
+            "parameterTypes": [
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": true,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": true,
+                "write": false,
+                "structural": false
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "formal-alias-length",
+      "coverage": [
+        "formal const alias",
+        "descriptor length",
+        "alias use and no owner read"
+      ],
+      "text": "function describe(v: ReadSpan<f64>): f64 {\n  const alias = v;\n  alias.length;\n  return 1.0;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  const v: ReadSpan<f64> = readSpan(a, 0, 1);\n  return describe(v);\n}\n",
+      "sourceExpected": {
+        "outcome": "accept-complete-facts",
+        "reason": "Official-valid selected finite grammar; Source does not decide borrow liveness."
+      },
+      "productExpected": {
+        "outcome": "pass",
+        "reason": "Alias initializer and alias.length are distinct view uses; neither reads the backing Array. describe fixed R=false is sufficient. Caller argument remains a completion use.",
+        "requiredUseOccurrences": [
+          "aliasInitializer",
+          "length receiver",
+          "call argument"
+        ],
+        "lastUseAnchor": "call",
+        "lastUseCandidate": {
+          "sourcePath": "/readspan26b-adjacent/formal-alias-length/app.ts",
+          "range": {
+            "start": 206,
+            "end": 217
+          },
+          "sourceText": "describe(v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "sourceRoot": "/readspan26b-adjacent/formal-alias-length",
+      "sourcePath": "/readspan26b-adjacent/formal-alias-length/app.ts",
+      "declarationPath": "/readspan26b-adjacent/formal-alias-length/minimal-arrays-v3.d.ts",
+      "bytes": 221,
+      "utf16Length": 221,
+      "sha256": "4ccb0371c0aa51473b36e545ed05bcdee50564fb5a61a57a1f444b6e38f9944b",
+      "anchorCandidates": {
+        "formal": {
+          "sourcePath": "/readspan26b-adjacent/formal-alias-length/app.ts",
+          "range": {
+            "start": 18,
+            "end": 34
+          },
+          "sourceText": "v: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "aliasDeclaration": {
+          "sourcePath": "/readspan26b-adjacent/formal-alias-length/app.ts",
+          "range": {
+            "start": 51,
+            "end": 60
+          },
+          "sourceText": "alias = v",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "aliasInitializer": {
+          "sourcePath": "/readspan26b-adjacent/formal-alias-length/app.ts",
+          "range": {
+            "start": 59,
+            "end": 60
+          },
+          "sourceText": "v",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "length": {
+          "sourcePath": "/readspan26b-adjacent/formal-alias-length/app.ts",
+          "range": {
+            "start": 64,
+            "end": 76
+          },
+          "sourceText": "alias.length",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "create": {
+          "sourcePath": "/readspan26b-adjacent/formal-alias-length/app.ts",
+          "range": {
+            "start": 178,
+            "end": 195
+          },
+          "sourceText": "readSpan(a, 0, 1)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "call": {
+          "sourcePath": "/readspan26b-adjacent/formal-alias-length/app.ts",
+          "range": {
+            "start": 206,
+            "end": 217
+          },
+          "sourceText": "describe(v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": true,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "describe",
+            "parameterTypes": [
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": false,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": true,
+                "write": false,
+                "structural": false
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "statement-return-forward-dag",
+      "coverage": [
+        "statement forwarding",
+        "return forwarding",
+        "complete three-function DAG"
+      ],
+      "text": "function leaf(v: ReadSpan<f64>): f64 {\n  return v[0];\n}\nfunction forward(v: ReadSpan<f64>): f64 {\n  leaf(v);\n  return leaf(v);\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  const v: ReadSpan<f64> = readSpan(a, 0, 1);\n  return forward(v);\n}\n",
+      "sourceExpected": {
+        "outcome": "accept-complete-facts",
+        "reason": "Official-valid selected finite grammar; Source does not decide borrow liveness."
+      },
+      "productExpected": {
+        "outcome": "pass",
+        "reason": "All three functions and each ordered call remain. Both forward leaf calls have completion uses even though one result is discarded. Full fixed R propagates through original slot0.",
+        "requiredCallPaths": {
+          "forward": [
+            [
+              "body",
+              0,
+              "expression"
+            ],
+            [
+              "body",
+              1,
+              "value"
+            ]
+          ],
+          "entry": [
+            [
+              "body",
+              2,
+              "value"
+            ]
+          ]
+        },
+        "lastUseAnchor": "entryCall",
+        "lastUseCandidate": {
+          "sourcePath": "/readspan26b-adjacent/statement-return-forward-dag/app.ts",
+          "range": {
+            "start": 241,
+            "end": 251
+          },
+          "sourceText": "forward(v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "sourceRoot": "/readspan26b-adjacent/statement-return-forward-dag",
+      "sourcePath": "/readspan26b-adjacent/statement-return-forward-dag/app.ts",
+      "declarationPath": "/readspan26b-adjacent/statement-return-forward-dag/minimal-arrays-v3.d.ts",
+      "bytes": 255,
+      "utf16Length": 255,
+      "sha256": "ae99800e13e37a6c415fad78fa5ab4214bfc2c1ee810077edad1342c85684463",
+      "anchorCandidates": {
+        "leafFormal": {
+          "sourcePath": "/readspan26b-adjacent/statement-return-forward-dag/app.ts",
+          "range": {
+            "start": 14,
+            "end": 30
+          },
+          "sourceText": "v: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "forwardFormal": {
+          "sourcePath": "/readspan26b-adjacent/statement-return-forward-dag/app.ts",
+          "range": {
+            "start": 73,
+            "end": 89
+          },
+          "sourceText": "v: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "leafRead": {
+          "sourcePath": "/readspan26b-adjacent/statement-return-forward-dag/app.ts",
+          "range": {
+            "start": 48,
+            "end": 52
+          },
+          "sourceText": "v[0]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "statementCall": {
+          "sourcePath": "/readspan26b-adjacent/statement-return-forward-dag/app.ts",
+          "range": {
+            "start": 100,
+            "end": 107
+          },
+          "sourceText": "leaf(v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "returnCall": {
+          "sourcePath": "/readspan26b-adjacent/statement-return-forward-dag/app.ts",
+          "range": {
+            "start": 118,
+            "end": 125
+          },
+          "sourceText": "leaf(v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "create": {
+          "sourcePath": "/readspan26b-adjacent/statement-return-forward-dag/app.ts",
+          "range": {
+            "start": 213,
+            "end": 230
+          },
+          "sourceText": "readSpan(a, 0, 1)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "entryCall": {
+          "sourcePath": "/readspan26b-adjacent/statement-return-forward-dag/app.ts",
+          "range": {
+            "start": 241,
+            "end": 251
+          },
+          "sourceText": "forward(v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": true,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "leaf",
+            "parameterTypes": [
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": true,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "forward",
+            "parameterTypes": [
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": true,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": true,
+                "write": false,
+                "structural": false
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "mixed-full-slots",
+      "coverage": [
+        "f64/view/u32/Array full signature",
+        "view slot1",
+        "Array slot3",
+        "alias checked read"
+      ],
+      "text": "function mixed(x: f64, v: ReadSpan<f64>, i: u32, a: f64[]): f64 {\n  const alias = v;\n  alias.length;\n  return alias[i];\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  const v: ReadSpan<f64> = readSpan(a, 0, 1);\n  return mixed(1.0, v, 0, a);\n}\n",
+      "sourceExpected": {
+        "outcome": "accept-complete-facts",
+        "reason": "Official-valid selected finite grammar; Source does not decide borrow liveness."
+      },
+      "productExpected": {
+        "outcome": "pass",
+        "reason": "Owner rows retain original slots1 and3, while scalar slots0/2 remain in signature/arity. Both owner arguments may designate the same entry.a; no structural flag is present.",
+        "requiredMappingIndices": [
+          1,
+          3
+        ],
+        "lastUseAnchor": "call",
+        "lastUseCandidate": {
+          "sourcePath": "/readspan26b-adjacent/mixed-full-slots/app.ts",
+          "range": {
+            "start": 234,
+            "end": 253
+          },
+          "sourceText": "mixed(1.0, v, 0, a)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "sourceRoot": "/readspan26b-adjacent/mixed-full-slots",
+      "sourcePath": "/readspan26b-adjacent/mixed-full-slots/app.ts",
+      "declarationPath": "/readspan26b-adjacent/mixed-full-slots/minimal-arrays-v3.d.ts",
+      "bytes": 257,
+      "utf16Length": 257,
+      "sha256": "2d5f2b6574a095afb2cbace2ee19d5b2e4ab1e84323044908d9800e23a11aa4e",
+      "anchorCandidates": {
+        "viewFormal": {
+          "sourcePath": "/readspan26b-adjacent/mixed-full-slots/app.ts",
+          "range": {
+            "start": 23,
+            "end": 39
+          },
+          "sourceText": "v: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "arrayFormal": {
+          "sourcePath": "/readspan26b-adjacent/mixed-full-slots/app.ts",
+          "range": {
+            "start": 49,
+            "end": 57
+          },
+          "sourceText": "a: f64[]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "u32Formal": {
+          "sourcePath": "/readspan26b-adjacent/mixed-full-slots/app.ts",
+          "range": {
+            "start": 41,
+            "end": 47
+          },
+          "sourceText": "i: u32",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "aliasInitializer": {
+          "sourcePath": "/readspan26b-adjacent/mixed-full-slots/app.ts",
+          "range": {
+            "start": 82,
+            "end": 83
+          },
+          "sourceText": "v",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "length": {
+          "sourcePath": "/readspan26b-adjacent/mixed-full-slots/app.ts",
+          "range": {
+            "start": 87,
+            "end": 99
+          },
+          "sourceText": "alias.length",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "checkedRead": {
+          "sourcePath": "/readspan26b-adjacent/mixed-full-slots/app.ts",
+          "range": {
+            "start": 110,
+            "end": 118
+          },
+          "sourceText": "alias[i]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "call": {
+          "sourcePath": "/readspan26b-adjacent/mixed-full-slots/app.ts",
+          "range": {
+            "start": 234,
+            "end": 253
+          },
+          "sourceText": "mixed(1.0, v, 0, a)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": true,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "mixed",
+            "parameterTypes": [
+              "f64",
+              "readspan.f64",
+              "u32",
+              "array.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 1,
+                  "read": true,
+                  "write": false,
+                  "structural": false
+                },
+                {
+                  "index": 3,
+                  "read": false,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": true,
+                "write": false,
+                "structural": false
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "same-family-two-view-arguments",
+      "coverage": [
+        "same family two full slots",
+        "alias actual",
+        "duplicate per-reference fees"
+      ],
+      "text": "function pair(left: ReadSpan<f64>, right: ReadSpan<f64>): f64 {\n  left.length;\n  return right[0];\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  const v: ReadSpan<f64> = readSpan(a, 0, 1);\n  const alias = v;\n  return pair(v, alias);\n}\n",
+      "sourceExpected": {
+        "outcome": "accept-complete-facts",
+        "reason": "Official-valid selected finite grammar; Source does not decide borrow liveness."
+      },
+      "productExpected": {
+        "outcome": "pass",
+        "reason": "Two ordered completion uses at slots0/1 refer to one caller family and are both charged. Family useEvents contains the group sequence once; semantic owner union does not erase either original mapping/ref row.",
+        "callGroupUseIndices": [
+          0,
+          1
+        ],
+        "callGroupReferenceFees": 2,
+        "diagnosticAliasSelectorIfConflict": "lowest original view slot0 => v",
+        "lastUseAnchor": "call",
+        "lastUseCandidate": {
+          "sourcePath": "/readspan26b-adjacent/same-family-two-view-arguments/app.ts",
+          "range": {
+            "start": 231,
+            "end": 245
+          },
+          "sourceText": "pair(v, alias)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "sourceRoot": "/readspan26b-adjacent/same-family-two-view-arguments",
+      "sourcePath": "/readspan26b-adjacent/same-family-two-view-arguments/app.ts",
+      "declarationPath": "/readspan26b-adjacent/same-family-two-view-arguments/minimal-arrays-v3.d.ts",
+      "bytes": 249,
+      "utf16Length": 249,
+      "sha256": "46363290df9b3a9b6981addaa7127f58e9dfb8171212b62d14a6493d6e094387",
+      "anchorCandidates": {
+        "leftFormal": {
+          "sourcePath": "/readspan26b-adjacent/same-family-two-view-arguments/app.ts",
+          "range": {
+            "start": 14,
+            "end": 33
+          },
+          "sourceText": "left: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "rightFormal": {
+          "sourcePath": "/readspan26b-adjacent/same-family-two-view-arguments/app.ts",
+          "range": {
+            "start": 35,
+            "end": 55
+          },
+          "sourceText": "right: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "leftLength": {
+          "sourcePath": "/readspan26b-adjacent/same-family-two-view-arguments/app.ts",
+          "range": {
+            "start": 66,
+            "end": 77
+          },
+          "sourceText": "left.length",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "rightRead": {
+          "sourcePath": "/readspan26b-adjacent/same-family-two-view-arguments/app.ts",
+          "range": {
+            "start": 88,
+            "end": 96
+          },
+          "sourceText": "right[0]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "create": {
+          "sourcePath": "/readspan26b-adjacent/same-family-two-view-arguments/app.ts",
+          "range": {
+            "start": 184,
+            "end": 201
+          },
+          "sourceText": "readSpan(a, 0, 1)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "aliasInitializer": {
+          "sourcePath": "/readspan26b-adjacent/same-family-two-view-arguments/app.ts",
+          "range": {
+            "start": 219,
+            "end": 220
+          },
+          "sourceText": "v",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "call": {
+          "sourcePath": "/readspan26b-adjacent/same-family-two-view-arguments/app.ts",
+          "range": {
+            "start": 231,
+            "end": 245
+          },
+          "sourceText": "pair(v, alias)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "firstActual": {
+          "sourcePath": "/readspan26b-adjacent/same-family-two-view-arguments/app.ts",
+          "range": {
+            "start": 236,
+            "end": 237
+          },
+          "sourceText": "v",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "secondActual": {
+          "sourcePath": "/readspan26b-adjacent/same-family-two-view-arguments/app.ts",
+          "range": {
+            "start": 239,
+            "end": 244
+          },
+          "sourceText": "alias",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": true,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "pair",
+            "parameterTypes": [
+              "readspan.f64",
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": false,
+                  "write": false,
+                  "structural": false
+                },
+                {
+                  "index": 1,
+                  "read": true,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": true,
+                "write": false,
+                "structural": false
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "generic-array-view-mayalias-before",
+      "coverage": [
+        "generic mixed input mayalias",
+        "direct resize before formal read",
+        "formal origin diagnostic"
+      ],
+      "text": "export function entry(a: f64[], v: ReadSpan<f64>): f64 {\n  a.length = 0;\n  return v[0];\n}\n",
+      "sourceExpected": {
+        "outcome": "accept-complete-facts",
+        "reason": "Official-valid selected finite grammar; Source does not decide borrow liveness."
+      },
+      "productExpected": {
+        "outcome": "conflict",
+        "diagnostic": {
+          "class": "TypeError",
+          "code": "r03-d-readspan-structural-conflict",
+          "ruleId": "r01-span",
+          "phase": "hir",
+          "message": "active ReadSpan may overlap a structural Array operation"
+        },
+        "reason": "Parameter backing owners at full slots0 and1 can alias. Formal v is live from entry through its later checked read; direct resize is structural and no parameter exact-length proof applies.",
+        "functionName": "entry",
+        "sourceKind": "directResize",
+        "sequence": 0,
+        "operationPath": [
+          "body",
+          0
+        ],
+        "lastUsePath": [
+          "body",
+          1,
+          "value"
+        ],
+        "primaryAnchor": "mutation",
+        "related": [
+          {
+            "role": "borrow-origin",
+            "anchor": "formal"
+          },
+          {
+            "role": "borrow-last-use",
+            "anchor": "lastRead"
+          }
+        ],
+        "viewOwnerDesign": "parameter(entry,1)",
+        "structuralOwnerDesign": "parameter(entry,0)",
+        "fixedCallFields": "absent",
+        "primaryCandidate": {
+          "sourcePath": "/readspan26b-adjacent/generic-array-view-mayalias-before/app.ts",
+          "range": {
+            "start": 59,
+            "end": 71
+          },
+          "sourceText": "a.length = 0",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "relatedCandidates": [
+          {
+            "role": "borrow-origin",
+            "sourcePath": "/readspan26b-adjacent/generic-array-view-mayalias-before/app.ts",
+            "range": {
+              "start": 32,
+              "end": 48
+            },
+            "sourceText": "v: ReadSpan<f64>",
+            "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+          },
+          {
+            "role": "borrow-last-use",
+            "sourcePath": "/readspan26b-adjacent/generic-array-view-mayalias-before/app.ts",
+            "range": {
+              "start": 82,
+              "end": 86
+            },
+            "sourceText": "v[0]",
+            "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+          }
+        ]
+      },
+      "sourceRoot": "/readspan26b-adjacent/generic-array-view-mayalias-before",
+      "sourcePath": "/readspan26b-adjacent/generic-array-view-mayalias-before/app.ts",
+      "declarationPath": "/readspan26b-adjacent/generic-array-view-mayalias-before/minimal-arrays-v3.d.ts",
+      "bytes": 90,
+      "utf16Length": 90,
+      "sha256": "f2bfea7e94ac12cb842f33188a04485bba960a53848bfee60744d88933d1017f",
+      "anchorCandidates": {
+        "formal": {
+          "sourcePath": "/readspan26b-adjacent/generic-array-view-mayalias-before/app.ts",
+          "range": {
+            "start": 32,
+            "end": 48
+          },
+          "sourceText": "v: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "mutation": {
+          "sourcePath": "/readspan26b-adjacent/generic-array-view-mayalias-before/app.ts",
+          "range": {
+            "start": 59,
+            "end": 71
+          },
+          "sourceText": "a.length = 0",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "lastRead": {
+          "sourcePath": "/readspan26b-adjacent/generic-array-view-mayalias-before/app.ts",
+          "range": {
+            "start": 82,
+            "end": 86
+          },
+          "sourceText": "v[0]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": true,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "entry",
+            "parameterTypes": [
+              "array.f64",
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": false,
+                  "write": false,
+                  "structural": true
+                },
+                {
+                  "index": 1,
+                  "read": true,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "read-then-mutate-same-owner-call",
+      "coverage": [
+        "callee last-use ends before mutation",
+        "caller held through completion",
+        "same-owner call conflict"
+      ],
+      "text": "function readThenMutate(a: f64[], v: ReadSpan<f64>): f64 {\n  v[0];\n  a.length = 0;\n  return 1.0;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  const v: ReadSpan<f64> = readSpan(a, 0, 1);\n  return readThenMutate(a, v);\n}\n",
+      "sourceExpected": {
+        "outcome": "accept-complete-facts",
+        "reason": "Official-valid selected finite grammar; Source does not decide borrow liveness."
+      },
+      "productExpected": {
+        "outcome": "conflict",
+        "diagnostic": {
+          "class": "TypeError",
+          "code": "r03-d-readspan-structural-conflict",
+          "ruleId": "r01-span",
+          "phase": "hir",
+          "message": "active ReadSpan may overlap a structural Array operation"
+        },
+        "reason": "Callee formal last read precedes its resize, so callee local borrow analysis passes. At entry the view actual holds entry.a through the entire call, and consumed fixed Array slot0 is S=true on that same owner.",
+        "localFunctionAnalysis": {
+          "readThenMutate": "pass"
+        },
+        "functionName": "entry",
+        "sourceKind": "fixedCall",
+        "sequence": 1,
+        "operationPath": [
+          "body",
+          2,
+          "value"
+        ],
+        "lastUsePath": [
+          "body",
+          2,
+          "value"
+        ],
+        "primaryAnchor": "call",
+        "related": [
+          {
+            "role": "borrow-origin",
+            "anchor": "create"
+          },
+          {
+            "role": "borrow-last-use",
+            "anchor": "call"
+          }
+        ],
+        "viewOwnerDesign": "entry own allocation a, empty callPath",
+        "structuralOwnerDesign": "same entry.a",
+        "targetFunctionName": "readThenMutate",
+        "parameterIndex": 0,
+        "requiredDigests": "exact target row consumedDigest + common scopeDigest/publishedDigest from independent context2",
+        "primaryCandidate": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-same-owner-call/app.ts",
+          "range": {
+            "start": 211,
+            "end": 231
+          },
+          "sourceText": "readThenMutate(a, v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "relatedCandidates": [
+          {
+            "role": "borrow-origin",
+            "sourcePath": "/readspan26b-adjacent/read-then-mutate-same-owner-call/app.ts",
+            "range": {
+              "start": 183,
+              "end": 200
+            },
+            "sourceText": "readSpan(a, 0, 1)",
+            "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+          },
+          {
+            "role": "borrow-last-use",
+            "sourcePath": "/readspan26b-adjacent/read-then-mutate-same-owner-call/app.ts",
+            "range": {
+              "start": 211,
+              "end": 231
+            },
+            "sourceText": "readThenMutate(a, v)",
+            "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+          }
+        ]
+      },
+      "sourceRoot": "/readspan26b-adjacent/read-then-mutate-same-owner-call",
+      "sourcePath": "/readspan26b-adjacent/read-then-mutate-same-owner-call/app.ts",
+      "declarationPath": "/readspan26b-adjacent/read-then-mutate-same-owner-call/minimal-arrays-v3.d.ts",
+      "bytes": 235,
+      "utf16Length": 235,
+      "sha256": "1d53224b7314a898f68a5d7abfb2b2a413153b63cd87ab363a8ddc269b5e823a",
+      "anchorCandidates": {
+        "formal": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-same-owner-call/app.ts",
+          "range": {
+            "start": 34,
+            "end": 50
+          },
+          "sourceText": "v: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "calleeLastRead": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-same-owner-call/app.ts",
+          "range": {
+            "start": 61,
+            "end": 65
+          },
+          "sourceText": "v[0]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "calleeMutation": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-same-owner-call/app.ts",
+          "range": {
+            "start": 69,
+            "end": 81
+          },
+          "sourceText": "a.length = 0",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "create": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-same-owner-call/app.ts",
+          "range": {
+            "start": 183,
+            "end": 200
+          },
+          "sourceText": "readSpan(a, 0, 1)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "call": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-same-owner-call/app.ts",
+          "range": {
+            "start": 211,
+            "end": 231
+          },
+          "sourceText": "readThenMutate(a, v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": true,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "readThenMutate",
+            "parameterTypes": [
+              "array.f64",
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": false,
+                  "write": false,
+                  "structural": true
+                },
+                {
+                  "index": 1,
+                  "read": true,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": true,
+                "write": false,
+                "structural": true
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "read-then-mutate-distinct-fresh-call",
+      "coverage": [
+        "distinct actual fresh owner permitted",
+        "callee local pass",
+        "candidate comparison before mayalias"
+      ],
+      "text": "function readThenMutate(a: f64[], v: ReadSpan<f64>): f64 {\n  v[0];\n  a.length = 0;\n  return 1.0;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  const b: f64[] = [2.0];\n  const v: ReadSpan<f64> = readSpan(a, 0, 1);\n  return readThenMutate(b, v);\n}\n",
+      "sourceExpected": {
+        "outcome": "accept-complete-facts",
+        "reason": "Official-valid selected finite grammar; Source does not decide borrow liveness."
+      },
+      "productExpected": {
+        "outcome": "pass",
+        "reason": "Callee local read-before-resize passes. Caller structural Array actual b is a separate fresh allocation from view backing a; perform and charge the candidate comparison before mayAlias proves disjointness. No all-reject substitute.",
+        "localFunctionAnalysis": {
+          "readThenMutate": "pass"
+        },
+        "structuralActualOwnerDesign": "entry own allocation b",
+        "viewActualOwnerDesign": "entry own allocation a",
+        "lastUseAnchor": "call",
+        "lastUseCandidate": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-distinct-fresh-call/app.ts",
+          "range": {
+            "start": 237,
+            "end": 257
+          },
+          "sourceText": "readThenMutate(b, v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "sourceRoot": "/readspan26b-adjacent/read-then-mutate-distinct-fresh-call",
+      "sourcePath": "/readspan26b-adjacent/read-then-mutate-distinct-fresh-call/app.ts",
+      "declarationPath": "/readspan26b-adjacent/read-then-mutate-distinct-fresh-call/minimal-arrays-v3.d.ts",
+      "bytes": 261,
+      "utf16Length": 261,
+      "sha256": "0263560108980fd9e84e35a3d32495ee17ce54e6250a95d5478c0efe09e2fd1f",
+      "anchorCandidates": {
+        "calleeLastRead": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-distinct-fresh-call/app.ts",
+          "range": {
+            "start": 61,
+            "end": 65
+          },
+          "sourceText": "v[0]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "calleeMutation": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-distinct-fresh-call/app.ts",
+          "range": {
+            "start": 69,
+            "end": 81
+          },
+          "sourceText": "a.length = 0",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "freshA": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-distinct-fresh-call/app.ts",
+          "range": {
+            "start": 149,
+            "end": 154
+          },
+          "sourceText": "[1.0]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "freshB": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-distinct-fresh-call/app.ts",
+          "range": {
+            "start": 175,
+            "end": 180
+          },
+          "sourceText": "[2.0]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "create": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-distinct-fresh-call/app.ts",
+          "range": {
+            "start": 209,
+            "end": 226
+          },
+          "sourceText": "readSpan(a, 0, 1)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "call": {
+          "sourcePath": "/readspan26b-adjacent/read-then-mutate-distinct-fresh-call/app.ts",
+          "range": {
+            "start": 237,
+            "end": 257
+          },
+          "sourceText": "readThenMutate(b, v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": true,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "readThenMutate",
+            "parameterTypes": [
+              "array.f64",
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": false,
+                  "write": false,
+                  "structural": true
+                },
+                {
+                  "index": 1,
+                  "read": true,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": true,
+                "write": false,
+                "structural": true
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "unused-rfalse-same-call-hold",
+      "coverage": [
+        "unused formal no local interval",
+        "fixedRfalse argument real use",
+        "same invocation structural conflict"
+      ],
+      "text": "function unused(v: ReadSpan<f64>, a: f64[]): f64 {\n  a.length = 0;\n  return 1.0;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  const v: ReadSpan<f64> = readSpan(a, 0, 1);\n  return unused(v, a);\n}\n",
+      "sourceExpected": {
+        "outcome": "accept-complete-facts",
+        "reason": "Official-valid selected finite grammar; Source does not decide borrow liveness."
+      },
+      "productExpected": {
+        "outcome": "conflict",
+        "diagnostic": {
+          "class": "TypeError",
+          "code": "r03-d-readspan-structural-conflict",
+          "ruleId": "r01-span",
+          "phase": "hir",
+          "message": "active ReadSpan may overlap a structural Array operation"
+        },
+        "reason": "unused.v has lastUseEvent:null and its local resize does not conflict with that unused formal. Entry still uses v until invocation completion even with body unused and fixed R=false; Array slot1 S aliases the actual view backing owner.",
+        "localFunctionAnalysis": {
+          "unused": "pass with registered unused formal, null lastUseEvent"
+        },
+        "functionName": "entry",
+        "sourceKind": "fixedCall",
+        "sequence": 1,
+        "operationPath": [
+          "body",
+          2,
+          "value"
+        ],
+        "lastUsePath": [
+          "body",
+          2,
+          "value"
+        ],
+        "primaryAnchor": "call",
+        "related": [
+          {
+            "role": "borrow-origin",
+            "anchor": "create"
+          },
+          {
+            "role": "borrow-last-use",
+            "anchor": "call"
+          }
+        ],
+        "targetFunctionName": "unused",
+        "parameterIndex": 1,
+        "viewOwnerDesign": "entry.a",
+        "structuralOwnerDesign": "entry.a",
+        "requiredDigests": "exact consumed target row and common fixed context2 digests",
+        "primaryCandidate": {
+          "sourcePath": "/readspan26b-adjacent/unused-rfalse-same-call-hold/app.ts",
+          "range": {
+            "start": 195,
+            "end": 207
+          },
+          "sourceText": "unused(v, a)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "relatedCandidates": [
+          {
+            "role": "borrow-origin",
+            "sourcePath": "/readspan26b-adjacent/unused-rfalse-same-call-hold/app.ts",
+            "range": {
+              "start": 167,
+              "end": 184
+            },
+            "sourceText": "readSpan(a, 0, 1)",
+            "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+          },
+          {
+            "role": "borrow-last-use",
+            "sourcePath": "/readspan26b-adjacent/unused-rfalse-same-call-hold/app.ts",
+            "range": {
+              "start": 195,
+              "end": 207
+            },
+            "sourceText": "unused(v, a)",
+            "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+          }
+        ]
+      },
+      "sourceRoot": "/readspan26b-adjacent/unused-rfalse-same-call-hold",
+      "sourcePath": "/readspan26b-adjacent/unused-rfalse-same-call-hold/app.ts",
+      "declarationPath": "/readspan26b-adjacent/unused-rfalse-same-call-hold/minimal-arrays-v3.d.ts",
+      "bytes": 211,
+      "utf16Length": 211,
+      "sha256": "d26ff61509c3ae72fd57b56a43cf3494c7e907a08a050f4906ca10d160c8351a",
+      "anchorCandidates": {
+        "unusedFormal": {
+          "sourcePath": "/readspan26b-adjacent/unused-rfalse-same-call-hold/app.ts",
+          "range": {
+            "start": 16,
+            "end": 32
+          },
+          "sourceText": "v: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "calleeMutation": {
+          "sourcePath": "/readspan26b-adjacent/unused-rfalse-same-call-hold/app.ts",
+          "range": {
+            "start": 53,
+            "end": 65
+          },
+          "sourceText": "a.length = 0",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "create": {
+          "sourcePath": "/readspan26b-adjacent/unused-rfalse-same-call-hold/app.ts",
+          "range": {
+            "start": 167,
+            "end": 184
+          },
+          "sourceText": "readSpan(a, 0, 1)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "call": {
+          "sourcePath": "/readspan26b-adjacent/unused-rfalse-same-call-hold/app.ts",
+          "range": {
+            "start": 195,
+            "end": 207
+          },
+          "sourceText": "unused(v, a)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": true,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "unused",
+            "parameterTypes": [
+              "readspan.f64",
+              "array.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": false,
+                  "write": false,
+                  "structural": false
+                },
+                {
+                  "index": 1,
+                  "read": false,
+                  "write": false,
+                  "structural": true
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": true,
+                "write": false,
+                "structural": true
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "fixed-array-s-wide-body-narrow",
+      "coverage": [
+        "fixed upper S must remain",
+        "body has no actual structural effect",
+        "view argument completion"
+      ],
+      "text": "function quiet(a: f64[], v: ReadSpan<f64>): f64 {\n  return v[0];\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  const v: ReadSpan<f64> = readSpan(a, 0, 1);\n  return quiet(a, v);\n}\n",
+      "sourceExpected": {
+        "outcome": "accept-complete-facts",
+        "reason": "Official-valid selected finite grammar; Source does not decide borrow liveness."
+      },
+      "productExpected": {
+        "outcome": "conflict",
+        "diagnostic": {
+          "class": "TypeError",
+          "code": "r03-d-readspan-structural-conflict",
+          "ruleId": "r01-span",
+          "phase": "hir",
+          "message": "active ReadSpan may overlap a structural Array operation"
+        },
+        "reason": "quiet's body has no Array mutation, but fixed Array slot0 structural=true remains mandatory at the caller. The same-owner v actual is held through quiet's completion. Narrow Derived does not narrow Published.",
+        "functionName": "entry",
+        "sourceKind": "fixedCall",
+        "sequence": 1,
+        "operationPath": [
+          "body",
+          2,
+          "value"
+        ],
+        "lastUsePath": [
+          "body",
+          2,
+          "value"
+        ],
+        "primaryAnchor": "call",
+        "related": [
+          {
+            "role": "borrow-origin",
+            "anchor": "create"
+          },
+          {
+            "role": "borrow-last-use",
+            "anchor": "call"
+          }
+        ],
+        "targetFunctionName": "quiet",
+        "parameterIndex": 0,
+        "viewOwnerDesign": "entry.a",
+        "structuralOwnerDesign": "entry.a",
+        "requiredDigests": "exact unchanged wide target row and context2 digests",
+        "pairedSemanticControl": "Same source with quiet slot0 S=false and entry local S=false is a distinct fixed-context control and must pass; no second source text.",
+        "primaryCandidate": {
+          "sourcePath": "/readspan26b-adjacent/fixed-array-s-wide-body-narrow/app.ts",
+          "range": {
+            "start": 179,
+            "end": 190
+          },
+          "sourceText": "quiet(a, v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "relatedCandidates": [
+          {
+            "role": "borrow-origin",
+            "sourcePath": "/readspan26b-adjacent/fixed-array-s-wide-body-narrow/app.ts",
+            "range": {
+              "start": 151,
+              "end": 168
+            },
+            "sourceText": "readSpan(a, 0, 1)",
+            "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+          },
+          {
+            "role": "borrow-last-use",
+            "sourcePath": "/readspan26b-adjacent/fixed-array-s-wide-body-narrow/app.ts",
+            "range": {
+              "start": 179,
+              "end": 190
+            },
+            "sourceText": "quiet(a, v)",
+            "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+          }
+        ]
+      },
+      "sourceRoot": "/readspan26b-adjacent/fixed-array-s-wide-body-narrow",
+      "sourcePath": "/readspan26b-adjacent/fixed-array-s-wide-body-narrow/app.ts",
+      "declarationPath": "/readspan26b-adjacent/fixed-array-s-wide-body-narrow/minimal-arrays-v3.d.ts",
+      "bytes": 194,
+      "utf16Length": 194,
+      "sha256": "4d4838f5cc6726617d4bf3389a83979d15d65c16006f61fa191729820d20c4f3",
+      "anchorCandidates": {
+        "quietRead": {
+          "sourcePath": "/readspan26b-adjacent/fixed-array-s-wide-body-narrow/app.ts",
+          "range": {
+            "start": 59,
+            "end": 63
+          },
+          "sourceText": "v[0]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "create": {
+          "sourcePath": "/readspan26b-adjacent/fixed-array-s-wide-body-narrow/app.ts",
+          "range": {
+            "start": 151,
+            "end": 168
+          },
+          "sourceText": "readSpan(a, 0, 1)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "call": {
+          "sourcePath": "/readspan26b-adjacent/fixed-array-s-wide-body-narrow/app.ts",
+          "range": {
+            "start": 179,
+            "end": 190
+          },
+          "sourceText": "quiet(a, v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": true,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "quiet",
+            "parameterTypes": [
+              "array.f64",
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": false,
+                  "write": false,
+                  "structural": true
+                },
+                {
+                  "index": 1,
+                  "read": true,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": true,
+                "write": false,
+                "structural": true
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "view-fixed-r-undercoverage",
+      "coverage": [
+        "valid readonly capability upper",
+        "actual formal R must be covered",
+        "contract before borrow"
+      ],
+      "text": "function read(v: ReadSpan<f64>): f64 {\n  return v[0];\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  const v: ReadSpan<f64> = readSpan(a, 0, 1);\n  return read(v);\n}\n",
+      "sourceExpected": {
+        "outcome": "accept-complete-facts",
+        "reason": "Official-valid selected finite grammar; Source does not decide borrow liveness."
+      },
+      "productExpected": {
+        "outcome": "contract",
+        "reason": "ReadSpan R=false is a valid capability declaration but actual checked formal read requires R=true. Complete Effective coverage rejects at read before view fees, plan/conflict or Core capability.",
+        "diagnostic": {
+          "class": "TypeError",
+          "code": "r03-d-array-call-effects-contract",
+          "ruleId": "r01-call-contract",
+          "phase": "analysis",
+          "message": "r03-d-array-call-effects-contract: invalid fixed Array owner publication"
+        },
+        "functionName": "read",
+        "facet": "parameter:0:read",
+        "primaryAnchor": "function",
+        "related": "absent",
+        "conflict": "absent",
+        "sameSourceControl": "The required-checked-read case has identical source text at a different unique root and R=true; control should also be run at this root with only the fixed row repaired.",
+        "primaryCandidate": {
+          "sourcePath": "/readspan26b-adjacent/view-fixed-r-undercoverage/app.ts",
+          "range": {
+            "start": 0,
+            "end": 55
+          },
+          "sourceText": "function read(v: ReadSpan<f64>): f64 {\n  return v[0];\n}",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "sourceRoot": "/readspan26b-adjacent/view-fixed-r-undercoverage",
+      "sourcePath": "/readspan26b-adjacent/view-fixed-r-undercoverage/app.ts",
+      "declarationPath": "/readspan26b-adjacent/view-fixed-r-undercoverage/minimal-arrays-v3.d.ts",
+      "bytes": 179,
+      "utf16Length": 179,
+      "sha256": "7aab6ef5eacd90f5e6200fabd06d1c38d13391d28c1a4a640b2359acc2e1eb38",
+      "anchorCandidates": {
+        "function": {
+          "sourcePath": "/readspan26b-adjacent/view-fixed-r-undercoverage/app.ts",
+          "range": {
+            "start": 0,
+            "end": 55
+          },
+          "sourceText": "function read(v: ReadSpan<f64>): f64 {\n  return v[0];\n}",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "formal": {
+          "sourcePath": "/readspan26b-adjacent/view-fixed-r-undercoverage/app.ts",
+          "range": {
+            "start": 14,
+            "end": 30
+          },
+          "sourceText": "v: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "read": {
+          "sourcePath": "/readspan26b-adjacent/view-fixed-r-undercoverage/app.ts",
+          "range": {
+            "start": 48,
+            "end": 52
+          },
+          "sourceText": "v[0]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "call": {
+          "sourcePath": "/readspan26b-adjacent/view-fixed-r-undercoverage/app.ts",
+          "range": {
+            "start": 168,
+            "end": 175
+          },
+          "sourceText": "read(v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": true,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "read",
+            "parameterTypes": [
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": false,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": true,
+                "write": false,
+                "structural": false
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "zero-length-retained-checks",
+      "coverage": [
+        "zero length does not remove checks",
+        "endpoint start==owner.length",
+        "checked OOB read stays reach-time"
+      ],
+      "text": "function probe(v: ReadSpan<f64>): f64 {\n  v.length;\n  return v[0];\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  const v: ReadSpan<f64> = readSpan(a, 1, 0);\n  return probe(v);\n}\n",
+      "sourceExpected": {
+        "outcome": "accept-complete-facts",
+        "reason": "Official-valid selected finite grammar; Source does not decide borrow liveness."
+      },
+      "productExpected": {
+        "outcome": "pass",
+        "reason": "Static owned validation accepts and retains the checked zero-length descriptor and checked index0 read. Source does not reject/fold OOB reads and Product does not execute them. Passing means static consumer success only; a future reached read must bounds-trap.",
+        "retained": [
+          "start<=owner.length",
+          "length<=owner.length-start",
+          "index<saved view length",
+          "original receiver/start/length/index evaluation order"
+        ],
+        "lastUseAnchor": "call",
+        "runtimeCredit": false,
+        "lastUseCandidate": {
+          "sourcePath": "/readspan26b-adjacent/zero-length-retained-checks/app.ts",
+          "range": {
+            "start": 181,
+            "end": 189
+          },
+          "sourceText": "probe(v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "sourceRoot": "/readspan26b-adjacent/zero-length-retained-checks",
+      "sourcePath": "/readspan26b-adjacent/zero-length-retained-checks/app.ts",
+      "declarationPath": "/readspan26b-adjacent/zero-length-retained-checks/minimal-arrays-v3.d.ts",
+      "bytes": 193,
+      "utf16Length": 193,
+      "sha256": "9c0b7d3a5efdfee818b90e03df468c42084529c6b3145b0b84f0b6cc9e9163e1",
+      "anchorCandidates": {
+        "formal": {
+          "sourcePath": "/readspan26b-adjacent/zero-length-retained-checks/app.ts",
+          "range": {
+            "start": 15,
+            "end": 31
+          },
+          "sourceText": "v: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "length": {
+          "sourcePath": "/readspan26b-adjacent/zero-length-retained-checks/app.ts",
+          "range": {
+            "start": 42,
+            "end": 50
+          },
+          "sourceText": "v.length",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "checkedRead": {
+          "sourcePath": "/readspan26b-adjacent/zero-length-retained-checks/app.ts",
+          "range": {
+            "start": 61,
+            "end": 65
+          },
+          "sourceText": "v[0]",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "create": {
+          "sourcePath": "/readspan26b-adjacent/zero-length-retained-checks/app.ts",
+          "range": {
+            "start": 153,
+            "end": 170
+          },
+          "sourceText": "readSpan(a, 1, 0)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "call": {
+          "sourcePath": "/readspan26b-adjacent/zero-length-retained-checks/app.ts",
+          "range": {
+            "start": 181,
+            "end": 189
+          },
+          "sourceText": "probe(v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": true,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "probe",
+            "parameterTypes": [
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": true,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": true,
+                "write": false,
+                "structural": false
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "nominal-array-as-view",
+      "coverage": [
+        "official structural assignability is insufficient",
+        "Array registry cannot mint view",
+        "argument primary"
+      ],
+      "text": "function ignore(v: ReadSpan<f64>): f64 {\n  return 1.0;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  return ignore(a);\n}\n",
+      "sourceExpected": {
+        "outcome": "capability",
+        "code": "r03-array-facts-capability",
+        "ruleId": "r01-ts-baseline",
+        "phase": "capability",
+        "category": "unsupported",
+        "severity": "error",
+        "primaryAnchor": "badArgument",
+        "reason": "Official IsTypeAssignableTo(Array<f64>, ReadSpan<f64>) is expected true, but actual argument a is a registered nominal Array, not a view parameter/local. Source emits no packet.",
+        "requiredOfficialControl": "Fresh4x0 plus true assignability and actual Array target/Symbol, distinct from pinned ReadSpan target.",
+        "primaryCandidate": {
+          "sourcePath": "/readspan26b-adjacent/nominal-array-as-view/app.ts",
+          "range": {
+            "start": 130,
+            "end": 131
+          },
+          "sourceText": "a",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "expectedFactsWrites": 0
+      },
+      "productExpected": {
+        "outcome": "not-reached-source-capability",
+        "reason": "No valid complete selected facts exists for this source. Do not invent pass/conflict/contract or a fake nominal packet."
+      },
+      "sourceRoot": "/readspan26b-adjacent/nominal-array-as-view",
+      "sourcePath": "/readspan26b-adjacent/nominal-array-as-view/app.ts",
+      "declarationPath": "/readspan26b-adjacent/nominal-array-as-view/minimal-arrays-v3.d.ts",
+      "bytes": 136,
+      "utf16Length": 136,
+      "sha256": "dc5e06850c65bc61cc9c661505ef7b8fee3cbdfb7996c5249946e222d9263416",
+      "anchorCandidates": {
+        "formal": {
+          "sourcePath": "/readspan26b-adjacent/nominal-array-as-view/app.ts",
+          "range": {
+            "start": 16,
+            "end": 32
+          },
+          "sourceText": "v: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "call": {
+          "sourcePath": "/readspan26b-adjacent/nominal-array-as-view/app.ts",
+          "range": {
+            "start": 123,
+            "end": 132
+          },
+          "sourceText": "ignore(a)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "badArgument": {
+          "sourcePath": "/readspan26b-adjacent/nominal-array-as-view/app.ts",
+          "range": {
+            "start": 130,
+            "end": 131
+          },
+          "sourceText": "a",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": false,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "ignore",
+            "parameterTypes": [
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": false,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "nominal-const-annotation-from-array",
+      "coverage": [
+        "destination annotation cannot mint nominal view",
+        "official valid initializer assignment",
+        "initializer primary"
+      ],
+      "text": "function ignore(v: ReadSpan<f64>): f64 {\n  return 1.0;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1.0];\n  const v: ReadSpan<f64> = a;\n  return ignore(v);\n}\n",
+      "sourceExpected": {
+        "outcome": "capability",
+        "code": "r03-array-facts-capability",
+        "ruleId": "r01-ts-baseline",
+        "phase": "capability",
+        "category": "unsupported",
+        "severity": "error",
+        "primaryAnchor": "badInitializer",
+        "reason": "Official assignment Array-to-readonly-interface is valid, but initializer a is not a prior nominal view; the v destination annotation cannot construct provenance.",
+        "requiredOfficialControl": "Fresh4x0; v declared type is pinned ReadSpan while initializer a actual type is Array; assignability true.",
+        "primaryCandidate": {
+          "sourcePath": "/readspan26b-adjacent/nominal-const-annotation-from-array/app.ts",
+          "range": {
+            "start": 141,
+            "end": 142
+          },
+          "sourceText": "a",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "expectedFactsWrites": 0
+      },
+      "productExpected": {
+        "outcome": "not-reached-source-capability",
+        "reason": "No valid Source view root exists; no Product packet or invented fresh owner is permitted."
+      },
+      "sourceRoot": "/readspan26b-adjacent/nominal-const-annotation-from-array",
+      "sourcePath": "/readspan26b-adjacent/nominal-const-annotation-from-array/app.ts",
+      "declarationPath": "/readspan26b-adjacent/nominal-const-annotation-from-array/minimal-arrays-v3.d.ts",
+      "bytes": 166,
+      "utf16Length": 166,
+      "sha256": "a4059034500239344e176d698e346cd884d06fd8bd92e06a3f39f842d2d5cd2c",
+      "anchorCandidates": {
+        "annotation": {
+          "sourcePath": "/readspan26b-adjacent/nominal-const-annotation-from-array/app.ts",
+          "range": {
+            "start": 125,
+            "end": 138
+          },
+          "sourceText": "ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "badInitializer": {
+          "sourcePath": "/readspan26b-adjacent/nominal-const-annotation-from-array/app.ts",
+          "range": {
+            "start": 141,
+            "end": 142
+          },
+          "sourceText": "a",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "call": {
+          "sourcePath": "/readspan26b-adjacent/nominal-const-annotation-from-array/app.ts",
+          "range": {
+            "start": 153,
+            "end": 162
+          },
+          "sourceText": "ignore(v)",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": false,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "ignore",
+            "parameterTypes": [
+              "readspan.f64"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": false,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "explicit-view-u32-rejected",
+      "coverage": [
+        "explicit pinned f64 origin",
+        "number alias erasure is insufficient"
+      ],
+      "text": "function bad(v: ReadSpan<u32>): f64 {\n  return 1.0;\n}\nexport function entry(): f64 {\n  return 1.0;\n}\n",
+      "sourceExpected": {
+        "outcome": "capability",
+        "code": "r03-array-facts-capability",
+        "ruleId": "r01-ts-baseline",
+        "phase": "capability",
+        "category": "unsupported",
+        "severity": "error",
+        "primaryAnchor": "badParameter",
+        "reason": "Required header arity is valid, but exact view annotation requires explicit pinned f64 Symbol. u32's official Number representation cannot substitute.",
+        "primaryCandidate": {
+          "sourcePath": "/readspan26b-adjacent/explicit-view-u32-rejected/app.ts",
+          "range": {
+            "start": 13,
+            "end": 29
+          },
+          "sourceText": "v: ReadSpan<u32>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "expectedFactsWrites": 0
+      },
+      "productExpected": {
+        "outcome": "not-reached-source-capability",
+        "reason": "Unsupported annotation cannot form a selected nominal signature/FunctionId/fixed context."
+      },
+      "manualUpperStatus": "Intended source-slot flags only; bad's slot0 is not an admitted selected owner slot and no fixed row/hash may be issued.",
+      "sourceRoot": "/readspan26b-adjacent/explicit-view-u32-rejected",
+      "sourcePath": "/readspan26b-adjacent/explicit-view-u32-rejected/app.ts",
+      "declarationPath": "/readspan26b-adjacent/explicit-view-u32-rejected/minimal-arrays-v3.d.ts",
+      "bytes": 101,
+      "utf16Length": 101,
+      "sha256": "cac01cf741c3276e0cb61212259daf0dde440a5d1c93a94bd37414c39f93d810",
+      "anchorCandidates": {
+        "badParameter": {
+          "sourcePath": "/readspan26b-adjacent/explicit-view-u32-rejected/app.ts",
+          "range": {
+            "start": 13,
+            "end": 29
+          },
+          "sourceText": "v: ReadSpan<u32>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "element": {
+          "sourcePath": "/readspan26b-adjacent/explicit-view-u32-rejected/app.ts",
+          "range": {
+            "start": 25,
+            "end": 28
+          },
+          "sourceText": "u32",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": false,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "bad",
+            "parameterTypes": [
+              "UNSUPPORTED:ReadSpan<u32>"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": false,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    },
+    {
+      "id": "optional-view-parameter-rejected",
+      "coverage": [
+        "representative optional/default/rest required-only boundary",
+        "header early rejection order"
+      ],
+      "text": "function maybe(v?: ReadSpan<f64>): f64 {\n  return 1.0;\n}\nexport function entry(): f64 {\n  return 1.0;\n}\n",
+      "sourceExpected": {
+        "outcome": "capability",
+        "code": "r03-array-facts-capability",
+        "ruleId": "r01-ts-baseline",
+        "phase": "capability",
+        "category": "unsupported",
+        "severity": "error",
+        "primaryAnchor": "function",
+        "reason": "Existing complete header checks MinArgumentCount()==declared parameter count before parameter conversion; optional v makes0!=1, so preserve whole FunctionDeclaration primary. Actual AST range still pending.",
+        "earlyRejectionAuthority": "Frozen required-signature rule plus Root's explicit preservation of existing header-before-parameter order; do not promise the narrower parameter primary.",
+        "primaryCandidate": {
+          "sourcePath": "/readspan26b-adjacent/optional-view-parameter-rejected/app.ts",
+          "range": {
+            "start": 0,
+            "end": 56
+          },
+          "sourceText": "function maybe(v?: ReadSpan<f64>): f64 {\n  return 1.0;\n}",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "expectedFactsWrites": 0
+      },
+      "productExpected": {
+        "outcome": "not-reached-source-capability",
+        "reason": "Optional signature is outside the selected required-only contract and cannot have a selected fixed context."
+      },
+      "manualUpperStatus": "Intended original source slot0 flags only; no selected row/hash.",
+      "notInstantiatedAlternatives": [
+        "default parameter",
+        "rest parameter"
+      ],
+      "sourceRoot": "/readspan26b-adjacent/optional-view-parameter-rejected",
+      "sourcePath": "/readspan26b-adjacent/optional-view-parameter-rejected/app.ts",
+      "declarationPath": "/readspan26b-adjacent/optional-view-parameter-rejected/minimal-arrays-v3.d.ts",
+      "bytes": 104,
+      "utf16Length": 104,
+      "sha256": "f8553d83325df1390329c62e81df58f4fa257100a3ec0997de421bffb2d0b9cf",
+      "anchorCandidates": {
+        "function": {
+          "sourcePath": "/readspan26b-adjacent/optional-view-parameter-rejected/app.ts",
+          "range": {
+            "start": 0,
+            "end": 56
+          },
+          "sourceText": "function maybe(v?: ReadSpan<f64>): f64 {\n  return 1.0;\n}",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        },
+        "optionalParameter": {
+          "sourcePath": "/readspan26b-adjacent/optional-view-parameter-rejected/app.ts",
+          "range": {
+            "start": 15,
+            "end": 32
+          },
+          "sourceText": "v?: ReadSpan<f64>",
+          "status": "AUTHORED_TEXT_OFFSETS_PENDING_FRESH_OFFICIAL_AST_POSITIONMAP"
+        }
+      },
+      "fixedPublicationIntent": {
+        "family": "tsfg.array-publication-context-candidate",
+        "version": 2,
+        "profile": "array-readspan-owner-relative-fixed-v2",
+        "constructibleFromAcceptedSource": false,
+        "identityStatus": "Manual all-function/full-slot upper intent only; actual stable FunctionIds/signature hashes/context digests require independent official whole oracle.",
+        "functions": [
+          {
+            "functionName": "maybe",
+            "parameterTypes": [
+              "UNSUPPORTED:optional ReadSpan<f64>"
+            ],
+            "upper": {
+              "parameters": [
+                {
+                  "index": 0,
+                  "read": false,
+                  "write": false,
+                  "structural": false
+                }
+              ],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          },
+          {
+            "functionName": "entry",
+            "parameterTypes": [],
+            "upper": {
+              "parameters": [],
+              "local": {
+                "read": false,
+                "write": false,
+                "structural": false
+              }
+            }
+          }
+        ]
+      },
+      "officialExpected": {
+        "status": "PENDING_NOT_RUN",
+        "diagnostics": {
+          "syntax": 0,
+          "semantic": 0,
+          "program": 0,
+          "global": 0
+        },
+        "closure": "root plus exact unchanged484B DTS only",
+        "actualAstSpans": "PENDING",
+        "wholeFactsHirPlanSummary": "PENDING"
+      }
+    }
+  ]
+}

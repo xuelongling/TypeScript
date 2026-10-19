@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Local view facts retain checked operands and real symbols, never borrow decisions.
+// Local and parameter view facts retain real symbols, never borrow decisions.
 package main
 
 import (
@@ -7,11 +7,26 @@ import (
 	"strings"
 )
 
+func (p *arrayFactsProjection) viewAnnotation(node *ast.Node) *ast.Node {
+	if node == nil || node.Kind != ast.KindTypeReference {
+		return nil
+	}
+	annotation := node.AsTypeReferenceNode()
+	if annotation.TypeName == nil || annotation.TypeName.Kind != ast.KindIdentifier || p.check.GetSymbolAtLocation(annotation.TypeName) != p.view.symbol || annotation.TypeArguments == nil || len(annotation.TypeArguments.Nodes) != 1 || !p.f64Annotation(annotation.TypeArguments.Nodes[0]) || !p.viewType(p.check.GetTypeFromTypeNode(node), p.check.GetNumberType()) {
+		return nil
+	}
+	return annotation.TypeArguments.Nodes[0]
+}
+
 func (p *arrayFactsProjection) viewReference(node *ast.Node, state *arrayFactsFunctionState) (*arrayFactsValue, error) {
 	if node == nil || node.Kind != ast.KindIdentifier {
 		return nil, arrayFactsCapability(p.file, node, "direct prior readonly view binding required")
 	}
-	binding, ok := state.bindings[p.check.GetSymbolAtLocation(node)]
+	symbol := p.check.GetSymbolAtLocation(node)
+	binding, ok := state.bindings[symbol]
+	if parameter, found := state.parameters[symbol]; found && parameter.DeclaredType == "readspan.f64" {
+		binding.ID, binding.DeclaredType, ok = parameter.ID, "readspan.f64", true
+	}
 	if !ok || binding.DeclaredType != "readspan.f64" || !p.viewType(p.check.GetTypeAtLocation(node), p.check.GetNumberType()) {
 		return nil, arrayFactsCapability(p.file, node, "actual same-function prior ReadSpan symbol/use type required")
 	}
@@ -76,14 +91,11 @@ func (p *arrayFactsProjection) viewLocal(statement, node *ast.Node, symbol *ast.
 	}
 	binding = arrayFactsBinding{ID: id, Name: strings.Clone(node.Name().Text()), Kind: "const", DeclaredType: "readspan.f64", Writable: false, DeclarationRange: expressionOffset(p.file, node), NameRange: expressionOffset(p.file, node.Name())}
 	if local.Type != nil {
-		if local.Type.Kind != ast.KindTypeReference {
-			return binding, result, arrayFactsCapability(p.file, local.Type, "explicit pinned ReadSpan<f64> annotation required")
-		}
-		annotation := local.Type.AsTypeReferenceNode()
-		if annotation.TypeName == nil || annotation.TypeName.Kind != ast.KindIdentifier || p.check.GetSymbolAtLocation(annotation.TypeName) != p.view.symbol || annotation.TypeArguments == nil || len(annotation.TypeArguments.Nodes) != 1 || !p.f64Annotation(annotation.TypeArguments.Nodes[0]) || !p.viewType(p.check.GetTypeFromTypeNode(local.Type), p.check.GetNumberType()) {
+		elementNode := p.viewAnnotation(local.Type)
+		if elementNode == nil {
 			return binding, result, arrayFactsCapability(p.file, local.Type, "actual pinned readonly ReadSpan<f64> annotation required")
 		}
-		full, element := expressionOffset(p.file, local.Type), expressionOffset(p.file, annotation.TypeArguments.Nodes[0])
+		full, element := expressionOffset(p.file, local.Type), expressionOffset(p.file, elementNode)
 		binding.AnnotationRange, binding.ElementAnnotationRange = &full, &element
 	}
 	var value *arrayFactsValue

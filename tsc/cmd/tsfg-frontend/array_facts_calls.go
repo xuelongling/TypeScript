@@ -33,7 +33,9 @@ func (p *arrayFactsProjection) call(node *ast.Node, state *arrayFactsFunctionSta
 		if err := p.ctx.Err(); err != nil {
 			return nil, arrayFactsError("canceled", "ordered call arguments", err)
 		}
-		if resolved.Parameters()[i] != header.signature.Parameters()[i] || !p.check.IsTypeAssignableTo(p.check.GetTypeAtLocation(argument), p.check.GetTypeOfSymbol(resolved.Parameters()[i])) {
+		parameter := resolved.Parameters()[i]
+		original := header.node.AsFunctionDeclaration().Parameters.Nodes[i]
+		if parameter == nil || parameter != header.signature.Parameters()[i] || len(parameter.Declarations) != 1 || parameter.Declarations[0] != original || !p.check.IsTypeAssignableTo(p.check.GetTypeAtLocation(argument), p.check.GetTypeOfSymbol(parameter)) {
 			return nil, arrayFactsCapability(p.file, argument, "actual argument and original resolved parameter identity/type required")
 		}
 		var value *arrayFactsValue
@@ -41,6 +43,8 @@ func (p *arrayFactsProjection) call(node *ast.Node, state *arrayFactsFunctionSta
 		switch header.function.Parameters[i].DeclaredType {
 		case "array.f64":
 			value, err = p.reference(argument, state)
+		case "readspan.f64":
+			value, err = p.viewReference(argument, state)
 		case "f64":
 			if argument.Kind == ast.KindIdentifier {
 				value, err = p.scalarReference(argument, "f64", state)

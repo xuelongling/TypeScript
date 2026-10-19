@@ -14,7 +14,7 @@ func runFrontendCommand(ctx context.Context, args []string, input io.Reader, out
 	if len(args) == 1 && args[0] == "--module-callable-facts-io-v1" {
 		return runModuleCallableFactsCandidate(ctx, input, output)
 	}
-	if len(args) == 1 && args[0] == "--array-facts-io-v4" {
+	if len(args) == 1 && args[0] == "--array-facts-io-v5" {
 		return runArrayFactsCandidate(ctx, input, output)
 	}
 	if len(args) == 1 && args[0] == "--string-facts-io-v2" {
