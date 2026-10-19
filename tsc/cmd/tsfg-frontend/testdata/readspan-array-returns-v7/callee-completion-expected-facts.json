@@ -1,0 +1,2096 @@
+{
+  "family": "tsfg.m26d-independent-callee-completion-source-whole-oracle",
+  "version": 1,
+  "status": "INDEPENDENT_PRE_OUTPUT_NOT_ACTUAL_RESULT",
+  "frozenInterface": {
+    "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/M26d-array-readspan-return-checks-20261019/interface-frozen.json",
+    "bytes": 22976,
+    "sha256": "cb048701ca15efafcb8ee6e2c02278431a6d8a845fb291f381cadb4e0189c48b"
+  },
+  "proposal": {
+    "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/M26d-array-readspan-return-checks-20261019/oracle/next-semantic-cases-proposal.json",
+    "bytes": 14574,
+    "sha256": "f2886ce8c5fb33928b590868ce4e21fe34622c46ff2b7dc4260eae78b09e3b75"
+  },
+  "method": "Exact proposal group2 source, independent explicit source geometry and DTO construction; no SUT/parser/import/eval, output or safety hints read.",
+  "sourceRoot": "/readspan26d-semantic",
+  "rootFile": "/readspan26d-semantic/app.ts",
+  "schemaHash": "sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2",
+  "sourceWindowFailures": [],
+  "suggestedGoSelectors": {
+    "official": "TestM26dArrayReturnCalleeCompletionOfficialProgram",
+    "public": "TestM26dArrayReturnCalleeCompletionPublicFacts"
+  },
+  "cases": [
+    {
+      "name": "callee-modify-before-create",
+      "source": "function borrow(a: f64[]): ReadSpan<f64> {\n  a.length = 0;\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\n  return v;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1];\n  const w: ReadSpan<f64> = borrow(a);\n  w.length;\n  return 1;\n}\n",
+      "sourceBytes": 238,
+      "sourceSHA256": "2a90617219fcc46d12d16f88a657607b66221adf705ec53af9471cacdec6d4e0",
+      "request": {
+        "family": "tsfg.array-facts-request-candidate",
+        "version": 7,
+        "input": {
+          "sourceRoot": "/readspan26d-semantic",
+          "rootFile": "/readspan26d-semantic/app.ts",
+          "files": [
+            {
+              "path": "/readspan26d-semantic/app.ts",
+              "content": "function borrow(a: f64[]): ReadSpan<f64> {\n  a.length = 0;\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\n  return v;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1];\n  const w: ReadSpan<f64> = borrow(a);\n  w.length;\n  return 1;\n}\n",
+              "sha256": "2a90617219fcc46d12d16f88a657607b66221adf705ec53af9471cacdec6d4e0"
+            },
+            {
+              "path": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+              "content": "// SPDX-License-Identifier: MIT\ninterface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> { [n: number]: T; length: number; }\ntype f64 = number;\ntype u32 = number;\ninterface ReadSpan<T> { readonly [n: number]: T; readonly length: u32; }\ndeclare function readSpan<T>(owner: T[], start: u32, length: u32): ReadSpan<T>;\n",
+              "sha256": "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415"
+            }
+          ],
+          "declarations": {
+            "paths": [
+              "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            ],
+            "version": "minimal-arrays-v3"
+          },
+          "config": {
+            "allowJs": false,
+            "noEmit": true,
+            "strict": true
+          }
+        }
+      },
+      "requestText": "{\"family\":\"tsfg.array-facts-request-candidate\",\"input\":{\"config\":{\"allowJs\":false,\"noEmit\":true,\"strict\":true},\"declarations\":{\"paths\":[\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"],\"version\":\"minimal-arrays-v3\"},\"files\":[{\"content\":\"function borrow(a: f64[]): ReadSpan<f64> {\\n  a.length = 0;\\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\\n  return v;\\n}\\nexport function entry(): f64 {\\n  const a: f64[] = [1];\\n  const w: ReadSpan<f64> = borrow(a);\\n  w.length;\\n  return 1;\\n}\\n\",\"path\":\"/readspan26d-semantic/app.ts\",\"sha256\":\"2a90617219fcc46d12d16f88a657607b66221adf705ec53af9471cacdec6d4e0\"},{\"content\":\"// SPDX-License-Identifier: MIT\\ninterface Object {}\\ninterface Function {}\\ninterface CallableFunction {}\\ninterface NewableFunction {}\\ninterface IArguments {}\\ninterface String {}\\ninterface Number {}\\ninterface Boolean {}\\ninterface RegExp {}\\ninterface Array<T> { [n: number]: T; length: number; }\\ntype f64 = number;\\ntype u32 = number;\\ninterface ReadSpan<T> { readonly [n: number]: T; readonly length: u32; }\\ndeclare function readSpan<T>(owner: T[], start: u32, length: u32): ReadSpan<T>;\\n\",\"path\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"sha256\":\"282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415\"}],\"rootFile\":\"/readspan26d-semantic/app.ts\",\"sourceRoot\":\"/readspan26d-semantic\"},\"version\":7}\n",
+      "package": {
+        "family": "tsfg.array-facts-package-candidate",
+        "version": 7,
+        "schemaHash": "sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2",
+        "requestId": "sha256:83babc4a33b5f4776a95d65d7eecb0dcb6d545c76b1a3123cc9e26e88a08f2dc",
+        "packageId": "sha256:4acbbd884796ad608c2840006d33fcff6d280eb70336d626b5fe2a4882141d59",
+        "payload": {
+          "arrayLength": {
+            "declarationRange": {
+              "end": 290,
+              "start": 275
+            },
+            "id": "sha256:db2528de3dc8c04e8feda7829090f980daccabf9a8d300a562cb9688f3f44a0a",
+            "kind": "property",
+            "name": "length",
+            "nameRange": {
+              "end": 281,
+              "start": 275
+            },
+            "officialType": "number",
+            "ownerType": "array.f64",
+            "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+            "typeRange": {
+              "end": 289,
+              "start": 283
+            },
+            "writeType": "u32"
+          },
+          "config": {
+            "allowJs": false,
+            "noEmit": true,
+            "strict": true
+          },
+          "declarations": {
+            "paths": [
+              "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            ],
+            "version": "minimal-arrays-v3"
+          },
+          "diagnostics": [],
+          "exports": [
+            {
+              "name": "entry",
+              "functionId": "sha256:ab1a555eb52765ab48a122ce20d12edeb938cb71d09b6cd3bebdf1c100425193"
+            }
+          ],
+          "files": [
+            {
+              "path": "/readspan26d-semantic/app.ts",
+              "content": "function borrow(a: f64[]): ReadSpan<f64> {\n  a.length = 0;\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\n  return v;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1];\n  const w: ReadSpan<f64> = borrow(a);\n  w.length;\n  return 1;\n}\n",
+              "byteLength": 238,
+              "utf16Length": 238,
+              "sha256": "2a90617219fcc46d12d16f88a657607b66221adf705ec53af9471cacdec6d4e0"
+            },
+            {
+              "path": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+              "content": "// SPDX-License-Identifier: MIT\ninterface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> { [n: number]: T; length: number; }\ntype f64 = number;\ntype u32 = number;\ninterface ReadSpan<T> { readonly [n: number]: T; readonly length: u32; }\ndeclare function readSpan<T>(owner: T[], start: u32, length: u32): ReadSpan<T>;\n",
+              "byteLength": 484,
+              "utf16Length": 484,
+              "sha256": "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415"
+            }
+          ],
+          "functions": [
+            {
+              "id": "sha256:eb32808ea01430bbcb5df725661340913eb73a42ac5ac8d28b483d5c8341bc73",
+              "name": "borrow",
+              "sourcePath": "/readspan26d-semantic/app.ts",
+              "declarationRange": {
+                "start": 0,
+                "end": 118
+              },
+              "nameRange": {
+                "start": 9,
+                "end": 15
+              },
+              "returnType": "readspan.f64",
+              "returnAnnotationRange": {
+                "start": 27,
+                "end": 40
+              },
+              "returnElementAnnotationRange": {
+                "start": 36,
+                "end": 39
+              },
+              "parameters": [
+                {
+                  "id": "sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49",
+                  "kind": "parameter",
+                  "name": "a",
+                  "declaredType": "array.f64",
+                  "writable": true,
+                  "declarationRange": {
+                    "start": 16,
+                    "end": 24
+                  },
+                  "nameRange": {
+                    "start": 16,
+                    "end": 17
+                  },
+                  "annotationRange": {
+                    "start": 19,
+                    "end": 24
+                  },
+                  "elementAnnotationRange": {
+                    "start": 19,
+                    "end": 22
+                  }
+                }
+              ],
+              "bindings": [
+                {
+                  "id": "sha256:cb3b1451625051a76c2efe44cf346f2efcd8b862f6a7413ae5e7b5df97fe11ef",
+                  "kind": "const",
+                  "name": "v",
+                  "declaredType": "readspan.f64",
+                  "writable": false,
+                  "declarationRange": {
+                    "start": 67,
+                    "end": 103
+                  },
+                  "nameRange": {
+                    "start": 67,
+                    "end": 68
+                  },
+                  "annotationRange": {
+                    "start": 70,
+                    "end": 83
+                  },
+                  "elementAnnotationRange": {
+                    "start": 79,
+                    "end": 82
+                  }
+                }
+              ],
+              "body": [
+                {
+                  "kind": "lengthAssignment",
+                  "range": {
+                    "start": 45,
+                    "end": 58
+                  },
+                  "expressionRange": {
+                    "start": 45,
+                    "end": 57
+                  },
+                  "operatorRange": {
+                    "start": 54,
+                    "end": 55
+                  },
+                  "target": {
+                    "kind": "lengthTarget",
+                    "type": "u32",
+                    "range": {
+                      "start": 45,
+                      "end": 53
+                    },
+                    "array": {
+                      "kind": "reference",
+                      "binding": "sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49",
+                      "flowType": "array.f64",
+                      "range": {
+                        "start": 45,
+                        "end": 46
+                      }
+                    },
+                    "property": "sha256:db2528de3dc8c04e8feda7829090f980daccabf9a8d300a562cb9688f3f44a0a",
+                    "nameRange": {
+                      "start": 47,
+                      "end": 53
+                    }
+                  },
+                  "value": {
+                    "kind": "lengthLiteral",
+                    "type": "u32",
+                    "range": {
+                      "start": 56,
+                      "end": 57
+                    },
+                    "token": "0",
+                    "decimal": "0"
+                  }
+                },
+                {
+                  "kind": "variable",
+                  "binding": "sha256:cb3b1451625051a76c2efe44cf346f2efcd8b862f6a7413ae5e7b5df97fe11ef",
+                  "range": {
+                    "start": 61,
+                    "end": 104
+                  },
+                  "initializer": {
+                    "kind": "readSpanCreate",
+                    "type": "readspan.f64",
+                    "range": {
+                      "start": 86,
+                      "end": 103
+                    },
+                    "intrinsic": "sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6",
+                    "calleeRange": {
+                      "start": 86,
+                      "end": 94
+                    },
+                    "array": {
+                      "kind": "reference",
+                      "binding": "sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49",
+                      "flowType": "array.f64",
+                      "range": {
+                        "start": 95,
+                        "end": 96
+                      }
+                    },
+                    "start": {
+                      "kind": "u32Literal",
+                      "type": "u32",
+                      "range": {
+                        "start": 98,
+                        "end": 99
+                      },
+                      "token": "0",
+                      "decimal": "0"
+                    },
+                    "length": {
+                      "kind": "u32Literal",
+                      "type": "u32",
+                      "range": {
+                        "start": 101,
+                        "end": 102
+                      },
+                      "token": "0",
+                      "decimal": "0"
+                    }
+                  }
+                },
+                {
+                  "kind": "return",
+                  "range": {
+                    "start": 107,
+                    "end": 116
+                  },
+                  "value": {
+                    "kind": "reference",
+                    "binding": "sha256:cb3b1451625051a76c2efe44cf346f2efcd8b862f6a7413ae5e7b5df97fe11ef",
+                    "flowType": "readspan.f64",
+                    "range": {
+                      "start": 114,
+                      "end": 115
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "sha256:ab1a555eb52765ab48a122ce20d12edeb938cb71d09b6cd3bebdf1c100425193",
+              "name": "entry",
+              "sourcePath": "/readspan26d-semantic/app.ts",
+              "declarationRange": {
+                "start": 119,
+                "end": 237
+              },
+              "nameRange": {
+                "start": 135,
+                "end": 140
+              },
+              "returnType": "f64",
+              "returnAnnotationRange": {
+                "start": 144,
+                "end": 147
+              },
+              "parameters": [],
+              "bindings": [
+                {
+                  "id": "sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6",
+                  "kind": "const",
+                  "name": "a",
+                  "declaredType": "array.f64",
+                  "writable": false,
+                  "declarationRange": {
+                    "start": 158,
+                    "end": 172
+                  },
+                  "nameRange": {
+                    "start": 158,
+                    "end": 159
+                  },
+                  "annotationRange": {
+                    "start": 161,
+                    "end": 166
+                  },
+                  "elementAnnotationRange": {
+                    "start": 161,
+                    "end": 164
+                  }
+                },
+                {
+                  "id": "sha256:38437aa152e98585429141fc7dc025cc38067d6aac6be7a44e0cff51e8d559c5",
+                  "kind": "const",
+                  "name": "w",
+                  "declaredType": "readspan.f64",
+                  "writable": false,
+                  "declarationRange": {
+                    "start": 182,
+                    "end": 210
+                  },
+                  "nameRange": {
+                    "start": 182,
+                    "end": 183
+                  },
+                  "annotationRange": {
+                    "start": 185,
+                    "end": 198
+                  },
+                  "elementAnnotationRange": {
+                    "start": 194,
+                    "end": 197
+                  }
+                }
+              ],
+              "body": [
+                {
+                  "kind": "variable",
+                  "binding": "sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6",
+                  "range": {
+                    "start": 152,
+                    "end": 173
+                  },
+                  "initializer": {
+                    "kind": "arrayLiteral",
+                    "type": "array.f64",
+                    "range": {
+                      "start": 169,
+                      "end": 172
+                    },
+                    "allocationSite": "sha256:afddb7b7923e7d51526d8cb80723132bd832b486d7371a723ec8617f01afffba",
+                    "elements": [
+                      {
+                        "kind": "numericLiteral",
+                        "type": "f64",
+                        "range": {
+                          "start": 170,
+                          "end": 171
+                        },
+                        "token": "1",
+                        "bits": "3ff0000000000000"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "variable",
+                  "binding": "sha256:38437aa152e98585429141fc7dc025cc38067d6aac6be7a44e0cff51e8d559c5",
+                  "range": {
+                    "start": 176,
+                    "end": 211
+                  },
+                  "initializer": {
+                    "kind": "directCall",
+                    "type": "readspan.f64",
+                    "range": {
+                      "start": 201,
+                      "end": 210
+                    },
+                    "callee": "sha256:eb32808ea01430bbcb5df725661340913eb73a42ac5ac8d28b483d5c8341bc73",
+                    "calleeRange": {
+                      "start": 201,
+                      "end": 207
+                    },
+                    "arguments": [
+                      {
+                        "kind": "reference",
+                        "binding": "sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6",
+                        "flowType": "array.f64",
+                        "range": {
+                          "start": 208,
+                          "end": 209
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "readSpanUse",
+                  "range": {
+                    "start": 214,
+                    "end": 223
+                  },
+                  "value": {
+                    "kind": "readSpanLength",
+                    "type": "u32",
+                    "range": {
+                      "start": 214,
+                      "end": 222
+                    },
+                    "property": "sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b",
+                    "nameRange": {
+                      "start": 216,
+                      "end": 222
+                    },
+                    "view": {
+                      "kind": "reference",
+                      "binding": "sha256:38437aa152e98585429141fc7dc025cc38067d6aac6be7a44e0cff51e8d559c5",
+                      "flowType": "readspan.f64",
+                      "range": {
+                        "start": 214,
+                        "end": 215
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "return",
+                  "range": {
+                    "start": 226,
+                    "end": 235
+                  },
+                  "value": {
+                    "kind": "numericLiteral",
+                    "type": "f64",
+                    "range": {
+                      "start": 233,
+                      "end": 234
+                    },
+                    "token": "1",
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              ]
+            }
+          ],
+          "positionUnit": "utf16",
+          "readSpanIntrinsic": {
+            "declarationRange": {
+              "end": 483,
+              "start": 404
+            },
+            "id": "sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6",
+            "kind": "intrinsic",
+            "name": "readSpan",
+            "nameRange": {
+              "end": 429,
+              "start": 421
+            },
+            "parameters": [
+              {
+                "declarationRange": {
+                  "end": 443,
+                  "start": 433
+                },
+                "name": "owner",
+                "nameRange": {
+                  "end": 438,
+                  "start": 433
+                },
+                "typeRange": {
+                  "end": 443,
+                  "start": 440
+                }
+              },
+              {
+                "declarationRange": {
+                  "end": 455,
+                  "start": 445
+                },
+                "name": "start",
+                "nameRange": {
+                  "end": 450,
+                  "start": 445
+                },
+                "typeRange": {
+                  "end": 455,
+                  "start": 452
+                }
+              },
+              {
+                "declarationRange": {
+                  "end": 468,
+                  "start": 457
+                },
+                "name": "length",
+                "nameRange": {
+                  "end": 463,
+                  "start": 457
+                },
+                "typeRange": {
+                  "end": 468,
+                  "start": 465
+                }
+              }
+            ],
+            "returnTypeRange": {
+              "end": 482,
+              "start": 471
+            },
+            "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+            "typeParameterRange": {
+              "end": 431,
+              "start": 430
+            }
+          },
+          "readSpanLength": {
+            "declarationRange": {
+              "end": 401,
+              "start": 380
+            },
+            "id": "sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b",
+            "kind": "property",
+            "name": "length",
+            "nameRange": {
+              "end": 395,
+              "start": 389
+            },
+            "officialType": "number",
+            "ownerType": "readspan.f64",
+            "readType": "u32",
+            "readonly": true,
+            "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+            "typeRange": {
+              "end": 400,
+              "start": 397
+            }
+          },
+          "rootFile": "/readspan26d-semantic/app.ts",
+          "sourceRoot": "/readspan26d-semantic",
+          "types": [
+            {
+              "declarationRange": {
+                "end": 311,
+                "start": 293
+              },
+              "id": "f64",
+              "kind": "scalar",
+              "nameRange": {
+                "end": 301,
+                "start": 298
+              },
+              "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            },
+            {
+              "declarationRange": {
+                "end": 292,
+                "start": 238
+              },
+              "elementType": "f64",
+              "id": "array.f64",
+              "indexSignatureRange": {
+                "end": 274,
+                "start": 259
+              },
+              "kind": "array",
+              "nameRange": {
+                "end": 253,
+                "start": 248
+              },
+              "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            },
+            {
+              "declarationRange": {
+                "end": 330,
+                "start": 312
+              },
+              "id": "u32",
+              "kind": "scalar",
+              "nameRange": {
+                "end": 320,
+                "start": 317
+              },
+              "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            },
+            {
+              "declarationRange": {
+                "end": 403,
+                "start": 331
+              },
+              "elementType": "f64",
+              "id": "readspan.f64",
+              "indexSignatureRange": {
+                "end": 379,
+                "start": 355
+              },
+              "kind": "readSpan",
+              "nameRange": {
+                "end": 349,
+                "start": 341
+              },
+              "readonly": true,
+              "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            }
+          ]
+        }
+      },
+      "packageText": "{\"family\":\"tsfg.array-facts-package-candidate\",\"packageId\":\"sha256:4acbbd884796ad608c2840006d33fcff6d280eb70336d626b5fe2a4882141d59\",\"payload\":{\"arrayLength\":{\"declarationRange\":{\"end\":290,\"start\":275},\"id\":\"sha256:db2528de3dc8c04e8feda7829090f980daccabf9a8d300a562cb9688f3f44a0a\",\"kind\":\"property\",\"name\":\"length\",\"nameRange\":{\"end\":281,\"start\":275},\"officialType\":\"number\",\"ownerType\":\"array.f64\",\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"typeRange\":{\"end\":289,\"start\":283},\"writeType\":\"u32\"},\"config\":{\"allowJs\":false,\"noEmit\":true,\"strict\":true},\"declarations\":{\"paths\":[\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"],\"version\":\"minimal-arrays-v3\"},\"diagnostics\":[],\"exports\":[{\"functionId\":\"sha256:ab1a555eb52765ab48a122ce20d12edeb938cb71d09b6cd3bebdf1c100425193\",\"name\":\"entry\"}],\"files\":[{\"byteLength\":238,\"content\":\"function borrow(a: f64[]): ReadSpan<f64> {\\n  a.length = 0;\\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\\n  return v;\\n}\\nexport function entry(): f64 {\\n  const a: f64[] = [1];\\n  const w: ReadSpan<f64> = borrow(a);\\n  w.length;\\n  return 1;\\n}\\n\",\"path\":\"/readspan26d-semantic/app.ts\",\"sha256\":\"2a90617219fcc46d12d16f88a657607b66221adf705ec53af9471cacdec6d4e0\",\"utf16Length\":238},{\"byteLength\":484,\"content\":\"// SPDX-License-Identifier: MIT\\ninterface Object {}\\ninterface Function {}\\ninterface CallableFunction {}\\ninterface NewableFunction {}\\ninterface IArguments {}\\ninterface String {}\\ninterface Number {}\\ninterface Boolean {}\\ninterface RegExp {}\\ninterface Array<T> { [n: number]: T; length: number; }\\ntype f64 = number;\\ntype u32 = number;\\ninterface ReadSpan<T> { readonly [n: number]: T; readonly length: u32; }\\ndeclare function readSpan<T>(owner: T[], start: u32, length: u32): ReadSpan<T>;\\n\",\"path\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"sha256\":\"282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415\",\"utf16Length\":484}],\"functions\":[{\"bindings\":[{\"annotationRange\":{\"end\":83,\"start\":70},\"declarationRange\":{\"end\":103,\"start\":67},\"declaredType\":\"readspan.f64\",\"elementAnnotationRange\":{\"end\":82,\"start\":79},\"id\":\"sha256:cb3b1451625051a76c2efe44cf346f2efcd8b862f6a7413ae5e7b5df97fe11ef\",\"kind\":\"const\",\"name\":\"v\",\"nameRange\":{\"end\":68,\"start\":67},\"writable\":false}],\"body\":[{\"expressionRange\":{\"end\":57,\"start\":45},\"kind\":\"lengthAssignment\",\"operatorRange\":{\"end\":55,\"start\":54},\"range\":{\"end\":58,\"start\":45},\"target\":{\"array\":{\"binding\":\"sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49\",\"flowType\":\"array.f64\",\"kind\":\"reference\",\"range\":{\"end\":46,\"start\":45}},\"kind\":\"lengthTarget\",\"nameRange\":{\"end\":53,\"start\":47},\"property\":\"sha256:db2528de3dc8c04e8feda7829090f980daccabf9a8d300a562cb9688f3f44a0a\",\"range\":{\"end\":53,\"start\":45},\"type\":\"u32\"},\"value\":{\"decimal\":\"0\",\"kind\":\"lengthLiteral\",\"range\":{\"end\":57,\"start\":56},\"token\":\"0\",\"type\":\"u32\"}},{\"binding\":\"sha256:cb3b1451625051a76c2efe44cf346f2efcd8b862f6a7413ae5e7b5df97fe11ef\",\"initializer\":{\"array\":{\"binding\":\"sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49\",\"flowType\":\"array.f64\",\"kind\":\"reference\",\"range\":{\"end\":96,\"start\":95}},\"calleeRange\":{\"end\":94,\"start\":86},\"intrinsic\":\"sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6\",\"kind\":\"readSpanCreate\",\"length\":{\"decimal\":\"0\",\"kind\":\"u32Literal\",\"range\":{\"end\":102,\"start\":101},\"token\":\"0\",\"type\":\"u32\"},\"range\":{\"end\":103,\"start\":86},\"start\":{\"decimal\":\"0\",\"kind\":\"u32Literal\",\"range\":{\"end\":99,\"start\":98},\"token\":\"0\",\"type\":\"u32\"},\"type\":\"readspan.f64\"},\"kind\":\"variable\",\"range\":{\"end\":104,\"start\":61}},{\"kind\":\"return\",\"range\":{\"end\":116,\"start\":107},\"value\":{\"binding\":\"sha256:cb3b1451625051a76c2efe44cf346f2efcd8b862f6a7413ae5e7b5df97fe11ef\",\"flowType\":\"readspan.f64\",\"kind\":\"reference\",\"range\":{\"end\":115,\"start\":114}}}],\"declarationRange\":{\"end\":118,\"start\":0},\"id\":\"sha256:eb32808ea01430bbcb5df725661340913eb73a42ac5ac8d28b483d5c8341bc73\",\"name\":\"borrow\",\"nameRange\":{\"end\":15,\"start\":9},\"parameters\":[{\"annotationRange\":{\"end\":24,\"start\":19},\"declarationRange\":{\"end\":24,\"start\":16},\"declaredType\":\"array.f64\",\"elementAnnotationRange\":{\"end\":22,\"start\":19},\"id\":\"sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49\",\"kind\":\"parameter\",\"name\":\"a\",\"nameRange\":{\"end\":17,\"start\":16},\"writable\":true}],\"returnAnnotationRange\":{\"end\":40,\"start\":27},\"returnElementAnnotationRange\":{\"end\":39,\"start\":36},\"returnType\":\"readspan.f64\",\"sourcePath\":\"/readspan26d-semantic/app.ts\"},{\"bindings\":[{\"annotationRange\":{\"end\":166,\"start\":161},\"declarationRange\":{\"end\":172,\"start\":158},\"declaredType\":\"array.f64\",\"elementAnnotationRange\":{\"end\":164,\"start\":161},\"id\":\"sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6\",\"kind\":\"const\",\"name\":\"a\",\"nameRange\":{\"end\":159,\"start\":158},\"writable\":false},{\"annotationRange\":{\"end\":198,\"start\":185},\"declarationRange\":{\"end\":210,\"start\":182},\"declaredType\":\"readspan.f64\",\"elementAnnotationRange\":{\"end\":197,\"start\":194},\"id\":\"sha256:38437aa152e98585429141fc7dc025cc38067d6aac6be7a44e0cff51e8d559c5\",\"kind\":\"const\",\"name\":\"w\",\"nameRange\":{\"end\":183,\"start\":182},\"writable\":false}],\"body\":[{\"binding\":\"sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6\",\"initializer\":{\"allocationSite\":\"sha256:afddb7b7923e7d51526d8cb80723132bd832b486d7371a723ec8617f01afffba\",\"elements\":[{\"bits\":\"3ff0000000000000\",\"kind\":\"numericLiteral\",\"range\":{\"end\":171,\"start\":170},\"token\":\"1\",\"type\":\"f64\"}],\"kind\":\"arrayLiteral\",\"range\":{\"end\":172,\"start\":169},\"type\":\"array.f64\"},\"kind\":\"variable\",\"range\":{\"end\":173,\"start\":152}},{\"binding\":\"sha256:38437aa152e98585429141fc7dc025cc38067d6aac6be7a44e0cff51e8d559c5\",\"initializer\":{\"arguments\":[{\"binding\":\"sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6\",\"flowType\":\"array.f64\",\"kind\":\"reference\",\"range\":{\"end\":209,\"start\":208}}],\"callee\":\"sha256:eb32808ea01430bbcb5df725661340913eb73a42ac5ac8d28b483d5c8341bc73\",\"calleeRange\":{\"end\":207,\"start\":201},\"kind\":\"directCall\",\"range\":{\"end\":210,\"start\":201},\"type\":\"readspan.f64\"},\"kind\":\"variable\",\"range\":{\"end\":211,\"start\":176}},{\"kind\":\"readSpanUse\",\"range\":{\"end\":223,\"start\":214},\"value\":{\"kind\":\"readSpanLength\",\"nameRange\":{\"end\":222,\"start\":216},\"property\":\"sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b\",\"range\":{\"end\":222,\"start\":214},\"type\":\"u32\",\"view\":{\"binding\":\"sha256:38437aa152e98585429141fc7dc025cc38067d6aac6be7a44e0cff51e8d559c5\",\"flowType\":\"readspan.f64\",\"kind\":\"reference\",\"range\":{\"end\":215,\"start\":214}}}},{\"kind\":\"return\",\"range\":{\"end\":235,\"start\":226},\"value\":{\"bits\":\"3ff0000000000000\",\"kind\":\"numericLiteral\",\"range\":{\"end\":234,\"start\":233},\"token\":\"1\",\"type\":\"f64\"}}],\"declarationRange\":{\"end\":237,\"start\":119},\"id\":\"sha256:ab1a555eb52765ab48a122ce20d12edeb938cb71d09b6cd3bebdf1c100425193\",\"name\":\"entry\",\"nameRange\":{\"end\":140,\"start\":135},\"parameters\":[],\"returnAnnotationRange\":{\"end\":147,\"start\":144},\"returnType\":\"f64\",\"sourcePath\":\"/readspan26d-semantic/app.ts\"}],\"positionUnit\":\"utf16\",\"readSpanIntrinsic\":{\"declarationRange\":{\"end\":483,\"start\":404},\"id\":\"sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6\",\"kind\":\"intrinsic\",\"name\":\"readSpan\",\"nameRange\":{\"end\":429,\"start\":421},\"parameters\":[{\"declarationRange\":{\"end\":443,\"start\":433},\"name\":\"owner\",\"nameRange\":{\"end\":438,\"start\":433},\"typeRange\":{\"end\":443,\"start\":440}},{\"declarationRange\":{\"end\":455,\"start\":445},\"name\":\"start\",\"nameRange\":{\"end\":450,\"start\":445},\"typeRange\":{\"end\":455,\"start\":452}},{\"declarationRange\":{\"end\":468,\"start\":457},\"name\":\"length\",\"nameRange\":{\"end\":463,\"start\":457},\"typeRange\":{\"end\":468,\"start\":465}}],\"returnTypeRange\":{\"end\":482,\"start\":471},\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"typeParameterRange\":{\"end\":431,\"start\":430}},\"readSpanLength\":{\"declarationRange\":{\"end\":401,\"start\":380},\"id\":\"sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b\",\"kind\":\"property\",\"name\":\"length\",\"nameRange\":{\"end\":395,\"start\":389},\"officialType\":\"number\",\"ownerType\":\"readspan.f64\",\"readType\":\"u32\",\"readonly\":true,\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"typeRange\":{\"end\":400,\"start\":397}},\"rootFile\":\"/readspan26d-semantic/app.ts\",\"sourceRoot\":\"/readspan26d-semantic\",\"types\":[{\"declarationRange\":{\"end\":311,\"start\":293},\"id\":\"f64\",\"kind\":\"scalar\",\"nameRange\":{\"end\":301,\"start\":298},\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"},{\"declarationRange\":{\"end\":292,\"start\":238},\"elementType\":\"f64\",\"id\":\"array.f64\",\"indexSignatureRange\":{\"end\":274,\"start\":259},\"kind\":\"array\",\"nameRange\":{\"end\":253,\"start\":248},\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"},{\"declarationRange\":{\"end\":330,\"start\":312},\"id\":\"u32\",\"kind\":\"scalar\",\"nameRange\":{\"end\":320,\"start\":317},\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"},{\"declarationRange\":{\"end\":403,\"start\":331},\"elementType\":\"f64\",\"id\":\"readspan.f64\",\"indexSignatureRange\":{\"end\":379,\"start\":355},\"kind\":\"readSpan\",\"nameRange\":{\"end\":349,\"start\":341},\"readonly\":true,\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"}]},\"requestId\":\"sha256:83babc4a33b5f4776a95d65d7eecb0dcb6d545c76b1a3123cc9e26e88a08f2dc\",\"schemaHash\":\"sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2\",\"version\":7}\n",
+      "packageBytes": 9293,
+      "packageSHA256": "9fc2f006e4085af54d03744bd3eea109e03c9a6e8056c254435bee45b64b0f5b",
+      "counts": {
+        "functions": 2,
+        "parameters": [
+          1,
+          0
+        ],
+        "locals": [
+          1,
+          2
+        ],
+        "statements": [
+          3,
+          4
+        ],
+        "ordinary": 1,
+        "raw": 2
+      },
+      "officialExpected": {
+        "freshProgram": true,
+        "producerProjectionCalled": false,
+        "diagnosticGroups": {
+          "syntactic": [],
+          "options": [],
+          "global": [],
+          "semantic": []
+        }
+      }
+    },
+    {
+      "name": "callee-create-before-modify",
+      "source": "function borrow(a: f64[]): ReadSpan<f64> {\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\n  a.length = 0;\n  return v;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1];\n  const w: ReadSpan<f64> = borrow(a);\n  w.length;\n  return 1;\n}\n",
+      "sourceBytes": 238,
+      "sourceSHA256": "20db1abbd37b17c8d62335e50eeada35b99ae22437d2e88554eaa167b0798b0c",
+      "request": {
+        "family": "tsfg.array-facts-request-candidate",
+        "version": 7,
+        "input": {
+          "sourceRoot": "/readspan26d-semantic",
+          "rootFile": "/readspan26d-semantic/app.ts",
+          "files": [
+            {
+              "path": "/readspan26d-semantic/app.ts",
+              "content": "function borrow(a: f64[]): ReadSpan<f64> {\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\n  a.length = 0;\n  return v;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1];\n  const w: ReadSpan<f64> = borrow(a);\n  w.length;\n  return 1;\n}\n",
+              "sha256": "20db1abbd37b17c8d62335e50eeada35b99ae22437d2e88554eaa167b0798b0c"
+            },
+            {
+              "path": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+              "content": "// SPDX-License-Identifier: MIT\ninterface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> { [n: number]: T; length: number; }\ntype f64 = number;\ntype u32 = number;\ninterface ReadSpan<T> { readonly [n: number]: T; readonly length: u32; }\ndeclare function readSpan<T>(owner: T[], start: u32, length: u32): ReadSpan<T>;\n",
+              "sha256": "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415"
+            }
+          ],
+          "declarations": {
+            "paths": [
+              "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            ],
+            "version": "minimal-arrays-v3"
+          },
+          "config": {
+            "allowJs": false,
+            "noEmit": true,
+            "strict": true
+          }
+        }
+      },
+      "requestText": "{\"family\":\"tsfg.array-facts-request-candidate\",\"input\":{\"config\":{\"allowJs\":false,\"noEmit\":true,\"strict\":true},\"declarations\":{\"paths\":[\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"],\"version\":\"minimal-arrays-v3\"},\"files\":[{\"content\":\"function borrow(a: f64[]): ReadSpan<f64> {\\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\\n  a.length = 0;\\n  return v;\\n}\\nexport function entry(): f64 {\\n  const a: f64[] = [1];\\n  const w: ReadSpan<f64> = borrow(a);\\n  w.length;\\n  return 1;\\n}\\n\",\"path\":\"/readspan26d-semantic/app.ts\",\"sha256\":\"20db1abbd37b17c8d62335e50eeada35b99ae22437d2e88554eaa167b0798b0c\"},{\"content\":\"// SPDX-License-Identifier: MIT\\ninterface Object {}\\ninterface Function {}\\ninterface CallableFunction {}\\ninterface NewableFunction {}\\ninterface IArguments {}\\ninterface String {}\\ninterface Number {}\\ninterface Boolean {}\\ninterface RegExp {}\\ninterface Array<T> { [n: number]: T; length: number; }\\ntype f64 = number;\\ntype u32 = number;\\ninterface ReadSpan<T> { readonly [n: number]: T; readonly length: u32; }\\ndeclare function readSpan<T>(owner: T[], start: u32, length: u32): ReadSpan<T>;\\n\",\"path\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"sha256\":\"282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415\"}],\"rootFile\":\"/readspan26d-semantic/app.ts\",\"sourceRoot\":\"/readspan26d-semantic\"},\"version\":7}\n",
+      "package": {
+        "family": "tsfg.array-facts-package-candidate",
+        "version": 7,
+        "schemaHash": "sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2",
+        "requestId": "sha256:c48c9158e2bd9bf23d8f752115f4a79f9891976753b6d5cf1c4f53d2ed1def27",
+        "packageId": "sha256:e61fdf47149629309c9956d254d3a0f03c9c1b1d1d2f6d073df23b5dbbf57574",
+        "payload": {
+          "arrayLength": {
+            "declarationRange": {
+              "end": 290,
+              "start": 275
+            },
+            "id": "sha256:db2528de3dc8c04e8feda7829090f980daccabf9a8d300a562cb9688f3f44a0a",
+            "kind": "property",
+            "name": "length",
+            "nameRange": {
+              "end": 281,
+              "start": 275
+            },
+            "officialType": "number",
+            "ownerType": "array.f64",
+            "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+            "typeRange": {
+              "end": 289,
+              "start": 283
+            },
+            "writeType": "u32"
+          },
+          "config": {
+            "allowJs": false,
+            "noEmit": true,
+            "strict": true
+          },
+          "declarations": {
+            "paths": [
+              "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            ],
+            "version": "minimal-arrays-v3"
+          },
+          "diagnostics": [],
+          "exports": [
+            {
+              "name": "entry",
+              "functionId": "sha256:ab1a555eb52765ab48a122ce20d12edeb938cb71d09b6cd3bebdf1c100425193"
+            }
+          ],
+          "files": [
+            {
+              "path": "/readspan26d-semantic/app.ts",
+              "content": "function borrow(a: f64[]): ReadSpan<f64> {\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\n  a.length = 0;\n  return v;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1];\n  const w: ReadSpan<f64> = borrow(a);\n  w.length;\n  return 1;\n}\n",
+              "byteLength": 238,
+              "utf16Length": 238,
+              "sha256": "20db1abbd37b17c8d62335e50eeada35b99ae22437d2e88554eaa167b0798b0c"
+            },
+            {
+              "path": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+              "content": "// SPDX-License-Identifier: MIT\ninterface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> { [n: number]: T; length: number; }\ntype f64 = number;\ntype u32 = number;\ninterface ReadSpan<T> { readonly [n: number]: T; readonly length: u32; }\ndeclare function readSpan<T>(owner: T[], start: u32, length: u32): ReadSpan<T>;\n",
+              "byteLength": 484,
+              "utf16Length": 484,
+              "sha256": "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415"
+            }
+          ],
+          "functions": [
+            {
+              "id": "sha256:eb32808ea01430bbcb5df725661340913eb73a42ac5ac8d28b483d5c8341bc73",
+              "name": "borrow",
+              "sourcePath": "/readspan26d-semantic/app.ts",
+              "declarationRange": {
+                "start": 0,
+                "end": 118
+              },
+              "nameRange": {
+                "start": 9,
+                "end": 15
+              },
+              "returnType": "readspan.f64",
+              "returnAnnotationRange": {
+                "start": 27,
+                "end": 40
+              },
+              "returnElementAnnotationRange": {
+                "start": 36,
+                "end": 39
+              },
+              "parameters": [
+                {
+                  "id": "sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49",
+                  "kind": "parameter",
+                  "name": "a",
+                  "declaredType": "array.f64",
+                  "writable": true,
+                  "declarationRange": {
+                    "start": 16,
+                    "end": 24
+                  },
+                  "nameRange": {
+                    "start": 16,
+                    "end": 17
+                  },
+                  "annotationRange": {
+                    "start": 19,
+                    "end": 24
+                  },
+                  "elementAnnotationRange": {
+                    "start": 19,
+                    "end": 22
+                  }
+                }
+              ],
+              "bindings": [
+                {
+                  "id": "sha256:088d268abceba8efd06256a71a33a33ce9c47c6d1c8012d8b22a4a74bd04eb15",
+                  "kind": "const",
+                  "name": "v",
+                  "declaredType": "readspan.f64",
+                  "writable": false,
+                  "declarationRange": {
+                    "start": 51,
+                    "end": 87
+                  },
+                  "nameRange": {
+                    "start": 51,
+                    "end": 52
+                  },
+                  "annotationRange": {
+                    "start": 54,
+                    "end": 67
+                  },
+                  "elementAnnotationRange": {
+                    "start": 63,
+                    "end": 66
+                  }
+                }
+              ],
+              "body": [
+                {
+                  "kind": "variable",
+                  "binding": "sha256:088d268abceba8efd06256a71a33a33ce9c47c6d1c8012d8b22a4a74bd04eb15",
+                  "range": {
+                    "start": 45,
+                    "end": 88
+                  },
+                  "initializer": {
+                    "kind": "readSpanCreate",
+                    "type": "readspan.f64",
+                    "range": {
+                      "start": 70,
+                      "end": 87
+                    },
+                    "intrinsic": "sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6",
+                    "calleeRange": {
+                      "start": 70,
+                      "end": 78
+                    },
+                    "array": {
+                      "kind": "reference",
+                      "binding": "sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49",
+                      "flowType": "array.f64",
+                      "range": {
+                        "start": 79,
+                        "end": 80
+                      }
+                    },
+                    "start": {
+                      "kind": "u32Literal",
+                      "type": "u32",
+                      "range": {
+                        "start": 82,
+                        "end": 83
+                      },
+                      "token": "0",
+                      "decimal": "0"
+                    },
+                    "length": {
+                      "kind": "u32Literal",
+                      "type": "u32",
+                      "range": {
+                        "start": 85,
+                        "end": 86
+                      },
+                      "token": "0",
+                      "decimal": "0"
+                    }
+                  }
+                },
+                {
+                  "kind": "lengthAssignment",
+                  "range": {
+                    "start": 91,
+                    "end": 104
+                  },
+                  "expressionRange": {
+                    "start": 91,
+                    "end": 103
+                  },
+                  "operatorRange": {
+                    "start": 100,
+                    "end": 101
+                  },
+                  "target": {
+                    "kind": "lengthTarget",
+                    "type": "u32",
+                    "range": {
+                      "start": 91,
+                      "end": 99
+                    },
+                    "array": {
+                      "kind": "reference",
+                      "binding": "sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49",
+                      "flowType": "array.f64",
+                      "range": {
+                        "start": 91,
+                        "end": 92
+                      }
+                    },
+                    "property": "sha256:db2528de3dc8c04e8feda7829090f980daccabf9a8d300a562cb9688f3f44a0a",
+                    "nameRange": {
+                      "start": 93,
+                      "end": 99
+                    }
+                  },
+                  "value": {
+                    "kind": "lengthLiteral",
+                    "type": "u32",
+                    "range": {
+                      "start": 102,
+                      "end": 103
+                    },
+                    "token": "0",
+                    "decimal": "0"
+                  }
+                },
+                {
+                  "kind": "return",
+                  "range": {
+                    "start": 107,
+                    "end": 116
+                  },
+                  "value": {
+                    "kind": "reference",
+                    "binding": "sha256:088d268abceba8efd06256a71a33a33ce9c47c6d1c8012d8b22a4a74bd04eb15",
+                    "flowType": "readspan.f64",
+                    "range": {
+                      "start": 114,
+                      "end": 115
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "sha256:ab1a555eb52765ab48a122ce20d12edeb938cb71d09b6cd3bebdf1c100425193",
+              "name": "entry",
+              "sourcePath": "/readspan26d-semantic/app.ts",
+              "declarationRange": {
+                "start": 119,
+                "end": 237
+              },
+              "nameRange": {
+                "start": 135,
+                "end": 140
+              },
+              "returnType": "f64",
+              "returnAnnotationRange": {
+                "start": 144,
+                "end": 147
+              },
+              "parameters": [],
+              "bindings": [
+                {
+                  "id": "sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6",
+                  "kind": "const",
+                  "name": "a",
+                  "declaredType": "array.f64",
+                  "writable": false,
+                  "declarationRange": {
+                    "start": 158,
+                    "end": 172
+                  },
+                  "nameRange": {
+                    "start": 158,
+                    "end": 159
+                  },
+                  "annotationRange": {
+                    "start": 161,
+                    "end": 166
+                  },
+                  "elementAnnotationRange": {
+                    "start": 161,
+                    "end": 164
+                  }
+                },
+                {
+                  "id": "sha256:38437aa152e98585429141fc7dc025cc38067d6aac6be7a44e0cff51e8d559c5",
+                  "kind": "const",
+                  "name": "w",
+                  "declaredType": "readspan.f64",
+                  "writable": false,
+                  "declarationRange": {
+                    "start": 182,
+                    "end": 210
+                  },
+                  "nameRange": {
+                    "start": 182,
+                    "end": 183
+                  },
+                  "annotationRange": {
+                    "start": 185,
+                    "end": 198
+                  },
+                  "elementAnnotationRange": {
+                    "start": 194,
+                    "end": 197
+                  }
+                }
+              ],
+              "body": [
+                {
+                  "kind": "variable",
+                  "binding": "sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6",
+                  "range": {
+                    "start": 152,
+                    "end": 173
+                  },
+                  "initializer": {
+                    "kind": "arrayLiteral",
+                    "type": "array.f64",
+                    "range": {
+                      "start": 169,
+                      "end": 172
+                    },
+                    "allocationSite": "sha256:afddb7b7923e7d51526d8cb80723132bd832b486d7371a723ec8617f01afffba",
+                    "elements": [
+                      {
+                        "kind": "numericLiteral",
+                        "type": "f64",
+                        "range": {
+                          "start": 170,
+                          "end": 171
+                        },
+                        "token": "1",
+                        "bits": "3ff0000000000000"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "variable",
+                  "binding": "sha256:38437aa152e98585429141fc7dc025cc38067d6aac6be7a44e0cff51e8d559c5",
+                  "range": {
+                    "start": 176,
+                    "end": 211
+                  },
+                  "initializer": {
+                    "kind": "directCall",
+                    "type": "readspan.f64",
+                    "range": {
+                      "start": 201,
+                      "end": 210
+                    },
+                    "callee": "sha256:eb32808ea01430bbcb5df725661340913eb73a42ac5ac8d28b483d5c8341bc73",
+                    "calleeRange": {
+                      "start": 201,
+                      "end": 207
+                    },
+                    "arguments": [
+                      {
+                        "kind": "reference",
+                        "binding": "sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6",
+                        "flowType": "array.f64",
+                        "range": {
+                          "start": 208,
+                          "end": 209
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "readSpanUse",
+                  "range": {
+                    "start": 214,
+                    "end": 223
+                  },
+                  "value": {
+                    "kind": "readSpanLength",
+                    "type": "u32",
+                    "range": {
+                      "start": 214,
+                      "end": 222
+                    },
+                    "property": "sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b",
+                    "nameRange": {
+                      "start": 216,
+                      "end": 222
+                    },
+                    "view": {
+                      "kind": "reference",
+                      "binding": "sha256:38437aa152e98585429141fc7dc025cc38067d6aac6be7a44e0cff51e8d559c5",
+                      "flowType": "readspan.f64",
+                      "range": {
+                        "start": 214,
+                        "end": 215
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "return",
+                  "range": {
+                    "start": 226,
+                    "end": 235
+                  },
+                  "value": {
+                    "kind": "numericLiteral",
+                    "type": "f64",
+                    "range": {
+                      "start": 233,
+                      "end": 234
+                    },
+                    "token": "1",
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              ]
+            }
+          ],
+          "positionUnit": "utf16",
+          "readSpanIntrinsic": {
+            "declarationRange": {
+              "end": 483,
+              "start": 404
+            },
+            "id": "sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6",
+            "kind": "intrinsic",
+            "name": "readSpan",
+            "nameRange": {
+              "end": 429,
+              "start": 421
+            },
+            "parameters": [
+              {
+                "declarationRange": {
+                  "end": 443,
+                  "start": 433
+                },
+                "name": "owner",
+                "nameRange": {
+                  "end": 438,
+                  "start": 433
+                },
+                "typeRange": {
+                  "end": 443,
+                  "start": 440
+                }
+              },
+              {
+                "declarationRange": {
+                  "end": 455,
+                  "start": 445
+                },
+                "name": "start",
+                "nameRange": {
+                  "end": 450,
+                  "start": 445
+                },
+                "typeRange": {
+                  "end": 455,
+                  "start": 452
+                }
+              },
+              {
+                "declarationRange": {
+                  "end": 468,
+                  "start": 457
+                },
+                "name": "length",
+                "nameRange": {
+                  "end": 463,
+                  "start": 457
+                },
+                "typeRange": {
+                  "end": 468,
+                  "start": 465
+                }
+              }
+            ],
+            "returnTypeRange": {
+              "end": 482,
+              "start": 471
+            },
+            "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+            "typeParameterRange": {
+              "end": 431,
+              "start": 430
+            }
+          },
+          "readSpanLength": {
+            "declarationRange": {
+              "end": 401,
+              "start": 380
+            },
+            "id": "sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b",
+            "kind": "property",
+            "name": "length",
+            "nameRange": {
+              "end": 395,
+              "start": 389
+            },
+            "officialType": "number",
+            "ownerType": "readspan.f64",
+            "readType": "u32",
+            "readonly": true,
+            "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+            "typeRange": {
+              "end": 400,
+              "start": 397
+            }
+          },
+          "rootFile": "/readspan26d-semantic/app.ts",
+          "sourceRoot": "/readspan26d-semantic",
+          "types": [
+            {
+              "declarationRange": {
+                "end": 311,
+                "start": 293
+              },
+              "id": "f64",
+              "kind": "scalar",
+              "nameRange": {
+                "end": 301,
+                "start": 298
+              },
+              "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            },
+            {
+              "declarationRange": {
+                "end": 292,
+                "start": 238
+              },
+              "elementType": "f64",
+              "id": "array.f64",
+              "indexSignatureRange": {
+                "end": 274,
+                "start": 259
+              },
+              "kind": "array",
+              "nameRange": {
+                "end": 253,
+                "start": 248
+              },
+              "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            },
+            {
+              "declarationRange": {
+                "end": 330,
+                "start": 312
+              },
+              "id": "u32",
+              "kind": "scalar",
+              "nameRange": {
+                "end": 320,
+                "start": 317
+              },
+              "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            },
+            {
+              "declarationRange": {
+                "end": 403,
+                "start": 331
+              },
+              "elementType": "f64",
+              "id": "readspan.f64",
+              "indexSignatureRange": {
+                "end": 379,
+                "start": 355
+              },
+              "kind": "readSpan",
+              "nameRange": {
+                "end": 349,
+                "start": 341
+              },
+              "readonly": true,
+              "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            }
+          ]
+        }
+      },
+      "packageText": "{\"family\":\"tsfg.array-facts-package-candidate\",\"packageId\":\"sha256:e61fdf47149629309c9956d254d3a0f03c9c1b1d1d2f6d073df23b5dbbf57574\",\"payload\":{\"arrayLength\":{\"declarationRange\":{\"end\":290,\"start\":275},\"id\":\"sha256:db2528de3dc8c04e8feda7829090f980daccabf9a8d300a562cb9688f3f44a0a\",\"kind\":\"property\",\"name\":\"length\",\"nameRange\":{\"end\":281,\"start\":275},\"officialType\":\"number\",\"ownerType\":\"array.f64\",\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"typeRange\":{\"end\":289,\"start\":283},\"writeType\":\"u32\"},\"config\":{\"allowJs\":false,\"noEmit\":true,\"strict\":true},\"declarations\":{\"paths\":[\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"],\"version\":\"minimal-arrays-v3\"},\"diagnostics\":[],\"exports\":[{\"functionId\":\"sha256:ab1a555eb52765ab48a122ce20d12edeb938cb71d09b6cd3bebdf1c100425193\",\"name\":\"entry\"}],\"files\":[{\"byteLength\":238,\"content\":\"function borrow(a: f64[]): ReadSpan<f64> {\\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\\n  a.length = 0;\\n  return v;\\n}\\nexport function entry(): f64 {\\n  const a: f64[] = [1];\\n  const w: ReadSpan<f64> = borrow(a);\\n  w.length;\\n  return 1;\\n}\\n\",\"path\":\"/readspan26d-semantic/app.ts\",\"sha256\":\"20db1abbd37b17c8d62335e50eeada35b99ae22437d2e88554eaa167b0798b0c\",\"utf16Length\":238},{\"byteLength\":484,\"content\":\"// SPDX-License-Identifier: MIT\\ninterface Object {}\\ninterface Function {}\\ninterface CallableFunction {}\\ninterface NewableFunction {}\\ninterface IArguments {}\\ninterface String {}\\ninterface Number {}\\ninterface Boolean {}\\ninterface RegExp {}\\ninterface Array<T> { [n: number]: T; length: number; }\\ntype f64 = number;\\ntype u32 = number;\\ninterface ReadSpan<T> { readonly [n: number]: T; readonly length: u32; }\\ndeclare function readSpan<T>(owner: T[], start: u32, length: u32): ReadSpan<T>;\\n\",\"path\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"sha256\":\"282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415\",\"utf16Length\":484}],\"functions\":[{\"bindings\":[{\"annotationRange\":{\"end\":67,\"start\":54},\"declarationRange\":{\"end\":87,\"start\":51},\"declaredType\":\"readspan.f64\",\"elementAnnotationRange\":{\"end\":66,\"start\":63},\"id\":\"sha256:088d268abceba8efd06256a71a33a33ce9c47c6d1c8012d8b22a4a74bd04eb15\",\"kind\":\"const\",\"name\":\"v\",\"nameRange\":{\"end\":52,\"start\":51},\"writable\":false}],\"body\":[{\"binding\":\"sha256:088d268abceba8efd06256a71a33a33ce9c47c6d1c8012d8b22a4a74bd04eb15\",\"initializer\":{\"array\":{\"binding\":\"sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49\",\"flowType\":\"array.f64\",\"kind\":\"reference\",\"range\":{\"end\":80,\"start\":79}},\"calleeRange\":{\"end\":78,\"start\":70},\"intrinsic\":\"sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6\",\"kind\":\"readSpanCreate\",\"length\":{\"decimal\":\"0\",\"kind\":\"u32Literal\",\"range\":{\"end\":86,\"start\":85},\"token\":\"0\",\"type\":\"u32\"},\"range\":{\"end\":87,\"start\":70},\"start\":{\"decimal\":\"0\",\"kind\":\"u32Literal\",\"range\":{\"end\":83,\"start\":82},\"token\":\"0\",\"type\":\"u32\"},\"type\":\"readspan.f64\"},\"kind\":\"variable\",\"range\":{\"end\":88,\"start\":45}},{\"expressionRange\":{\"end\":103,\"start\":91},\"kind\":\"lengthAssignment\",\"operatorRange\":{\"end\":101,\"start\":100},\"range\":{\"end\":104,\"start\":91},\"target\":{\"array\":{\"binding\":\"sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49\",\"flowType\":\"array.f64\",\"kind\":\"reference\",\"range\":{\"end\":92,\"start\":91}},\"kind\":\"lengthTarget\",\"nameRange\":{\"end\":99,\"start\":93},\"property\":\"sha256:db2528de3dc8c04e8feda7829090f980daccabf9a8d300a562cb9688f3f44a0a\",\"range\":{\"end\":99,\"start\":91},\"type\":\"u32\"},\"value\":{\"decimal\":\"0\",\"kind\":\"lengthLiteral\",\"range\":{\"end\":103,\"start\":102},\"token\":\"0\",\"type\":\"u32\"}},{\"kind\":\"return\",\"range\":{\"end\":116,\"start\":107},\"value\":{\"binding\":\"sha256:088d268abceba8efd06256a71a33a33ce9c47c6d1c8012d8b22a4a74bd04eb15\",\"flowType\":\"readspan.f64\",\"kind\":\"reference\",\"range\":{\"end\":115,\"start\":114}}}],\"declarationRange\":{\"end\":118,\"start\":0},\"id\":\"sha256:eb32808ea01430bbcb5df725661340913eb73a42ac5ac8d28b483d5c8341bc73\",\"name\":\"borrow\",\"nameRange\":{\"end\":15,\"start\":9},\"parameters\":[{\"annotationRange\":{\"end\":24,\"start\":19},\"declarationRange\":{\"end\":24,\"start\":16},\"declaredType\":\"array.f64\",\"elementAnnotationRange\":{\"end\":22,\"start\":19},\"id\":\"sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49\",\"kind\":\"parameter\",\"name\":\"a\",\"nameRange\":{\"end\":17,\"start\":16},\"writable\":true}],\"returnAnnotationRange\":{\"end\":40,\"start\":27},\"returnElementAnnotationRange\":{\"end\":39,\"start\":36},\"returnType\":\"readspan.f64\",\"sourcePath\":\"/readspan26d-semantic/app.ts\"},{\"bindings\":[{\"annotationRange\":{\"end\":166,\"start\":161},\"declarationRange\":{\"end\":172,\"start\":158},\"declaredType\":\"array.f64\",\"elementAnnotationRange\":{\"end\":164,\"start\":161},\"id\":\"sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6\",\"kind\":\"const\",\"name\":\"a\",\"nameRange\":{\"end\":159,\"start\":158},\"writable\":false},{\"annotationRange\":{\"end\":198,\"start\":185},\"declarationRange\":{\"end\":210,\"start\":182},\"declaredType\":\"readspan.f64\",\"elementAnnotationRange\":{\"end\":197,\"start\":194},\"id\":\"sha256:38437aa152e98585429141fc7dc025cc38067d6aac6be7a44e0cff51e8d559c5\",\"kind\":\"const\",\"name\":\"w\",\"nameRange\":{\"end\":183,\"start\":182},\"writable\":false}],\"body\":[{\"binding\":\"sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6\",\"initializer\":{\"allocationSite\":\"sha256:afddb7b7923e7d51526d8cb80723132bd832b486d7371a723ec8617f01afffba\",\"elements\":[{\"bits\":\"3ff0000000000000\",\"kind\":\"numericLiteral\",\"range\":{\"end\":171,\"start\":170},\"token\":\"1\",\"type\":\"f64\"}],\"kind\":\"arrayLiteral\",\"range\":{\"end\":172,\"start\":169},\"type\":\"array.f64\"},\"kind\":\"variable\",\"range\":{\"end\":173,\"start\":152}},{\"binding\":\"sha256:38437aa152e98585429141fc7dc025cc38067d6aac6be7a44e0cff51e8d559c5\",\"initializer\":{\"arguments\":[{\"binding\":\"sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6\",\"flowType\":\"array.f64\",\"kind\":\"reference\",\"range\":{\"end\":209,\"start\":208}}],\"callee\":\"sha256:eb32808ea01430bbcb5df725661340913eb73a42ac5ac8d28b483d5c8341bc73\",\"calleeRange\":{\"end\":207,\"start\":201},\"kind\":\"directCall\",\"range\":{\"end\":210,\"start\":201},\"type\":\"readspan.f64\"},\"kind\":\"variable\",\"range\":{\"end\":211,\"start\":176}},{\"kind\":\"readSpanUse\",\"range\":{\"end\":223,\"start\":214},\"value\":{\"kind\":\"readSpanLength\",\"nameRange\":{\"end\":222,\"start\":216},\"property\":\"sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b\",\"range\":{\"end\":222,\"start\":214},\"type\":\"u32\",\"view\":{\"binding\":\"sha256:38437aa152e98585429141fc7dc025cc38067d6aac6be7a44e0cff51e8d559c5\",\"flowType\":\"readspan.f64\",\"kind\":\"reference\",\"range\":{\"end\":215,\"start\":214}}}},{\"kind\":\"return\",\"range\":{\"end\":235,\"start\":226},\"value\":{\"bits\":\"3ff0000000000000\",\"kind\":\"numericLiteral\",\"range\":{\"end\":234,\"start\":233},\"token\":\"1\",\"type\":\"f64\"}}],\"declarationRange\":{\"end\":237,\"start\":119},\"id\":\"sha256:ab1a555eb52765ab48a122ce20d12edeb938cb71d09b6cd3bebdf1c100425193\",\"name\":\"entry\",\"nameRange\":{\"end\":140,\"start\":135},\"parameters\":[],\"returnAnnotationRange\":{\"end\":147,\"start\":144},\"returnType\":\"f64\",\"sourcePath\":\"/readspan26d-semantic/app.ts\"}],\"positionUnit\":\"utf16\",\"readSpanIntrinsic\":{\"declarationRange\":{\"end\":483,\"start\":404},\"id\":\"sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6\",\"kind\":\"intrinsic\",\"name\":\"readSpan\",\"nameRange\":{\"end\":429,\"start\":421},\"parameters\":[{\"declarationRange\":{\"end\":443,\"start\":433},\"name\":\"owner\",\"nameRange\":{\"end\":438,\"start\":433},\"typeRange\":{\"end\":443,\"start\":440}},{\"declarationRange\":{\"end\":455,\"start\":445},\"name\":\"start\",\"nameRange\":{\"end\":450,\"start\":445},\"typeRange\":{\"end\":455,\"start\":452}},{\"declarationRange\":{\"end\":468,\"start\":457},\"name\":\"length\",\"nameRange\":{\"end\":463,\"start\":457},\"typeRange\":{\"end\":468,\"start\":465}}],\"returnTypeRange\":{\"end\":482,\"start\":471},\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"typeParameterRange\":{\"end\":431,\"start\":430}},\"readSpanLength\":{\"declarationRange\":{\"end\":401,\"start\":380},\"id\":\"sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b\",\"kind\":\"property\",\"name\":\"length\",\"nameRange\":{\"end\":395,\"start\":389},\"officialType\":\"number\",\"ownerType\":\"readspan.f64\",\"readType\":\"u32\",\"readonly\":true,\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"typeRange\":{\"end\":400,\"start\":397}},\"rootFile\":\"/readspan26d-semantic/app.ts\",\"sourceRoot\":\"/readspan26d-semantic\",\"types\":[{\"declarationRange\":{\"end\":311,\"start\":293},\"id\":\"f64\",\"kind\":\"scalar\",\"nameRange\":{\"end\":301,\"start\":298},\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"},{\"declarationRange\":{\"end\":292,\"start\":238},\"elementType\":\"f64\",\"id\":\"array.f64\",\"indexSignatureRange\":{\"end\":274,\"start\":259},\"kind\":\"array\",\"nameRange\":{\"end\":253,\"start\":248},\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"},{\"declarationRange\":{\"end\":330,\"start\":312},\"id\":\"u32\",\"kind\":\"scalar\",\"nameRange\":{\"end\":320,\"start\":317},\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"},{\"declarationRange\":{\"end\":403,\"start\":331},\"elementType\":\"f64\",\"id\":\"readspan.f64\",\"indexSignatureRange\":{\"end\":379,\"start\":355},\"kind\":\"readSpan\",\"nameRange\":{\"end\":349,\"start\":341},\"readonly\":true,\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"}]},\"requestId\":\"sha256:c48c9158e2bd9bf23d8f752115f4a79f9891976753b6d5cf1c4f53d2ed1def27\",\"schemaHash\":\"sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2\",\"version\":7}\n",
+      "packageBytes": 9294,
+      "packageSHA256": "41bc09d488c917fc9d7b07633adef299015b7328cd815b4815b98513a13c7244",
+      "counts": {
+        "functions": 2,
+        "parameters": [
+          1,
+          0
+        ],
+        "locals": [
+          1,
+          2
+        ],
+        "statements": [
+          3,
+          4
+        ],
+        "ordinary": 1,
+        "raw": 2
+      },
+      "officialExpected": {
+        "freshProgram": true,
+        "producerProjectionCalled": false,
+        "diagnosticGroups": {
+          "syntactic": [],
+          "options": [],
+          "global": [],
+          "semantic": []
+        }
+      }
+    },
+    {
+      "name": "caller-old-live-view-consumes-fixed-S",
+      "source": "function borrow(a: f64[]): ReadSpan<f64> {\n  a.length = 0;\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\n  return v;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1];\n  const old: ReadSpan<f64> = readSpan(a, 0, 0);\n  const w: ReadSpan<f64> = borrow(a);\n  old.length;\n  w.length;\n  return 1;\n}\n",
+      "sourceBytes": 300,
+      "sourceSHA256": "9ba4472fdc2773fe5f0b19716f64d86c01764c9e79543eed83c74b576f967ff7",
+      "request": {
+        "family": "tsfg.array-facts-request-candidate",
+        "version": 7,
+        "input": {
+          "sourceRoot": "/readspan26d-semantic",
+          "rootFile": "/readspan26d-semantic/app.ts",
+          "files": [
+            {
+              "path": "/readspan26d-semantic/app.ts",
+              "content": "function borrow(a: f64[]): ReadSpan<f64> {\n  a.length = 0;\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\n  return v;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1];\n  const old: ReadSpan<f64> = readSpan(a, 0, 0);\n  const w: ReadSpan<f64> = borrow(a);\n  old.length;\n  w.length;\n  return 1;\n}\n",
+              "sha256": "9ba4472fdc2773fe5f0b19716f64d86c01764c9e79543eed83c74b576f967ff7"
+            },
+            {
+              "path": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+              "content": "// SPDX-License-Identifier: MIT\ninterface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> { [n: number]: T; length: number; }\ntype f64 = number;\ntype u32 = number;\ninterface ReadSpan<T> { readonly [n: number]: T; readonly length: u32; }\ndeclare function readSpan<T>(owner: T[], start: u32, length: u32): ReadSpan<T>;\n",
+              "sha256": "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415"
+            }
+          ],
+          "declarations": {
+            "paths": [
+              "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            ],
+            "version": "minimal-arrays-v3"
+          },
+          "config": {
+            "allowJs": false,
+            "noEmit": true,
+            "strict": true
+          }
+        }
+      },
+      "requestText": "{\"family\":\"tsfg.array-facts-request-candidate\",\"input\":{\"config\":{\"allowJs\":false,\"noEmit\":true,\"strict\":true},\"declarations\":{\"paths\":[\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"],\"version\":\"minimal-arrays-v3\"},\"files\":[{\"content\":\"function borrow(a: f64[]): ReadSpan<f64> {\\n  a.length = 0;\\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\\n  return v;\\n}\\nexport function entry(): f64 {\\n  const a: f64[] = [1];\\n  const old: ReadSpan<f64> = readSpan(a, 0, 0);\\n  const w: ReadSpan<f64> = borrow(a);\\n  old.length;\\n  w.length;\\n  return 1;\\n}\\n\",\"path\":\"/readspan26d-semantic/app.ts\",\"sha256\":\"9ba4472fdc2773fe5f0b19716f64d86c01764c9e79543eed83c74b576f967ff7\"},{\"content\":\"// SPDX-License-Identifier: MIT\\ninterface Object {}\\ninterface Function {}\\ninterface CallableFunction {}\\ninterface NewableFunction {}\\ninterface IArguments {}\\ninterface String {}\\ninterface Number {}\\ninterface Boolean {}\\ninterface RegExp {}\\ninterface Array<T> { [n: number]: T; length: number; }\\ntype f64 = number;\\ntype u32 = number;\\ninterface ReadSpan<T> { readonly [n: number]: T; readonly length: u32; }\\ndeclare function readSpan<T>(owner: T[], start: u32, length: u32): ReadSpan<T>;\\n\",\"path\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"sha256\":\"282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415\"}],\"rootFile\":\"/readspan26d-semantic/app.ts\",\"sourceRoot\":\"/readspan26d-semantic\"},\"version\":7}\n",
+      "package": {
+        "family": "tsfg.array-facts-package-candidate",
+        "version": 7,
+        "schemaHash": "sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2",
+        "requestId": "sha256:a275af9c80d3a034c28f8335a32fce2f9f940283fb2b95742141a28a913d3b5d",
+        "packageId": "sha256:fb9569505c070b38568c0c64b18b71dfd7bd2725057b3ac5efa08a7bd344d9d9",
+        "payload": {
+          "arrayLength": {
+            "declarationRange": {
+              "end": 290,
+              "start": 275
+            },
+            "id": "sha256:db2528de3dc8c04e8feda7829090f980daccabf9a8d300a562cb9688f3f44a0a",
+            "kind": "property",
+            "name": "length",
+            "nameRange": {
+              "end": 281,
+              "start": 275
+            },
+            "officialType": "number",
+            "ownerType": "array.f64",
+            "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+            "typeRange": {
+              "end": 289,
+              "start": 283
+            },
+            "writeType": "u32"
+          },
+          "config": {
+            "allowJs": false,
+            "noEmit": true,
+            "strict": true
+          },
+          "declarations": {
+            "paths": [
+              "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            ],
+            "version": "minimal-arrays-v3"
+          },
+          "diagnostics": [],
+          "exports": [
+            {
+              "name": "entry",
+              "functionId": "sha256:ab1a555eb52765ab48a122ce20d12edeb938cb71d09b6cd3bebdf1c100425193"
+            }
+          ],
+          "files": [
+            {
+              "path": "/readspan26d-semantic/app.ts",
+              "content": "function borrow(a: f64[]): ReadSpan<f64> {\n  a.length = 0;\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\n  return v;\n}\nexport function entry(): f64 {\n  const a: f64[] = [1];\n  const old: ReadSpan<f64> = readSpan(a, 0, 0);\n  const w: ReadSpan<f64> = borrow(a);\n  old.length;\n  w.length;\n  return 1;\n}\n",
+              "byteLength": 300,
+              "utf16Length": 300,
+              "sha256": "9ba4472fdc2773fe5f0b19716f64d86c01764c9e79543eed83c74b576f967ff7"
+            },
+            {
+              "path": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+              "content": "// SPDX-License-Identifier: MIT\ninterface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> { [n: number]: T; length: number; }\ntype f64 = number;\ntype u32 = number;\ninterface ReadSpan<T> { readonly [n: number]: T; readonly length: u32; }\ndeclare function readSpan<T>(owner: T[], start: u32, length: u32): ReadSpan<T>;\n",
+              "byteLength": 484,
+              "utf16Length": 484,
+              "sha256": "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415"
+            }
+          ],
+          "functions": [
+            {
+              "id": "sha256:eb32808ea01430bbcb5df725661340913eb73a42ac5ac8d28b483d5c8341bc73",
+              "name": "borrow",
+              "sourcePath": "/readspan26d-semantic/app.ts",
+              "declarationRange": {
+                "start": 0,
+                "end": 118
+              },
+              "nameRange": {
+                "start": 9,
+                "end": 15
+              },
+              "returnType": "readspan.f64",
+              "returnAnnotationRange": {
+                "start": 27,
+                "end": 40
+              },
+              "returnElementAnnotationRange": {
+                "start": 36,
+                "end": 39
+              },
+              "parameters": [
+                {
+                  "id": "sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49",
+                  "kind": "parameter",
+                  "name": "a",
+                  "declaredType": "array.f64",
+                  "writable": true,
+                  "declarationRange": {
+                    "start": 16,
+                    "end": 24
+                  },
+                  "nameRange": {
+                    "start": 16,
+                    "end": 17
+                  },
+                  "annotationRange": {
+                    "start": 19,
+                    "end": 24
+                  },
+                  "elementAnnotationRange": {
+                    "start": 19,
+                    "end": 22
+                  }
+                }
+              ],
+              "bindings": [
+                {
+                  "id": "sha256:cb3b1451625051a76c2efe44cf346f2efcd8b862f6a7413ae5e7b5df97fe11ef",
+                  "kind": "const",
+                  "name": "v",
+                  "declaredType": "readspan.f64",
+                  "writable": false,
+                  "declarationRange": {
+                    "start": 67,
+                    "end": 103
+                  },
+                  "nameRange": {
+                    "start": 67,
+                    "end": 68
+                  },
+                  "annotationRange": {
+                    "start": 70,
+                    "end": 83
+                  },
+                  "elementAnnotationRange": {
+                    "start": 79,
+                    "end": 82
+                  }
+                }
+              ],
+              "body": [
+                {
+                  "kind": "lengthAssignment",
+                  "range": {
+                    "start": 45,
+                    "end": 58
+                  },
+                  "expressionRange": {
+                    "start": 45,
+                    "end": 57
+                  },
+                  "operatorRange": {
+                    "start": 54,
+                    "end": 55
+                  },
+                  "target": {
+                    "kind": "lengthTarget",
+                    "type": "u32",
+                    "range": {
+                      "start": 45,
+                      "end": 53
+                    },
+                    "array": {
+                      "kind": "reference",
+                      "binding": "sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49",
+                      "flowType": "array.f64",
+                      "range": {
+                        "start": 45,
+                        "end": 46
+                      }
+                    },
+                    "property": "sha256:db2528de3dc8c04e8feda7829090f980daccabf9a8d300a562cb9688f3f44a0a",
+                    "nameRange": {
+                      "start": 47,
+                      "end": 53
+                    }
+                  },
+                  "value": {
+                    "kind": "lengthLiteral",
+                    "type": "u32",
+                    "range": {
+                      "start": 56,
+                      "end": 57
+                    },
+                    "token": "0",
+                    "decimal": "0"
+                  }
+                },
+                {
+                  "kind": "variable",
+                  "binding": "sha256:cb3b1451625051a76c2efe44cf346f2efcd8b862f6a7413ae5e7b5df97fe11ef",
+                  "range": {
+                    "start": 61,
+                    "end": 104
+                  },
+                  "initializer": {
+                    "kind": "readSpanCreate",
+                    "type": "readspan.f64",
+                    "range": {
+                      "start": 86,
+                      "end": 103
+                    },
+                    "intrinsic": "sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6",
+                    "calleeRange": {
+                      "start": 86,
+                      "end": 94
+                    },
+                    "array": {
+                      "kind": "reference",
+                      "binding": "sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49",
+                      "flowType": "array.f64",
+                      "range": {
+                        "start": 95,
+                        "end": 96
+                      }
+                    },
+                    "start": {
+                      "kind": "u32Literal",
+                      "type": "u32",
+                      "range": {
+                        "start": 98,
+                        "end": 99
+                      },
+                      "token": "0",
+                      "decimal": "0"
+                    },
+                    "length": {
+                      "kind": "u32Literal",
+                      "type": "u32",
+                      "range": {
+                        "start": 101,
+                        "end": 102
+                      },
+                      "token": "0",
+                      "decimal": "0"
+                    }
+                  }
+                },
+                {
+                  "kind": "return",
+                  "range": {
+                    "start": 107,
+                    "end": 116
+                  },
+                  "value": {
+                    "kind": "reference",
+                    "binding": "sha256:cb3b1451625051a76c2efe44cf346f2efcd8b862f6a7413ae5e7b5df97fe11ef",
+                    "flowType": "readspan.f64",
+                    "range": {
+                      "start": 114,
+                      "end": 115
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "sha256:ab1a555eb52765ab48a122ce20d12edeb938cb71d09b6cd3bebdf1c100425193",
+              "name": "entry",
+              "sourcePath": "/readspan26d-semantic/app.ts",
+              "declarationRange": {
+                "start": 119,
+                "end": 299
+              },
+              "nameRange": {
+                "start": 135,
+                "end": 140
+              },
+              "returnType": "f64",
+              "returnAnnotationRange": {
+                "start": 144,
+                "end": 147
+              },
+              "parameters": [],
+              "bindings": [
+                {
+                  "id": "sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6",
+                  "kind": "const",
+                  "name": "a",
+                  "declaredType": "array.f64",
+                  "writable": false,
+                  "declarationRange": {
+                    "start": 158,
+                    "end": 172
+                  },
+                  "nameRange": {
+                    "start": 158,
+                    "end": 159
+                  },
+                  "annotationRange": {
+                    "start": 161,
+                    "end": 166
+                  },
+                  "elementAnnotationRange": {
+                    "start": 161,
+                    "end": 164
+                  }
+                },
+                {
+                  "id": "sha256:389f7368848f7996403a7b67557e711c3cc9c210833efbacd4bc9544474b6cb0",
+                  "kind": "const",
+                  "name": "old",
+                  "declaredType": "readspan.f64",
+                  "writable": false,
+                  "declarationRange": {
+                    "start": 182,
+                    "end": 220
+                  },
+                  "nameRange": {
+                    "start": 182,
+                    "end": 185
+                  },
+                  "annotationRange": {
+                    "start": 187,
+                    "end": 200
+                  },
+                  "elementAnnotationRange": {
+                    "start": 196,
+                    "end": 199
+                  }
+                },
+                {
+                  "id": "sha256:7f119fcf2a0f6504446b05f17079cc180b159a218d0f6304440e981c66562a78",
+                  "kind": "const",
+                  "name": "w",
+                  "declaredType": "readspan.f64",
+                  "writable": false,
+                  "declarationRange": {
+                    "start": 230,
+                    "end": 258
+                  },
+                  "nameRange": {
+                    "start": 230,
+                    "end": 231
+                  },
+                  "annotationRange": {
+                    "start": 233,
+                    "end": 246
+                  },
+                  "elementAnnotationRange": {
+                    "start": 242,
+                    "end": 245
+                  }
+                }
+              ],
+              "body": [
+                {
+                  "kind": "variable",
+                  "binding": "sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6",
+                  "range": {
+                    "start": 152,
+                    "end": 173
+                  },
+                  "initializer": {
+                    "kind": "arrayLiteral",
+                    "type": "array.f64",
+                    "range": {
+                      "start": 169,
+                      "end": 172
+                    },
+                    "allocationSite": "sha256:afddb7b7923e7d51526d8cb80723132bd832b486d7371a723ec8617f01afffba",
+                    "elements": [
+                      {
+                        "kind": "numericLiteral",
+                        "type": "f64",
+                        "range": {
+                          "start": 170,
+                          "end": 171
+                        },
+                        "token": "1",
+                        "bits": "3ff0000000000000"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "variable",
+                  "binding": "sha256:389f7368848f7996403a7b67557e711c3cc9c210833efbacd4bc9544474b6cb0",
+                  "range": {
+                    "start": 176,
+                    "end": 221
+                  },
+                  "initializer": {
+                    "kind": "readSpanCreate",
+                    "type": "readspan.f64",
+                    "range": {
+                      "start": 203,
+                      "end": 220
+                    },
+                    "intrinsic": "sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6",
+                    "calleeRange": {
+                      "start": 203,
+                      "end": 211
+                    },
+                    "array": {
+                      "kind": "reference",
+                      "binding": "sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6",
+                      "flowType": "array.f64",
+                      "range": {
+                        "start": 212,
+                        "end": 213
+                      }
+                    },
+                    "start": {
+                      "kind": "u32Literal",
+                      "type": "u32",
+                      "range": {
+                        "start": 215,
+                        "end": 216
+                      },
+                      "token": "0",
+                      "decimal": "0"
+                    },
+                    "length": {
+                      "kind": "u32Literal",
+                      "type": "u32",
+                      "range": {
+                        "start": 218,
+                        "end": 219
+                      },
+                      "token": "0",
+                      "decimal": "0"
+                    }
+                  }
+                },
+                {
+                  "kind": "variable",
+                  "binding": "sha256:7f119fcf2a0f6504446b05f17079cc180b159a218d0f6304440e981c66562a78",
+                  "range": {
+                    "start": 224,
+                    "end": 259
+                  },
+                  "initializer": {
+                    "kind": "directCall",
+                    "type": "readspan.f64",
+                    "range": {
+                      "start": 249,
+                      "end": 258
+                    },
+                    "callee": "sha256:eb32808ea01430bbcb5df725661340913eb73a42ac5ac8d28b483d5c8341bc73",
+                    "calleeRange": {
+                      "start": 249,
+                      "end": 255
+                    },
+                    "arguments": [
+                      {
+                        "kind": "reference",
+                        "binding": "sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6",
+                        "flowType": "array.f64",
+                        "range": {
+                          "start": 256,
+                          "end": 257
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "readSpanUse",
+                  "range": {
+                    "start": 262,
+                    "end": 273
+                  },
+                  "value": {
+                    "kind": "readSpanLength",
+                    "type": "u32",
+                    "range": {
+                      "start": 262,
+                      "end": 272
+                    },
+                    "property": "sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b",
+                    "nameRange": {
+                      "start": 266,
+                      "end": 272
+                    },
+                    "view": {
+                      "kind": "reference",
+                      "binding": "sha256:389f7368848f7996403a7b67557e711c3cc9c210833efbacd4bc9544474b6cb0",
+                      "flowType": "readspan.f64",
+                      "range": {
+                        "start": 262,
+                        "end": 265
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "readSpanUse",
+                  "range": {
+                    "start": 276,
+                    "end": 285
+                  },
+                  "value": {
+                    "kind": "readSpanLength",
+                    "type": "u32",
+                    "range": {
+                      "start": 276,
+                      "end": 284
+                    },
+                    "property": "sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b",
+                    "nameRange": {
+                      "start": 278,
+                      "end": 284
+                    },
+                    "view": {
+                      "kind": "reference",
+                      "binding": "sha256:7f119fcf2a0f6504446b05f17079cc180b159a218d0f6304440e981c66562a78",
+                      "flowType": "readspan.f64",
+                      "range": {
+                        "start": 276,
+                        "end": 277
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "return",
+                  "range": {
+                    "start": 288,
+                    "end": 297
+                  },
+                  "value": {
+                    "kind": "numericLiteral",
+                    "type": "f64",
+                    "range": {
+                      "start": 295,
+                      "end": 296
+                    },
+                    "token": "1",
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              ]
+            }
+          ],
+          "positionUnit": "utf16",
+          "readSpanIntrinsic": {
+            "declarationRange": {
+              "end": 483,
+              "start": 404
+            },
+            "id": "sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6",
+            "kind": "intrinsic",
+            "name": "readSpan",
+            "nameRange": {
+              "end": 429,
+              "start": 421
+            },
+            "parameters": [
+              {
+                "declarationRange": {
+                  "end": 443,
+                  "start": 433
+                },
+                "name": "owner",
+                "nameRange": {
+                  "end": 438,
+                  "start": 433
+                },
+                "typeRange": {
+                  "end": 443,
+                  "start": 440
+                }
+              },
+              {
+                "declarationRange": {
+                  "end": 455,
+                  "start": 445
+                },
+                "name": "start",
+                "nameRange": {
+                  "end": 450,
+                  "start": 445
+                },
+                "typeRange": {
+                  "end": 455,
+                  "start": 452
+                }
+              },
+              {
+                "declarationRange": {
+                  "end": 468,
+                  "start": 457
+                },
+                "name": "length",
+                "nameRange": {
+                  "end": 463,
+                  "start": 457
+                },
+                "typeRange": {
+                  "end": 468,
+                  "start": 465
+                }
+              }
+            ],
+            "returnTypeRange": {
+              "end": 482,
+              "start": 471
+            },
+            "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+            "typeParameterRange": {
+              "end": 431,
+              "start": 430
+            }
+          },
+          "readSpanLength": {
+            "declarationRange": {
+              "end": 401,
+              "start": 380
+            },
+            "id": "sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b",
+            "kind": "property",
+            "name": "length",
+            "nameRange": {
+              "end": 395,
+              "start": 389
+            },
+            "officialType": "number",
+            "ownerType": "readspan.f64",
+            "readType": "u32",
+            "readonly": true,
+            "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts",
+            "typeRange": {
+              "end": 400,
+              "start": 397
+            }
+          },
+          "rootFile": "/readspan26d-semantic/app.ts",
+          "sourceRoot": "/readspan26d-semantic",
+          "types": [
+            {
+              "declarationRange": {
+                "end": 311,
+                "start": 293
+              },
+              "id": "f64",
+              "kind": "scalar",
+              "nameRange": {
+                "end": 301,
+                "start": 298
+              },
+              "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            },
+            {
+              "declarationRange": {
+                "end": 292,
+                "start": 238
+              },
+              "elementType": "f64",
+              "id": "array.f64",
+              "indexSignatureRange": {
+                "end": 274,
+                "start": 259
+              },
+              "kind": "array",
+              "nameRange": {
+                "end": 253,
+                "start": 248
+              },
+              "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            },
+            {
+              "declarationRange": {
+                "end": 330,
+                "start": 312
+              },
+              "id": "u32",
+              "kind": "scalar",
+              "nameRange": {
+                "end": 320,
+                "start": 317
+              },
+              "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            },
+            {
+              "declarationRange": {
+                "end": 403,
+                "start": 331
+              },
+              "elementType": "f64",
+              "id": "readspan.f64",
+              "indexSignatureRange": {
+                "end": 379,
+                "start": 355
+              },
+              "kind": "readSpan",
+              "nameRange": {
+                "end": 349,
+                "start": 341
+              },
+              "readonly": true,
+              "sourcePath": "/readspan26d-semantic/minimal-arrays-v3.d.ts"
+            }
+          ]
+        }
+      },
+      "packageText": "{\"family\":\"tsfg.array-facts-package-candidate\",\"packageId\":\"sha256:fb9569505c070b38568c0c64b18b71dfd7bd2725057b3ac5efa08a7bd344d9d9\",\"payload\":{\"arrayLength\":{\"declarationRange\":{\"end\":290,\"start\":275},\"id\":\"sha256:db2528de3dc8c04e8feda7829090f980daccabf9a8d300a562cb9688f3f44a0a\",\"kind\":\"property\",\"name\":\"length\",\"nameRange\":{\"end\":281,\"start\":275},\"officialType\":\"number\",\"ownerType\":\"array.f64\",\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"typeRange\":{\"end\":289,\"start\":283},\"writeType\":\"u32\"},\"config\":{\"allowJs\":false,\"noEmit\":true,\"strict\":true},\"declarations\":{\"paths\":[\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"],\"version\":\"minimal-arrays-v3\"},\"diagnostics\":[],\"exports\":[{\"functionId\":\"sha256:ab1a555eb52765ab48a122ce20d12edeb938cb71d09b6cd3bebdf1c100425193\",\"name\":\"entry\"}],\"files\":[{\"byteLength\":300,\"content\":\"function borrow(a: f64[]): ReadSpan<f64> {\\n  a.length = 0;\\n  const v: ReadSpan<f64> = readSpan(a, 0, 0);\\n  return v;\\n}\\nexport function entry(): f64 {\\n  const a: f64[] = [1];\\n  const old: ReadSpan<f64> = readSpan(a, 0, 0);\\n  const w: ReadSpan<f64> = borrow(a);\\n  old.length;\\n  w.length;\\n  return 1;\\n}\\n\",\"path\":\"/readspan26d-semantic/app.ts\",\"sha256\":\"9ba4472fdc2773fe5f0b19716f64d86c01764c9e79543eed83c74b576f967ff7\",\"utf16Length\":300},{\"byteLength\":484,\"content\":\"// SPDX-License-Identifier: MIT\\ninterface Object {}\\ninterface Function {}\\ninterface CallableFunction {}\\ninterface NewableFunction {}\\ninterface IArguments {}\\ninterface String {}\\ninterface Number {}\\ninterface Boolean {}\\ninterface RegExp {}\\ninterface Array<T> { [n: number]: T; length: number; }\\ntype f64 = number;\\ntype u32 = number;\\ninterface ReadSpan<T> { readonly [n: number]: T; readonly length: u32; }\\ndeclare function readSpan<T>(owner: T[], start: u32, length: u32): ReadSpan<T>;\\n\",\"path\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"sha256\":\"282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415\",\"utf16Length\":484}],\"functions\":[{\"bindings\":[{\"annotationRange\":{\"end\":83,\"start\":70},\"declarationRange\":{\"end\":103,\"start\":67},\"declaredType\":\"readspan.f64\",\"elementAnnotationRange\":{\"end\":82,\"start\":79},\"id\":\"sha256:cb3b1451625051a76c2efe44cf346f2efcd8b862f6a7413ae5e7b5df97fe11ef\",\"kind\":\"const\",\"name\":\"v\",\"nameRange\":{\"end\":68,\"start\":67},\"writable\":false}],\"body\":[{\"expressionRange\":{\"end\":57,\"start\":45},\"kind\":\"lengthAssignment\",\"operatorRange\":{\"end\":55,\"start\":54},\"range\":{\"end\":58,\"start\":45},\"target\":{\"array\":{\"binding\":\"sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49\",\"flowType\":\"array.f64\",\"kind\":\"reference\",\"range\":{\"end\":46,\"start\":45}},\"kind\":\"lengthTarget\",\"nameRange\":{\"end\":53,\"start\":47},\"property\":\"sha256:db2528de3dc8c04e8feda7829090f980daccabf9a8d300a562cb9688f3f44a0a\",\"range\":{\"end\":53,\"start\":45},\"type\":\"u32\"},\"value\":{\"decimal\":\"0\",\"kind\":\"lengthLiteral\",\"range\":{\"end\":57,\"start\":56},\"token\":\"0\",\"type\":\"u32\"}},{\"binding\":\"sha256:cb3b1451625051a76c2efe44cf346f2efcd8b862f6a7413ae5e7b5df97fe11ef\",\"initializer\":{\"array\":{\"binding\":\"sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49\",\"flowType\":\"array.f64\",\"kind\":\"reference\",\"range\":{\"end\":96,\"start\":95}},\"calleeRange\":{\"end\":94,\"start\":86},\"intrinsic\":\"sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6\",\"kind\":\"readSpanCreate\",\"length\":{\"decimal\":\"0\",\"kind\":\"u32Literal\",\"range\":{\"end\":102,\"start\":101},\"token\":\"0\",\"type\":\"u32\"},\"range\":{\"end\":103,\"start\":86},\"start\":{\"decimal\":\"0\",\"kind\":\"u32Literal\",\"range\":{\"end\":99,\"start\":98},\"token\":\"0\",\"type\":\"u32\"},\"type\":\"readspan.f64\"},\"kind\":\"variable\",\"range\":{\"end\":104,\"start\":61}},{\"kind\":\"return\",\"range\":{\"end\":116,\"start\":107},\"value\":{\"binding\":\"sha256:cb3b1451625051a76c2efe44cf346f2efcd8b862f6a7413ae5e7b5df97fe11ef\",\"flowType\":\"readspan.f64\",\"kind\":\"reference\",\"range\":{\"end\":115,\"start\":114}}}],\"declarationRange\":{\"end\":118,\"start\":0},\"id\":\"sha256:eb32808ea01430bbcb5df725661340913eb73a42ac5ac8d28b483d5c8341bc73\",\"name\":\"borrow\",\"nameRange\":{\"end\":15,\"start\":9},\"parameters\":[{\"annotationRange\":{\"end\":24,\"start\":19},\"declarationRange\":{\"end\":24,\"start\":16},\"declaredType\":\"array.f64\",\"elementAnnotationRange\":{\"end\":22,\"start\":19},\"id\":\"sha256:c6ec57ba60c836dc7526a909dfb357a1dcd78241758e8186f19b669621f0fd49\",\"kind\":\"parameter\",\"name\":\"a\",\"nameRange\":{\"end\":17,\"start\":16},\"writable\":true}],\"returnAnnotationRange\":{\"end\":40,\"start\":27},\"returnElementAnnotationRange\":{\"end\":39,\"start\":36},\"returnType\":\"readspan.f64\",\"sourcePath\":\"/readspan26d-semantic/app.ts\"},{\"bindings\":[{\"annotationRange\":{\"end\":166,\"start\":161},\"declarationRange\":{\"end\":172,\"start\":158},\"declaredType\":\"array.f64\",\"elementAnnotationRange\":{\"end\":164,\"start\":161},\"id\":\"sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6\",\"kind\":\"const\",\"name\":\"a\",\"nameRange\":{\"end\":159,\"start\":158},\"writable\":false},{\"annotationRange\":{\"end\":200,\"start\":187},\"declarationRange\":{\"end\":220,\"start\":182},\"declaredType\":\"readspan.f64\",\"elementAnnotationRange\":{\"end\":199,\"start\":196},\"id\":\"sha256:389f7368848f7996403a7b67557e711c3cc9c210833efbacd4bc9544474b6cb0\",\"kind\":\"const\",\"name\":\"old\",\"nameRange\":{\"end\":185,\"start\":182},\"writable\":false},{\"annotationRange\":{\"end\":246,\"start\":233},\"declarationRange\":{\"end\":258,\"start\":230},\"declaredType\":\"readspan.f64\",\"elementAnnotationRange\":{\"end\":245,\"start\":242},\"id\":\"sha256:7f119fcf2a0f6504446b05f17079cc180b159a218d0f6304440e981c66562a78\",\"kind\":\"const\",\"name\":\"w\",\"nameRange\":{\"end\":231,\"start\":230},\"writable\":false}],\"body\":[{\"binding\":\"sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6\",\"initializer\":{\"allocationSite\":\"sha256:afddb7b7923e7d51526d8cb80723132bd832b486d7371a723ec8617f01afffba\",\"elements\":[{\"bits\":\"3ff0000000000000\",\"kind\":\"numericLiteral\",\"range\":{\"end\":171,\"start\":170},\"token\":\"1\",\"type\":\"f64\"}],\"kind\":\"arrayLiteral\",\"range\":{\"end\":172,\"start\":169},\"type\":\"array.f64\"},\"kind\":\"variable\",\"range\":{\"end\":173,\"start\":152}},{\"binding\":\"sha256:389f7368848f7996403a7b67557e711c3cc9c210833efbacd4bc9544474b6cb0\",\"initializer\":{\"array\":{\"binding\":\"sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6\",\"flowType\":\"array.f64\",\"kind\":\"reference\",\"range\":{\"end\":213,\"start\":212}},\"calleeRange\":{\"end\":211,\"start\":203},\"intrinsic\":\"sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6\",\"kind\":\"readSpanCreate\",\"length\":{\"decimal\":\"0\",\"kind\":\"u32Literal\",\"range\":{\"end\":219,\"start\":218},\"token\":\"0\",\"type\":\"u32\"},\"range\":{\"end\":220,\"start\":203},\"start\":{\"decimal\":\"0\",\"kind\":\"u32Literal\",\"range\":{\"end\":216,\"start\":215},\"token\":\"0\",\"type\":\"u32\"},\"type\":\"readspan.f64\"},\"kind\":\"variable\",\"range\":{\"end\":221,\"start\":176}},{\"binding\":\"sha256:7f119fcf2a0f6504446b05f17079cc180b159a218d0f6304440e981c66562a78\",\"initializer\":{\"arguments\":[{\"binding\":\"sha256:9b9c23e78d73dd0b0fc7b25ccc393e5b69aad4fd1f4470faa5ff28419102edf6\",\"flowType\":\"array.f64\",\"kind\":\"reference\",\"range\":{\"end\":257,\"start\":256}}],\"callee\":\"sha256:eb32808ea01430bbcb5df725661340913eb73a42ac5ac8d28b483d5c8341bc73\",\"calleeRange\":{\"end\":255,\"start\":249},\"kind\":\"directCall\",\"range\":{\"end\":258,\"start\":249},\"type\":\"readspan.f64\"},\"kind\":\"variable\",\"range\":{\"end\":259,\"start\":224}},{\"kind\":\"readSpanUse\",\"range\":{\"end\":273,\"start\":262},\"value\":{\"kind\":\"readSpanLength\",\"nameRange\":{\"end\":272,\"start\":266},\"property\":\"sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b\",\"range\":{\"end\":272,\"start\":262},\"type\":\"u32\",\"view\":{\"binding\":\"sha256:389f7368848f7996403a7b67557e711c3cc9c210833efbacd4bc9544474b6cb0\",\"flowType\":\"readspan.f64\",\"kind\":\"reference\",\"range\":{\"end\":265,\"start\":262}}}},{\"kind\":\"readSpanUse\",\"range\":{\"end\":285,\"start\":276},\"value\":{\"kind\":\"readSpanLength\",\"nameRange\":{\"end\":284,\"start\":278},\"property\":\"sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b\",\"range\":{\"end\":284,\"start\":276},\"type\":\"u32\",\"view\":{\"binding\":\"sha256:7f119fcf2a0f6504446b05f17079cc180b159a218d0f6304440e981c66562a78\",\"flowType\":\"readspan.f64\",\"kind\":\"reference\",\"range\":{\"end\":277,\"start\":276}}}},{\"kind\":\"return\",\"range\":{\"end\":297,\"start\":288},\"value\":{\"bits\":\"3ff0000000000000\",\"kind\":\"numericLiteral\",\"range\":{\"end\":296,\"start\":295},\"token\":\"1\",\"type\":\"f64\"}}],\"declarationRange\":{\"end\":299,\"start\":119},\"id\":\"sha256:ab1a555eb52765ab48a122ce20d12edeb938cb71d09b6cd3bebdf1c100425193\",\"name\":\"entry\",\"nameRange\":{\"end\":140,\"start\":135},\"parameters\":[],\"returnAnnotationRange\":{\"end\":147,\"start\":144},\"returnType\":\"f64\",\"sourcePath\":\"/readspan26d-semantic/app.ts\"}],\"positionUnit\":\"utf16\",\"readSpanIntrinsic\":{\"declarationRange\":{\"end\":483,\"start\":404},\"id\":\"sha256:1b095d19b3c0586930369f8504152039723a4a0aebd8c7e12f9cec5173f622b6\",\"kind\":\"intrinsic\",\"name\":\"readSpan\",\"nameRange\":{\"end\":429,\"start\":421},\"parameters\":[{\"declarationRange\":{\"end\":443,\"start\":433},\"name\":\"owner\",\"nameRange\":{\"end\":438,\"start\":433},\"typeRange\":{\"end\":443,\"start\":440}},{\"declarationRange\":{\"end\":455,\"start\":445},\"name\":\"start\",\"nameRange\":{\"end\":450,\"start\":445},\"typeRange\":{\"end\":455,\"start\":452}},{\"declarationRange\":{\"end\":468,\"start\":457},\"name\":\"length\",\"nameRange\":{\"end\":463,\"start\":457},\"typeRange\":{\"end\":468,\"start\":465}}],\"returnTypeRange\":{\"end\":482,\"start\":471},\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"typeParameterRange\":{\"end\":431,\"start\":430}},\"readSpanLength\":{\"declarationRange\":{\"end\":401,\"start\":380},\"id\":\"sha256:3a385e2afd4d852e52e1d6b3abdbd20eaf72ac5bc67d09839df32f2cebdcbb0b\",\"kind\":\"property\",\"name\":\"length\",\"nameRange\":{\"end\":395,\"start\":389},\"officialType\":\"number\",\"ownerType\":\"readspan.f64\",\"readType\":\"u32\",\"readonly\":true,\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\",\"typeRange\":{\"end\":400,\"start\":397}},\"rootFile\":\"/readspan26d-semantic/app.ts\",\"sourceRoot\":\"/readspan26d-semantic\",\"types\":[{\"declarationRange\":{\"end\":311,\"start\":293},\"id\":\"f64\",\"kind\":\"scalar\",\"nameRange\":{\"end\":301,\"start\":298},\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"},{\"declarationRange\":{\"end\":292,\"start\":238},\"elementType\":\"f64\",\"id\":\"array.f64\",\"indexSignatureRange\":{\"end\":274,\"start\":259},\"kind\":\"array\",\"nameRange\":{\"end\":253,\"start\":248},\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"},{\"declarationRange\":{\"end\":330,\"start\":312},\"id\":\"u32\",\"kind\":\"scalar\",\"nameRange\":{\"end\":320,\"start\":317},\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"},{\"declarationRange\":{\"end\":403,\"start\":331},\"elementType\":\"f64\",\"id\":\"readspan.f64\",\"indexSignatureRange\":{\"end\":379,\"start\":355},\"kind\":\"readSpan\",\"nameRange\":{\"end\":349,\"start\":341},\"readonly\":true,\"sourcePath\":\"/readspan26d-semantic/minimal-arrays-v3.d.ts\"}]},\"requestId\":\"sha256:a275af9c80d3a034c28f8335a32fce2f9f940283fb2b95742141a28a913d3b5d\",\"schemaHash\":\"sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2\",\"version\":7}\n",
+      "packageBytes": 10833,
+      "packageSHA256": "8fa34dfb5008ac808f68361a0c0785fd98e2cf288435873bb8777abc6f59a578",
+      "counts": {
+        "functions": 2,
+        "parameters": [
+          1,
+          0
+        ],
+        "locals": [
+          1,
+          3
+        ],
+        "statements": [
+          3,
+          6
+        ],
+        "ordinary": 1,
+        "raw": 3
+      },
+      "officialExpected": {
+        "freshProgram": true,
+        "producerProjectionCalled": false,
+        "diagnosticGroups": {
+          "syntactic": [],
+          "options": [],
+          "global": [],
+          "semantic": []
+        }
+      }
+    }
+  ]
+}
