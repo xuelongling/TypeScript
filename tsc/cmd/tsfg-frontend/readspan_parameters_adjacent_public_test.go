@@ -12,10 +12,10 @@ import (
 	"unicode/utf16"
 )
 
-func TestReadSpan26bV6AdjacentPublicWholeFrozen(t *testing.T) {
+func TestReadSpan26bV7AdjacentPublicWholeFrozen(t *testing.T) {
 	read := func(name string, size int, pin string) []byte {
 		t.Helper()
-		path := "testdata/readspan-parameters-v6/" + name
+		path := "testdata/readspan-parameters-v7/" + name
 		raw, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatal(err)
@@ -32,8 +32,8 @@ func TestReadSpan26bV6AdjacentPublicWholeFrozen(t *testing.T) {
 		})
 		return raw
 	}
-	inputRaw := read("adjacent-inputs.json", 92072, "4ce5bddf8bede5e800798733876ce3d38ef9479e1b794b3ec027045dc9a66883")
-	expectedRaw := read("adjacent-expected-facts.json", 159931, "54d5a043b0e1ac9f26d3abd852179da969bf382f92dd9adc3d208eab79213c5e")
+	inputRaw := read("adjacent-inputs.json", 62723, "c6b239b78aceb1aa770336bbbe98ab0ad93fca2ac478582ad12b31f0e650e757")
+	expectedRaw := read("adjacent-expected-facts.json", 154720, "a46885f7d475fb8bc8180d1ff6155332416494ac62eab0cffab406223704c7d6")
 	var input struct {
 		Cases []struct {
 			ID             string `json:"id"`

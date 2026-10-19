@@ -57,7 +57,7 @@ func arrayDomainID25(t *testing.T, domain string, value any) string {
 
 // This template is authored directly. It consumes no producer AST/projector or
 // float conversion; all elements are token 0 with independently fixed +0 bits.
-// Frozen v6 eight-case origins supply the selected declarations/config basis.
+// Frozen v7 eight-case origins supply the selected declarations/config basis.
 func arrayDomainPacket25(t *testing.T, lengths [][]int) (string, []byte, []byte) {
 	t.Helper()
 	var packet map[string]any
@@ -150,11 +150,11 @@ func arrayDomainPacket25(t *testing.T, lengths [][]int) (string, []byte, []byte)
 		requestFiles = append(requestFiles, map[string]any{"path": file["path"], "content": file["content"], "sha256": file["sha256"]})
 	}
 	payload["functions"], payload["exports"] = functions, exports
-	request := map[string]any{"family": "tsfg.array-facts-request-candidate", "version": 6, "input": map[string]any{
+	request := map[string]any{"family": "tsfg.array-facts-request-candidate", "version": 7, "input": map[string]any{
 		"sourceRoot": payload["sourceRoot"], "rootFile": path, "files": requestFiles, "declarations": payload["declarations"], "config": payload["config"]}}
 	requestText := arrayBoundaryWire25(t, request)
-	packet["requestId"] = "sha256:" + arrayFirstHash25(append([]byte("tsfg.array-facts.request.v6\x00"), requestText...))
-	packet["packageId"] = "sha256:" + arrayFirstHash25(append([]byte("tsfg.array-facts.package.v6\x00"+packet["schemaHash"].(string)+"\x00"), arrayFirstCanonical25(t, payload)...))
+	packet["requestId"] = "sha256:" + arrayFirstHash25(append([]byte("tsfg.array-facts.request.v7\x00"), requestText...))
+	packet["packageId"] = "sha256:" + arrayFirstHash25(append([]byte("tsfg.array-facts.package.v7\x00"+packet["schemaHash"].(string)+"\x00"), arrayFirstCanonical25(t, payload)...))
 	return source, requestText, arrayBoundaryWire25(t, packet)
 }
 
@@ -210,7 +210,7 @@ func TestArrayFactsDomainBudgets25(t *testing.T) {
 			}
 			arrayDomainOfficialZero25(t, input)
 			var output arrayBoundaryWriter25
-			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v6"}, bytes.NewReader(input), &output)
+			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v7"}, bytes.NewReader(input), &output)
 			if plan.accept {
 				if err != nil || output.calls != 1 {
 					t.Fatalf("legal domain boundary: err=%v writes=%d", err, output.calls)

@@ -9,8 +9,8 @@ import (
 
 var rs26cReturnGlobalWorkPin = rs26cFrozenFixturePin{
 	"global1024-1025-expected-facts.json",
-	"dcc44ac523c9ad923aa09e631e13dcd89ae20aa90720c6c2ea4be7c28f5bc2fb",
-	3280304,
+	"6d3e2f51446e40f08ceff81676f8995d0a2fc741806305261e90ff316563908d",
+	1989039,
 	[]string{"return-global-1024", "return-global-1025"},
 }
 
@@ -24,6 +24,6 @@ func TestReadSpan26cOfficialFreshWholeReturnGlobalWork(t *testing.T) {
 	}
 }
 
-func TestReadSpan26cV6ReturnGlobalWorkPublicWholeFrozen(t *testing.T) {
+func TestReadSpan26cV7ReturnGlobalWorkPublicWholeFrozen(t *testing.T) {
 	rs26cPublicFrozenMatrix(t, []rs26cFrozenFixturePin{rs26cReturnGlobalWorkPin})
 }

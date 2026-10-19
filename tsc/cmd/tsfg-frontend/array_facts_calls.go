@@ -80,36 +80,21 @@ func (p *arrayFactsProjection) call(node *ast.Node, state *arrayFactsFunctionSta
 	return &arrayFactsValue{Kind: "directCall", Type: header.function.ReturnType, Range: expressionOffset(p.file, node), Callee: header.function.ID, CalleeRange: &calleeRange, Arguments: &values}, nil
 }
 
-func (p *arrayFactsProjection) acyclic(headers []*arrayFactsHeader) error {
-	// Sixteen complete functions bound graph depth; source slots prove no physical disjointness.
-	state := map[*ast.Node]uint8{}
-	var visit func(*arrayFactsHeader) error
-	visit = func(header *arrayFactsHeader) error {
+func (p *arrayFactsProjection) completeCallGraph(headers []*arrayFactsHeader) error {
+	// Count original occurrences, not target identities. Cycles are complete Source
+	// facts; Product owns their parameter-domain and effect fixed-point decisions.
+	ordinary := 0
+	for _, header := range headers {
 		if err := p.ctx.Err(); err != nil {
 			return arrayFactsError("canceled", "complete direct call graph", err)
 		}
-		state[header.node] = 1
 		for _, node := range header.state.calls {
-			target := p.headers[p.check.GetSymbolAtLocation(node.AsCallExpression().Expression)]
-			if target == nil {
+			ordinary++
+			if ordinary > 480 {
+				return arrayFactsError("limit", "ordinary calls per package", nil)
+			}
+			if p.headers[p.check.GetSymbolAtLocation(node.AsCallExpression().Expression)] == nil {
 				return arrayFactsError("identity", "complete projected call target", nil)
-			}
-			if state[target.node] == 1 {
-				return arrayFactsCapability(p.file, node, "acyclic direct named call graph required")
-			}
-			if state[target.node] == 0 {
-				if err := visit(target); err != nil {
-					return err
-				}
-			}
-		}
-		state[header.node] = 2
-		return nil
-	}
-	for _, header := range headers {
-		if state[header.node] == 0 {
-			if err := visit(header); err != nil {
-				return err
 			}
 		}
 	}

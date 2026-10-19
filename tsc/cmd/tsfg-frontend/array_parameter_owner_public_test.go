@@ -20,8 +20,8 @@ type arrayOwnerFrozenCase23e struct {
 
 func arrayOwnerFrozenBundles23e(t *testing.T) []arrayOwnerFrozenCase23e {
 	t.Helper()
-	data, err := os.ReadFile("testdata/array-facts-v6/owner10-official-packages.json")
-	if err != nil || len(data) != 1073962 || arrayFirstHash25(data) != "771e0363f1f45f6b050711be919b07a459dcbe99006cd75e679809f7eeba776d" {
+	data, err := os.ReadFile("testdata/array-facts-v7/owner10-official-packages.json")
+	if err != nil || len(data) != 1067092 || arrayFirstHash25(data) != "84c04dac411d0837ca55dfac09abcb9188f7426365d8c78c4cb7ee68182d614e" {
 		t.Fatalf("independent whole Source bundle bytes: %v", err)
 	}
 	var bundle struct{ Cases []arrayOwnerFrozenCase23e }
@@ -41,7 +41,7 @@ func TestArrayParameterOwner23ePublicWholeFrozenPackets(t *testing.T) {
 			input := []byte(item.RequestText)
 			before := bytes.Clone(input)
 			var output bytes.Buffer
-			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v6"}, bytes.NewReader(input), &output)
+			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v7"}, bytes.NewReader(input), &output)
 			if !bytes.Equal(before, input) {
 				t.Fatal("caller input mutated")
 			}
@@ -49,7 +49,7 @@ func TestArrayParameterOwner23ePublicWholeFrozenPackets(t *testing.T) {
 				if output.Len() != 0 {
 					t.Fatal("failed publication produced partial packet")
 				}
-				t.Fatalf("ordinary complete source must publish v6 facts: %v", err)
+				t.Fatalf("ordinary complete source must publish v7 facts: %v", err)
 			}
 			if !bytes.Equal(output.Bytes(), []byte(item.PackageText)) {
 				t.Logf("TSFG_ARRAY_OWNER_23E_MISMATCH name=%s actual=%s", item.Name, base64.StdEncoding.EncodeToString(output.Bytes()))
@@ -65,7 +65,7 @@ func TestArrayParameterOwner23eRetiredV2Rejected(t *testing.T) {
 		t.Fatalf("unchanged historical FIRST input: %v", err)
 	}
 	var output bytes.Buffer
-	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v6"}, bytes.NewReader(input), &output)
+	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v7"}, bytes.NewReader(input), &output)
 	failure := arrayBoundaryFailure25(t, err)
 	if failure.Code != "r03-array-facts-schema" || failure.Phase != "input" || output.Len() != 0 {
 		t.Fatalf("retired v2 envelope must be rejected, not adapted: %+v", failure)
@@ -77,6 +77,8 @@ func TestArrayParameterOwner23eRetiredV2Rejected(t *testing.T) {
 }
 func TestArrayParameterOwner23eCallLimitsAndUnsignedArguments(t *testing.T) {
 	for _, tc := range []struct{ name, source, want string }{
+		{"selfRecursion", "export function entry(a: f64[]): f64 { return entry(a); }", ""},
+		{"mutualRecursion", "function a(x: f64[]): f64 { return b(x); } export function b(x: f64[]): f64 { return a(x); }", ""},
 		{"calls32", "function leaf(a: f64[]): f64 { return a[0]; }\nexport function entry(a: f64[]): f64 {" + strings.Repeat("leaf(a);", 31) + "return leaf(a);}", ""},
 		{"calls33", "function leaf(a: f64[]): f64 { return a[0]; }\nexport function entry(a: f64[]): f64 {" + strings.Repeat("leaf(a);", 32) + "return leaf(a);}", "r03-array-facts-limit"},
 		{"fullU32CallLiteral", "function leaf(a: f64[], i: u32): f64 { return a[i]; }\nexport function entry(a: f64[]): f64 {return leaf(a,4294967295);}", ""},
@@ -103,8 +105,6 @@ func TestArrayParameterOwner23eCallLimitsAndUnsignedArguments(t *testing.T) {
 }
 func TestArrayParameterOwner23eUnsupportedCallsStayLocated(t *testing.T) {
 	for _, tc := range []struct{ name, source string }{
-		{"selfRecursion", "export function entry(a: f64[]): f64 { return entry(a); }"},
-		{"mutualRecursion", "function a(x: f64[]): f64 { return b(x); } export function b(x: f64[]): f64 { return a(x); }"},
 		{"temporaryArray", "function leaf(a: f64[]): f64 { return a[0]; } export function entry(): f64 { return leaf([1.0]); }"},
 		{"nestedRHS", "function leaf(a: f64[]): f64 { return a[0]; } export function entry(a: f64[]): f64 { a[0]=leaf(a);return a[0]; }"},
 		{"nestedArgument", "function leaf(a: f64[],v: f64): f64 { return v; } export function entry(a: f64[]): f64 { return leaf(a,leaf(a,1.0)); }"},
@@ -128,7 +128,7 @@ func TestArrayParameterOwner23eRetiredV3Rejected(t *testing.T) {
 		t.Fatalf("unchanged historical v3 request: %v", err)
 	}
 	var output arrayBoundaryWriter25
-	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v6"}, bytes.NewReader(input), &output)
+	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v7"}, bytes.NewReader(input), &output)
 	failure := arrayBoundaryFailure25(t, err)
 	if failure.Code != "r03-array-facts-schema" || failure.Phase != "input" || output.Len() != 0 || output.calls != 0 {
 		t.Fatalf("retired v3 envelope must fail before publication: %+v", failure)

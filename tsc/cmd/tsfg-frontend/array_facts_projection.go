@@ -200,7 +200,7 @@ func projectArrayFacts(ctx context.Context, r request, input arrayFactsInput) (a
 		}
 		payload.Functions = append(payload.Functions, fn)
 	}
-	if err := p.acyclic(headers); err != nil {
+	if err := p.completeCallGraph(headers); err != nil {
 		return empty, err
 	}
 	module := file.AsNode().Symbol()

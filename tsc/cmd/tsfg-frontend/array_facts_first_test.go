@@ -14,8 +14,8 @@ import (
 	tsjson "github.com/microsoft/typescript-go/internal/json"
 )
 
-const arrayFirstOracleSHA25 = "737e86f71385d1ea7eb2b0ce509361dc11a52bbf535664356d6102e9c2ae984e"
-const arrayFirstSchemaSHA25 = "fc9b976b96070df07f5b9cdae27c58f327f9b67b74945f25ee874087ce55a279"
+const arrayFirstOracleSHA25 = "42098ede9d787de34ce4702313a001db799f93f110a9c6b891866e7deb316e45"
+const arrayFirstSchemaSHA25 = "3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617"
 const arrayFirstDtsSHA25 = "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415"
 
 type arrayFirstRange25 struct {
@@ -149,11 +149,11 @@ func arrayFirstCanonical25(t *testing.T, value any) []byte {
 }
 func arrayFirstFixture25(t *testing.T) []arrayFirstCase25 {
 	t.Helper()
-	data, err := os.ReadFile("testdata/array-facts-v6/oracle.json")
+	data, err := os.ReadFile("testdata/array-facts-v7/oracle.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(data) != 87971 || arrayFirstHash25(data) != arrayFirstOracleSHA25 {
+	if len(data) != 87365 || arrayFirstHash25(data) != arrayFirstOracleSHA25 {
 		t.Fatal("independent whole oracle changed")
 	}
 	var oracle struct {
@@ -164,7 +164,7 @@ func arrayFirstFixture25(t *testing.T) []arrayFirstCase25 {
 	if err := json.Unmarshal(data, &oracle); err != nil {
 		t.Fatal(err)
 	}
-	if oracle.Family != "tsfg.r03.array-facts-whole-oracle" || oracle.Version != 6 || len(oracle.Cases) != 8 {
+	if oracle.Family != "tsfg.r03.array-facts-whole-oracle" || oracle.Version != 7 || len(oracle.Cases) != 8 {
 		t.Fatal("complete independent eight-case oracle")
 	}
 	for _, tc := range oracle.Cases {
@@ -195,7 +195,7 @@ func arrayFirstDecode25(t *testing.T, tc arrayFirstCase25) (request, arrayFirstP
 	if json.Unmarshal([]byte(tc.RequestText), &envelope) != nil || json.Unmarshal([]byte(tc.PackageText), &packet) != nil {
 		t.Fatal("complete request/package decode")
 	}
-	if envelope.Family != "tsfg.array-facts-request-candidate" || envelope.Version != 6 || packet.Family != "tsfg.array-facts-package-candidate" || packet.Version != 6 || packet.SchemaHash != "sha256:"+arrayFirstSchemaSHA25 {
+	if envelope.Family != "tsfg.array-facts-request-candidate" || envelope.Version != 7 || packet.Family != "tsfg.array-facts-package-candidate" || packet.Version != 7 || packet.SchemaHash != "sha256:"+arrayFirstSchemaSHA25 {
 		t.Fatal("frozen family/version/schema")
 	}
 	r := envelope.Input
@@ -214,28 +214,41 @@ func arrayFirstDecode25(t *testing.T, tc arrayFirstCase25) (request, arrayFirstP
 	if json.Unmarshal([]byte(tc.PackageText), &whole) != nil {
 		t.Fatal("payload decode")
 	}
-	if packet.RequestID != "sha256:"+arrayFirstHash25(append([]byte("tsfg.array-facts.request.v6\x00"), []byte(tc.RequestText)...)) || packet.PackageID != "sha256:"+arrayFirstHash25(append([]byte("tsfg.array-facts.package.v6\x00"+packet.SchemaHash+"\x00"), arrayFirstCanonical25(t, whole["payload"])...)) {
+	if packet.RequestID != "sha256:"+arrayFirstHash25(append([]byte("tsfg.array-facts.request.v7\x00"), []byte(tc.RequestText)...)) || packet.PackageID != "sha256:"+arrayFirstHash25(append([]byte("tsfg.array-facts.package.v7\x00"+packet.SchemaHash+"\x00"), arrayFirstCanonical25(t, whole["payload"])...)) {
 		t.Fatal("independent whole identity preimages")
 	}
 	return r, packet
 }
 
-// Root preserved the historical v1 causal RED. The current sole-v6 command
+// Root preserved the historical v1 causal RED. The current sole-v7 command
 // rejects its original envelope rather than providing a compatibility path.
-func TestArrayFactsV6RejectsV1Request(t *testing.T) {
+func TestArrayFactsV7RejectsV1Request(t *testing.T) {
 	input, err := os.ReadFile("testdata/array-dense-v2/first-v1-request.json")
 	if err != nil || len(input) != 935 || arrayFirstHash25(input) != "e18ca6f7ed8c6b5da40e6e57b5ec137218d25ee2067b2e1c38b2f9a5c0ed78aa" {
 		t.Fatalf("frozen baseline request: %v", err)
 	}
 	var output arrayBoundaryWriter25
-	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v6"}, bytes.NewReader(input), &output)
+	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v7"}, bytes.NewReader(input), &output)
 	owned := arrayBoundaryFailure25(t, err)
 	if owned.Code != "r03-array-facts-schema" || owned.Phase != "input" || owned.RuleID != "r01-input-boundary" || output.calls != 0 || output.Len() != 0 {
-		t.Fatalf("v1 request must fail at the v6 schema before publication: %+v", owned)
+		t.Fatalf("v1 request must fail at the v7 schema before publication: %+v", owned)
 	}
+	t.Run("retired-v6-envelope", func(t *testing.T) {
+		current := []byte(arrayFirstFixture25(t)[0].RequestText)
+		retired := bytes.Replace(current, []byte("\"version\":7"), []byte("\"version\":6"), 1)
+		if bytes.Equal(current, retired) {
+			t.Fatal("retired request control must change the actual envelope version")
+		}
+		var sink arrayBoundaryWriter25
+		err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v7"}, bytes.NewReader(retired), &sink)
+		failure := arrayBoundaryFailure25(t, err)
+		if failure.Code != "r03-array-facts-schema" || failure.Phase != "input" || failure.RuleID != "r01-input-boundary" || sink.calls != 0 || sink.Len() != 0 {
+			t.Fatalf("retired v6 envelope must reject before publication: %+v", failure)
+		}
+	})
 }
 
-func TestArrayFactsV6CommandWholeFrozenPackage(t *testing.T) {
+func TestArrayFactsV7CommandWholeFrozenPackage(t *testing.T) {
 	for _, tc := range arrayFirstFixture25(t) {
 		t.Run(tc.Name, func(t *testing.T) {
 			r, packet := arrayFirstDecode25(t, tc)
@@ -243,11 +256,11 @@ func TestArrayFactsV6CommandWholeFrozenPackage(t *testing.T) {
 			input := []byte(tc.RequestText)
 			before := bytes.Clone(input)
 			var output bytes.Buffer
-			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v6"}, bytes.NewReader(input), &output)
+			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v7"}, bytes.NewReader(input), &output)
 			if tc.Name == "full-fresh-aliases" {
-				t.Logf("TSFG_ARRAY_FACTS_V6_ACTUAL_PACKAGE_BASE64=%s", base64.StdEncoding.EncodeToString(output.Bytes()))
+				t.Logf("TSFG_ARRAY_FACTS_V7_ACTUAL_PACKAGE_BASE64=%s", base64.StdEncoding.EncodeToString(output.Bytes()))
 			} else {
-				t.Logf("TSFG_ARRAY_FACTS_V6_CASE_ACTUAL_BASE64 name=%s data=%s", tc.Name, base64.StdEncoding.EncodeToString(output.Bytes()))
+				t.Logf("TSFG_ARRAY_FACTS_V7_CASE_ACTUAL_BASE64 name=%s data=%s", tc.Name, base64.StdEncoding.EncodeToString(output.Bytes()))
 			}
 			if !bytes.Equal(input, before) {
 				t.Fatal("caller input changed")
@@ -261,7 +274,7 @@ func TestArrayFactsV6CommandWholeFrozenPackage(t *testing.T) {
 			if !bytes.Equal(output.Bytes(), []byte(tc.PackageText)) {
 				t.Fatalf("whole independent package mismatch for %s\nactual=%s\nexpected=%s", tc.Name, output.Bytes(), tc.PackageText)
 			}
-			t.Logf("TSFG_ARRAY_FACTS_V6_WHOLE_PASS name=%s bytes=%d sha256=%s", tc.Name, output.Len(), arrayFirstHash25(output.Bytes()))
+			t.Logf("TSFG_ARRAY_FACTS_V7_WHOLE_PASS name=%s bytes=%d sha256=%s", tc.Name, output.Len(), arrayFirstHash25(output.Bytes()))
 		})
 	}
 }

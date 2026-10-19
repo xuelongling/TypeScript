@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Frozen independent facts6 bytes exercise the public IO boundary, not a CLI child.
+// Frozen independent facts7 bytes exercise the public IO boundary, not a CLI child.
 // Both source variants must publish facts; Product alone decides borrow lifetime.
 package main
 
@@ -11,14 +11,14 @@ import (
 	"testing"
 )
 
-func TestReadSpan26cV6PublicWholeFrozenPair(t *testing.T) {
-	const path = "testdata/readspan-returns-v6/first-expected-facts.json"
+func TestReadSpan26cV7PublicWholeFrozenPair(t *testing.T) {
+	const path = "testdata/readspan-returns-v7/first-expected-facts.json"
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(raw) != 26697 || readSpanParameterPublicHash26b(raw) != "f993d9de204a720b4dbba4985f3a76533b47e4c1ed5355456907eb782f7f435a" {
-		t.Fatal("complete independent pre-production facts6 fixture changed")
+	if len(raw) != 26697 || readSpanParameterPublicHash26b(raw) != "358000a1b975ecd53460d3b053625a91572715e6a7eb1d6036ffccdea3ec1c54" {
+		t.Fatal("complete independent pre-production facts7 fixture changed")
 	}
 	fixtureBefore := bytes.Clone(raw)
 	t.Cleanup(func() {
@@ -41,8 +41,8 @@ func TestReadSpan26cV6PublicWholeFrozenPair(t *testing.T) {
 		t.Fatal("frozen before/after cases must be complete")
 	}
 	for i, pin := range []struct{ name, requestHash, packageHash string }{
-		{"before", "85650f89a5e220e8158c32fd586b222985f8ebcf9bef3afaa8cc76bacff7736a", "67fdfc86a9032b1601b8b540ac6c8b3132b5e871d93ade1f207c654684661621"},
-		{"after", "d6662f6412c390dc7aa1808340f4ee2a9d1d765e25361a8b1aa0b3fe026b3556", "c34ff85000bc424e7499840ea44b8eb22cadf293616eab4e2c36086588abac0a"},
+		{"before", "bada2e634911886f9f74512046c805dd57c9420efdc2a3c35fc4751cbecb4aba", "8a45c70f6da6ebf16a54c1224dce8ab72df03998483e14b3bca56838c8135cdf"},
+		{"after", "ff3a3a576a77e3c5c2a1a4fc550cae43dd30c2e9658195035d1814422a9191ad", "115c52420a37cb9b50efafe9a6755a8726027311423e7d503d948d44b4d9eb0c"},
 	} {
 		t.Run(pin.name, func(t *testing.T) {
 			item := fixture.Cases[i]
@@ -68,7 +68,7 @@ func TestReadSpan26cV6PublicWholeFrozenPair(t *testing.T) {
 					t.Fatalf("failure published partial facts: writes=%d bytes=%d %s actualBase64=%s",
 						output.writes, output.Len(), readSpanParameterPublicError26b(err), base64.StdEncoding.EncodeToString(output.Bytes()))
 				}
-				t.Fatalf("official-valid required-view source must publish the exact facts6 packet; IO rejection is not a CLI invocation or borrow decision: %s",
+				t.Fatalf("official-valid required-view source must publish the exact facts7 packet; IO rejection is not a CLI invocation or borrow decision: %s",
 					readSpanParameterPublicError26b(err))
 			}
 			if output.writes != 1 {

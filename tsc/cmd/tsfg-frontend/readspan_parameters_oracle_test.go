@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Full facts6 expectations are authored from fixed literals before any Source producer output.
+// Full facts7 expectations are authored from fixed literals before any Source producer output.
 package main
 
 import (
@@ -10,9 +10,9 @@ import (
 )
 
 const rs26bContractPin = "e9887966e68cd5dcbb042095f344f4a63d41b6070835ba37ccd5057758358e4d"
-const rs26bSchema = "sha256:fc9b976b96070df07f5b9cdae27c58f327f9b67b74945f25ee874087ce55a279"
+const rs26bSchema = "sha256:3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617"
 const rs26bInputPin = "5c079481047a2b7437886994a940694e84e86592577fa256fd2b660526de07d7"
-const rs26bExpectedPin = "a9c6b50da659561049db929752a554541935c3b6321a1a0c858f9acfa6918061"
+const rs26bExpectedPin = "189db5e75e093a7ebf5ea3060349c82b2b52807343ec07419f3b44217d53bee1"
 
 func rs26bPacket(t *testing.T, name, source, dts string) []byte {
 	s, release := rs26bProgram(t, source, dts)
@@ -32,12 +32,12 @@ func rs26bPacket(t *testing.T, name, source, dts string) []byte {
 	config := ao23Map{"strict": true, "noEmit": true, "allowJs": false}
 	declarations := ao23Map{"version": "minimal-arrays-v3", "paths": []string{s.dts.FileName()}}
 	input := ao23Map{"sourceRoot": "/readspan26b", "rootFile": s.file.FileName(), "files": files, "config": config, "declarations": declarations}
-	request := ao23Map{"family": "tsfg.array-facts-request-candidate", "version": 6, "input": input}
+	request := ao23Map{"family": "tsfg.array-facts-request-candidate", "version": 7, "input": input}
 	requestBytes := append(ao23JCS(t, request), '\n')
 	payload := ao23Map{"sourceRoot": input["sourceRoot"], "rootFile": input["rootFile"], "positionUnit": "utf16", "config": config, "declarations": declarations, "files": owned, "types": types, "arrayLength": arrayLength, "readSpanLength": viewLength, "readSpanIntrinsic": intrinsic, "functions": functions, "exports": exports, "diagnostics": []any{}}
-	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v6\x00"), requestBytes...))
-	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v6\x00"+rs26bSchema+"\x00"), ao23JCS(t, payload)...))
-	packet := ao23Map{"family": "tsfg.array-facts-package-candidate", "version": 6, "schemaHash": rs26bSchema, "requestId": requestID, "packageId": packageID, "payload": payload}
+	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v7\x00"), requestBytes...))
+	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v7\x00"+rs26bSchema+"\x00"), ao23JCS(t, payload)...))
+	packet := ao23Map{"family": "tsfg.array-facts-package-candidate", "version": 7, "schemaHash": rs26bSchema, "requestId": requestID, "packageId": packageID, "payload": payload}
 	packetBytes := append(ao23JCS(t, packet), '\n')
 	entry := functions[2].(ao23Map)["body"].([]any)
 	mutateIndex, ignoreIndex := 2, 3
@@ -63,7 +63,7 @@ func rs26bPacket(t *testing.T, name, source, dts string) []byte {
 
 func TestReadSpan26bIndependentFirstOfficial(t *testing.T) {
 	read := func(name string, bytes int, pin string) []byte {
-		raw, err := os.ReadFile("testdata/readspan-parameters-v6/" + name)
+		raw, err := os.ReadFile("testdata/readspan-parameters-v7/" + name)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -72,8 +72,8 @@ func TestReadSpan26bIndependentFirstOfficial(t *testing.T) {
 	}
 	input := read("first-source-texts.json", 1019, rs26bInputPin)
 	dts := read("minimal-arrays-v3.d.ts", 484, "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415")
-	read("schema.json", 38816, rs26bSchema[7:])
-	expected := read("first-expected-facts.json", 53989, rs26bExpectedPin)
+	read("schema.json", 39596, rs26bSchema[7:])
+	expected := read("first-expected-facts.json", 43793, rs26bExpectedPin)
 	var first struct {
 		SourceRoot, SourcePath, DeclarationPath string
 		Before, After                           struct {
@@ -103,7 +103,7 @@ func TestReadSpan26bIndependentFirstOfficial(t *testing.T) {
 			if err := json.Unmarshal(raw, &bundle); err != nil {
 				t.Fatal(err)
 			}
-			ao23Want(t, want.Cases[i].Name == name && bundle.RequestText == want.Cases[i].RequestText && bundle.PackageText == want.Cases[i].PackageText, "entire official-only request/facts6 equals independently authored literal expectations")
+			ao23Want(t, want.Cases[i].Name == name && bundle.RequestText == want.Cases[i].RequestText && bundle.PackageText == want.Cases[i].PackageText, "entire official-only request/facts7 equals independently authored literal expectations")
 			t.Logf("TSFG_READSPAN_26B_INDEPENDENT_PACKET name=%s bytes=%d sha256=%s base64=%s", name, len(raw), ao23Hash(raw), base64.StdEncoding.EncodeToString(raw))
 		})
 	}

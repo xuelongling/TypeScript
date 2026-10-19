@@ -102,28 +102,28 @@ func (w *arrayOwnerDepth16Writer23e) Write(data []byte) (int, error) {
 }
 
 func TestArrayParameterOwner23ePublicDepth16Whole(t *testing.T) {
-	frozen, err := os.ReadFile("testdata/array-facts-v6/depth16-expected.json")
-	if err != nil || len(frozen) != 18710 || arrayFirstHash25(frozen) != "8eec21f436c4618c90ba1b47f5eb500adb6691a42795959ec1f47087ca72ab5c" {
-		t.Fatalf("independently frozen v6 depth16 bytes: %v", err)
+	frozen, err := os.ReadFile("testdata/array-facts-v7/depth16-expected.json")
+	if err != nil || len(frozen) != 18327 || arrayFirstHash25(frozen) != "b8a6f6380bec7906cfb3b813556f2b67dfc90c9636715f7abf768e302e9c430d" {
+		t.Fatalf("independently frozen v7 depth16 bytes: %v", err)
 	}
 	var item arrayOwnerDepth16Bundle23e
 	if err := json.Unmarshal(frozen, &item); err != nil {
 		t.Fatal(err)
 	}
-	arrayOwnerDepth16V6Shape26(t, item)
+	arrayOwnerDepth16V7Shape26(t, item)
 	input := []byte(item.RequestText)
 	before := bytes.Clone(input)
 	writer := &arrayOwnerDepth16Writer23e{}
-	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v6"}, bytes.NewReader(input), writer)
+	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v7"}, bytes.NewReader(input), writer)
 	ao23Want(t, bytes.Equal(input, before), "public command preserves caller request")
 	if err != nil {
 		ao23Want(t, writer.writes == 0 && writer.output.Len() == 0, "rejection must not publish any partial packet")
-		t.Fatalf("officially valid full forward chain16 must publish complete v6 package: %v", err)
+		t.Fatalf("officially valid full forward chain16 must publish complete v7 package: %v", err)
 	}
 	actual := writer.output.Bytes()
 	t.Logf("TSFG_ARRAY_OWNER_23E_PUBLIC_PACKET name=forward-chain16 bytes=%d sha256=%s base64=%s", len(actual), ao23Hash(actual), base64.StdEncoding.EncodeToString(actual))
 	ao23Want(t, writer.writes == 1 && bytes.Equal(actual, []byte(item.PackageText)), "one complete public write equals independent frozen whole packet")
 	actualItem := item
 	actualItem.PackageText = string(actual)
-	arrayOwnerDepth16V6Shape26(t, actualItem)
+	arrayOwnerDepth16V7Shape26(t, actualItem)
 }

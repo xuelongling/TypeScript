@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Private ArrayFacts v6 owns its complete wire values; no legacy DTO changes.
+// Private ArrayFacts v7 owns its complete wire values; no legacy DTO changes.
 package main
 
 import (
@@ -15,13 +15,13 @@ import (
 )
 
 const arrayFactsMaxBytes = 2097152
-const arrayFactsSchema = "sha256:fc9b976b96070df07f5b9cdae27c58f327f9b67b74945f25ee874087ce55a279"
+const arrayFactsSchema = "sha256:3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617"
 const arrayFactsDtsSHA = "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415"
 
-//go:embed testdata/array-facts-v6/schema.json
+//go:embed testdata/array-facts-v7/schema.json
 var arrayFactsSchemaBytes []byte
 
-//go:embed testdata/array-facts-v6/minimal-arrays-v3.d.ts
+//go:embed testdata/array-facts-v7/minimal-arrays-v3.d.ts
 var arrayFactsDtsBytes []byte
 
 type arrayFactsConfig struct {
@@ -283,7 +283,7 @@ func decodeArrayFactsRequest(data []byte) (arrayFactsRequest, error) {
 	if err != nil {
 		return r, err
 	}
-	if !bytes.Equal(encoded, raw) || r.Family != "tsfg.array-facts-request-candidate" || r.Version != 6 || "sha256:"+arrayFactsSHA(arrayFactsSchemaBytes) != arrayFactsSchema {
+	if !bytes.Equal(encoded, raw) || r.Family != "tsfg.array-facts-request-candidate" || r.Version != 7 || "sha256:"+arrayFactsSHA(arrayFactsSchemaBytes) != arrayFactsSchema {
 		return r, arrayFactsError("schema", "exact fields/types/family/version/embedded schema", nil)
 	}
 	return r, nil

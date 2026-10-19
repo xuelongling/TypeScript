@@ -10,13 +10,13 @@ import (
 	"testing"
 )
 
-func TestReadSpan26bV6FormalArgumentBudgetPublic(t *testing.T) {
-	const path = "testdata/readspan-parameters-v6/formal-argument-budget-expected-facts.json"
+func TestReadSpan26bV7FormalArgumentBudgetPublic(t *testing.T) {
+	const path = "testdata/readspan-parameters-v7/formal-argument-budget-expected-facts.json"
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(raw) != 503470 || readSpanParameterPublicHash26b(raw) != "09c8cd7e3db0c7e7a9fb67be3323056092b895521057dd22f3c23b9a996d80c3" {
+	if len(raw) != 500807 || readSpanParameterPublicHash26b(raw) != "05c79a1e935215266ac14fc5f7a68584b94fce63473adc543fc762a4d1563bff" {
 		t.Fatal("independent formal/argument budget fixture changed")
 	}
 	frozen := bytes.Clone(raw)

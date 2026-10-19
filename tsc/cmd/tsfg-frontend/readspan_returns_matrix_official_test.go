@@ -27,15 +27,15 @@ type rs26cFrozenFixturePin struct {
 }
 
 var rs26cFrozenFixturePins = []rs26cFrozenFixturePin{
-	{"events100101-expected-facts.json", "50eb7c31a3230ce4aea552e85c51aefeed1ab87d24561f1c1fa384dfabe27c60", 283874, []string{"events100", "events101"}},
-	{"family-uses5051-expected-facts.json", "a4ce30e1fdcb212bed7a0b6d6daa76e8ce445f7b8405648342aba2253d9d1616", 266063, []string{"familyUses50", "familyUses51"}},
-	{"adjacent-part1-expected-facts.json", "9f81d63cde4ce580c592a3fb4fcb030aa97da9ecc73a71e9c2a7edcecad85603", 176615, []string{"const-alias-return", "tail-forward-return", "bound-forward-return", "discarded-return-call", "mixed-original-slots", "local-fresh-return-escape", "array-parameter-return-capability"}},
-	{"adjacent-part2-expected-facts.json", "04d86c1a4754b5b8968114bbd065f9bef860090b4daf8485c03b99c7cb2b6572", 129225, []string{"same-owner-distinct-family-before", "same-owner-distinct-family-after", "initializer-array-density-forgets-old-exact"}},
+	{"events100101-expected-facts.json", "976bf2b227ee2a948ae502ed1f1d71ed5e456d913f70ea0d03435716a6795958", 175189, []string{"events100", "events101"}},
+	{"family-uses5051-expected-facts.json", "0aabb9007f8b1d925a2b56d1edd72a2573c340acfb765c9b1a60348b4a50e562", 164882, []string{"familyUses50", "familyUses51"}},
+	{"adjacent-part1-expected-facts.json", "47c34990d6998ce6fa4d0789f99882197ab384d647730ab30accc21d428ec291", 123338, []string{"const-alias-return", "tail-forward-return", "bound-forward-return", "discarded-return-call", "mixed-original-slots", "local-fresh-return-escape", "array-parameter-return-capability"}},
+	{"adjacent-part2-expected-facts.json", "6c798a858f4e23e38ecdcb297997cb4b231981fc2a05e27191a747dab7f823f9", 85078, []string{"same-owner-distinct-family-before", "same-owner-distinct-family-after", "initializer-array-density-forgets-old-exact"}},
 }
 
 func rs26cReadFrozenFixture(t *testing.T, pin rs26cFrozenFixturePin) rs26cFrozenFixture {
 	t.Helper()
-	path := "testdata/readspan-returns-v6/" + pin.name
+	path := "testdata/readspan-returns-v7/" + pin.name
 	raw, err := os.ReadFile(path)
 	ao23Want(t, err == nil && len(raw) == pin.bytes && ao23Hash(raw) == pin.sha, "complete independently authored frozen fixture "+pin.name)
 	before := bytes.Clone(raw)
@@ -49,7 +49,7 @@ func rs26cReadFrozenFixture(t *testing.T, pin rs26cFrozenFixturePin) rs26cFrozen
 	if err := json.Unmarshal(raw, &fixture); err != nil {
 		t.Fatal(err)
 	}
-	ao23Want(t, fixture.FactsSchemaHash == "sha256:fc9b976b96070df07f5b9cdae27c58f327f9b67b74945f25ee874087ce55a279" && len(fixture.Cases) == len(pin.cases), "complete frozen private6 case family")
+	ao23Want(t, fixture.FactsSchemaHash == "sha256:3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617" && len(fixture.Cases) == len(pin.cases), "complete frozen private7 case family")
 	for i, c := range fixture.Cases {
 		ao23Want(t, c.Name == pin.cases[i] && len(c.Source) == c.SourceBytes && ao23Hash([]byte(c.Source)) == c.SourceSHA256, "exact independent original source order/text")
 		ao23Want(t, len(c.RequestText) > 0 && len(c.ExpectedText) == c.ExpectedBytes && ao23Hash([]byte(c.ExpectedText)) == c.ExpectedSHA256, "complete fixed request and literal packet")
@@ -76,7 +76,7 @@ func rs26cOfficialFixtureWitness(t *testing.T, item rs26cFrozenFixtureCase) ao23
 		t.Fatal(err)
 	}
 	in := envelope.Input
-	ao23Want(t, envelope.Family == "tsfg.array-facts-request-candidate" && envelope.Version == 6 && in.RootFile == item.SourcePath && len(in.Files) == 2 && in.Config.Strict && in.Config.NoEmit && !in.Config.AllowJS && in.Declarations.Version == "minimal-arrays-v3" && len(in.Declarations.Paths) == 1, "complete original private6 two-file request")
+	ao23Want(t, envelope.Family == "tsfg.array-facts-request-candidate" && envelope.Version == 7 && in.RootFile == item.SourcePath && len(in.Files) == 2 && in.Config.Strict && in.Config.NoEmit && !in.Config.AllowJS && in.Declarations.Version == "minimal-arrays-v3" && len(in.Declarations.Paths) == 1, "complete original private7 two-file request")
 	dtsPath := in.Declarations.Paths[0]
 	contents := map[string]string{}
 	files, owned := []any{}, []any{}
@@ -99,14 +99,14 @@ func rs26cOfficialFixtureWitness(t *testing.T, item rs26cFrozenFixtureCase) ao23
 	exports := s.actualExports(headers)
 	config := ao23Map{"strict": true, "noEmit": true, "allowJs": false}
 	declarations := ao23Map{"version": "minimal-arrays-v3", "paths": []string{dtsPath}}
-	request := ao23Map{"family": "tsfg.array-facts-request-candidate", "version": 6, "input": ao23Map{"sourceRoot": in.SourceRoot, "rootFile": item.SourcePath, "files": files, "config": config, "declarations": declarations}}
+	request := ao23Map{"family": "tsfg.array-facts-request-candidate", "version": 7, "input": ao23Map{"sourceRoot": in.SourceRoot, "rootFile": item.SourcePath, "files": files, "config": config, "declarations": declarations}}
 	requestText := append(ao23JCS(t, request), '\n')
 	ao23Want(t, bytes.Equal(requestText, []byte(item.RequestText)), "official-only complete request equals independent literal")
 	payload := ao23Map{"sourceRoot": in.SourceRoot, "rootFile": item.SourcePath, "positionUnit": "utf16", "config": config, "declarations": declarations, "files": owned, "types": types, "arrayLength": arrayLength, "readSpanLength": viewLength, "readSpanIntrinsic": intrinsic, "functions": functions, "exports": exports, "diagnostics": []any{}}
-	schema := "sha256:fc9b976b96070df07f5b9cdae27c58f327f9b67b74945f25ee874087ce55a279"
-	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v6\x00"), requestText...))
-	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v6\x00"+schema+"\x00"), ao23JCS(t, payload)...))
-	packet := ao23Map{"family": "tsfg.array-facts-package-candidate", "version": 6, "schemaHash": schema, "requestId": requestID, "packageId": packageID, "payload": payload}
+	schema := "sha256:3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617"
+	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v7\x00"), requestText...))
+	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v7\x00"+schema+"\x00"), ao23JCS(t, payload)...))
+	packet := ao23Map{"family": "tsfg.array-facts-package-candidate", "version": 7, "schemaHash": schema, "requestId": requestID, "packageId": packageID, "payload": payload}
 	packetText := append(ao23JCS(t, packet), '\n')
 	if !bytes.Equal(packetText, []byte(item.ExpectedText)) {
 		t.Fatalf("official-only whole packet differs from independent literal for %s\nactual=%s\nexpected=%s", item.Name, packetText, item.ExpectedText)

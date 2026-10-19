@@ -34,10 +34,10 @@ func rs26cPublicFrozenMatrix(t *testing.T, pins []rs26cFrozenFixturePin) {
 	}
 }
 
-func TestReadSpan26cV6ReturnBudgetsPublicWholeFrozen(t *testing.T) {
+func TestReadSpan26cV7ReturnBudgetsPublicWholeFrozen(t *testing.T) {
 	rs26cPublicFrozenMatrix(t, rs26cFrozenFixturePins[:2])
 }
 
-func TestReadSpan26cV6ReturnAdjacentPublicWholeFrozen(t *testing.T) {
+func TestReadSpan26cV7ReturnAdjacentPublicWholeFrozen(t *testing.T) {
 	rs26cPublicFrozenMatrix(t, rs26cFrozenFixturePins[2:])
 }
