@@ -52,11 +52,11 @@ func TestModuleCallableFactsFirstPublicPackage(t *testing.T) {
 			t.Fatalf("original causal FIRST TypeScript bytes changed at %s", path)
 		}
 	}
-	t.Logf("TSFG_MODULE_CALLABLE_23D_FIRST_MIGRATION sameOriginalTS=3 oldDefaultWireRetained=true declarations=minimal-integers-v3 candidateFlag=--module-callable-facts-io-v1 bytes=%d sha256:%x", len(input), sha256.Sum256(input))
+	t.Logf("TSFG_MODULE_CALLABLE_23D_FIRST_MIGRATION sameOriginalTS=3 oldDefaultWireRetained=true declarations=minimal-integers-v3 candidateFlag=--module-callable-facts-io-v2 bytes=%d sha256:%x", len(input), sha256.Sum256(input))
 	moduleCallableFirstOfficial23d(t, envelope.Input)
 	t.Log("TSFG_MODULE_CALLABLE_23D_FIRST_OFFICIAL_PASS diagnostics=0 modules=3 functions=4 originalAlias=true exactCallable=true")
 	var output bytes.Buffer
-	if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v1"}, bytes.NewReader(input), &output); err != nil {
+	if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v2"}, bytes.NewReader(input), &output); err != nil {
 		t.Fatalf("ordinary original TypeScript must succeed after explicit candidate-wire migration: %v", err)
 	}
 	if !bytes.Equal(input, before) {

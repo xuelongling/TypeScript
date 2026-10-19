@@ -95,12 +95,12 @@ func handleModuleCallableFactsCandidate(ctx context.Context, data []byte) (resul
 	if err := moduleCallableFactsBounds(facts); err != nil {
 		return nil, err
 	}
-	requestID, err := moduleCallableDigest("tsfg.module-callable-facts.request.v1", decoded)
+	requestID, err := moduleCallableDigest("tsfg.module-callable-facts.request.v2", decoded)
 	if err != nil {
 		return nil, err
 	}
-	packet := moduleCallablePacket{Family: "tsfg.module-callable-facts-package-candidate", Version: 1, SchemaHash: moduleCallableFactsSchema, RequestID: requestID, Payload: moduleCallablePayload{InputIdentity: inputID, Files: files, Facts: facts, Annotations: annotations, Exports: exports}}
-	packet.PackageID, err = moduleCallableDigest("tsfg.module-callable-facts.package.v1", packet)
+	packet := moduleCallablePacket{Family: "tsfg.module-callable-facts-package-candidate", Version: 2, SchemaHash: moduleCallableFactsSchema, RequestID: requestID, Payload: moduleCallablePayload{InputIdentity: inputID, Files: files, Facts: facts, Annotations: annotations, Exports: exports}}
+	packet.PackageID, err = moduleCallableDigest("tsfg.module-callable-facts.package.v2", packet)
 	if err != nil {
 		return nil, err
 	}

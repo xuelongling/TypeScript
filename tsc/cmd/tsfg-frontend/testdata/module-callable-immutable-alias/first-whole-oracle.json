@@ -1,0 +1,2397 @@
+{
+  "format": {
+    "family": "tsfg.m23g-independent-whole",
+    "version": 1
+  },
+  "sourceBaseline": "118236ed78d602b1edfffc6596dc02c0716f66b5",
+  "input": {
+    "sourceRoot": "/src",
+    "rootFile": "/src/app.ts",
+    "files": [
+      {
+        "path": "/src/app.ts",
+        "content": "// 🧭 static alias\nlet shared: bool = false;\nfunction leaf(value: bool): bool { return shared || value; }\nconst op = leaf;\nexport function entry(value: bool): bool { return op(value); }\nexport function peer(value: bool): bool { return shared || value; }\n",
+        "sha256": "96b6db8cf548132041bab6f138b1cc548711658eb3ad35ecac27057f92501285"
+      },
+      {
+        "path": "/src/minimal-integers-v3.d.ts",
+        "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+        "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+      }
+    ],
+    "declarations": {
+      "version": "minimal-integers-v3",
+      "paths": [
+        "/src/minimal-integers-v3.d.ts"
+      ]
+    },
+    "config": {
+      "strict": true,
+      "noEmit": true,
+      "allowJs": false
+    },
+    "target": {
+      "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+      "pointerBits": "64",
+      "target": "windows-x86_64-msvc",
+      "triple": "x86_64-pc-windows-msvc"
+    },
+    "compilationClosure": {
+      "roots": [
+        {
+          "kind": "kernel",
+          "sourcePath": "/src/app.ts",
+          "name": "entry"
+        },
+        {
+          "kind": "kernel",
+          "sourcePath": "/src/app.ts",
+          "name": "peer"
+        }
+      ],
+      "requiredRoots": []
+    },
+    "hostImports": []
+  },
+  "manifest": [
+    {
+      "path": "/src/app.ts",
+      "digest": "sha256:96b6db8cf548132041bab6f138b1cc548711658eb3ad35ecac27057f92501285",
+      "byteLength": 256,
+      "length": 254,
+      "positionUnit": "utf16"
+    },
+    {
+      "path": "/src/minimal-integers-v3.d.ts",
+      "digest": "sha256:9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e",
+      "byteLength": 1214,
+      "length": 1214,
+      "positionUnit": "utf16"
+    }
+  ],
+  "official": {
+    "diagnosticCounts": {
+      "syntax": 0,
+      "semantic": 0,
+      "program": 0,
+      "global": 0
+    },
+    "appAST": [
+      {
+        "kind": "SourceFile",
+        "start": 0,
+        "end": 254,
+        "parent": -1
+      },
+      {
+        "kind": "VariableStatement",
+        "start": 0,
+        "end": 44,
+        "parent": 0
+      },
+      {
+        "kind": "VariableDeclarationList",
+        "start": 0,
+        "end": 43,
+        "parent": 1
+      },
+      {
+        "kind": "VariableDeclaration",
+        "start": 22,
+        "end": 43,
+        "parent": 2
+      },
+      {
+        "kind": "Identifier",
+        "start": 22,
+        "end": 29,
+        "parent": 3
+      },
+      {
+        "kind": "TypeReference",
+        "start": 30,
+        "end": 35,
+        "parent": 3
+      },
+      {
+        "kind": "Identifier",
+        "start": 30,
+        "end": 35,
+        "parent": 5
+      },
+      {
+        "kind": "FalseKeyword",
+        "start": 37,
+        "end": 43,
+        "parent": 3
+      },
+      {
+        "kind": "FunctionDeclaration",
+        "start": 44,
+        "end": 105,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 53,
+        "end": 58,
+        "parent": 8
+      },
+      {
+        "kind": "Parameter",
+        "start": 59,
+        "end": 70,
+        "parent": 8
+      },
+      {
+        "kind": "Identifier",
+        "start": 59,
+        "end": 64,
+        "parent": 10
+      },
+      {
+        "kind": "TypeReference",
+        "start": 65,
+        "end": 70,
+        "parent": 10
+      },
+      {
+        "kind": "Identifier",
+        "start": 65,
+        "end": 70,
+        "parent": 12
+      },
+      {
+        "kind": "TypeReference",
+        "start": 72,
+        "end": 77,
+        "parent": 8
+      },
+      {
+        "kind": "Identifier",
+        "start": 72,
+        "end": 77,
+        "parent": 14
+      },
+      {
+        "kind": "Block",
+        "start": 77,
+        "end": 105,
+        "parent": 8
+      },
+      {
+        "kind": "ReturnStatement",
+        "start": 79,
+        "end": 103,
+        "parent": 16
+      },
+      {
+        "kind": "BinaryExpression",
+        "start": 86,
+        "end": 102,
+        "parent": 17
+      },
+      {
+        "kind": "Identifier",
+        "start": 86,
+        "end": 93,
+        "parent": 18
+      },
+      {
+        "kind": "BarBarToken",
+        "start": 93,
+        "end": 96,
+        "parent": 18
+      },
+      {
+        "kind": "Identifier",
+        "start": 96,
+        "end": 102,
+        "parent": 18
+      },
+      {
+        "kind": "VariableStatement",
+        "start": 105,
+        "end": 122,
+        "parent": 0
+      },
+      {
+        "kind": "VariableDeclarationList",
+        "start": 105,
+        "end": 121,
+        "parent": 22
+      },
+      {
+        "kind": "VariableDeclaration",
+        "start": 111,
+        "end": 121,
+        "parent": 23
+      },
+      {
+        "kind": "Identifier",
+        "start": 111,
+        "end": 114,
+        "parent": 24
+      },
+      {
+        "kind": "Identifier",
+        "start": 116,
+        "end": 121,
+        "parent": 24
+      },
+      {
+        "kind": "FunctionDeclaration",
+        "start": 122,
+        "end": 185,
+        "parent": 0
+      },
+      {
+        "kind": "ExportKeyword",
+        "start": 122,
+        "end": 129,
+        "parent": 27
+      },
+      {
+        "kind": "Identifier",
+        "start": 138,
+        "end": 144,
+        "parent": 27
+      },
+      {
+        "kind": "Parameter",
+        "start": 145,
+        "end": 156,
+        "parent": 27
+      },
+      {
+        "kind": "Identifier",
+        "start": 145,
+        "end": 150,
+        "parent": 30
+      },
+      {
+        "kind": "TypeReference",
+        "start": 151,
+        "end": 156,
+        "parent": 30
+      },
+      {
+        "kind": "Identifier",
+        "start": 151,
+        "end": 156,
+        "parent": 32
+      },
+      {
+        "kind": "TypeReference",
+        "start": 158,
+        "end": 163,
+        "parent": 27
+      },
+      {
+        "kind": "Identifier",
+        "start": 158,
+        "end": 163,
+        "parent": 34
+      },
+      {
+        "kind": "Block",
+        "start": 163,
+        "end": 185,
+        "parent": 27
+      },
+      {
+        "kind": "ReturnStatement",
+        "start": 165,
+        "end": 183,
+        "parent": 36
+      },
+      {
+        "kind": "CallExpression",
+        "start": 172,
+        "end": 182,
+        "parent": 37
+      },
+      {
+        "kind": "Identifier",
+        "start": 172,
+        "end": 175,
+        "parent": 38
+      },
+      {
+        "kind": "Identifier",
+        "start": 176,
+        "end": 181,
+        "parent": 38
+      },
+      {
+        "kind": "FunctionDeclaration",
+        "start": 185,
+        "end": 253,
+        "parent": 0
+      },
+      {
+        "kind": "ExportKeyword",
+        "start": 185,
+        "end": 192,
+        "parent": 41
+      },
+      {
+        "kind": "Identifier",
+        "start": 201,
+        "end": 206,
+        "parent": 41
+      },
+      {
+        "kind": "Parameter",
+        "start": 207,
+        "end": 218,
+        "parent": 41
+      },
+      {
+        "kind": "Identifier",
+        "start": 207,
+        "end": 212,
+        "parent": 44
+      },
+      {
+        "kind": "TypeReference",
+        "start": 213,
+        "end": 218,
+        "parent": 44
+      },
+      {
+        "kind": "Identifier",
+        "start": 213,
+        "end": 218,
+        "parent": 46
+      },
+      {
+        "kind": "TypeReference",
+        "start": 220,
+        "end": 225,
+        "parent": 41
+      },
+      {
+        "kind": "Identifier",
+        "start": 220,
+        "end": 225,
+        "parent": 48
+      },
+      {
+        "kind": "Block",
+        "start": 225,
+        "end": 253,
+        "parent": 41
+      },
+      {
+        "kind": "ReturnStatement",
+        "start": 227,
+        "end": 251,
+        "parent": 50
+      },
+      {
+        "kind": "BinaryExpression",
+        "start": 234,
+        "end": 250,
+        "parent": 51
+      },
+      {
+        "kind": "Identifier",
+        "start": 234,
+        "end": 241,
+        "parent": 52
+      },
+      {
+        "kind": "BarBarToken",
+        "start": 241,
+        "end": 244,
+        "parent": 52
+      },
+      {
+        "kind": "Identifier",
+        "start": 244,
+        "end": 250,
+        "parent": 52
+      },
+      {
+        "kind": "EndOfFile",
+        "start": 253,
+        "end": 254,
+        "parent": 0
+      }
+    ],
+    "declarationAST": [
+      {
+        "kind": "SourceFile",
+        "start": 0,
+        "end": 1214,
+        "parent": -1
+      },
+      {
+        "kind": "InterfaceDeclaration",
+        "start": 0,
+        "end": 19,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 9,
+        "end": 16,
+        "parent": 1
+      },
+      {
+        "kind": "InterfaceDeclaration",
+        "start": 19,
+        "end": 41,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 29,
+        "end": 38,
+        "parent": 3
+      },
+      {
+        "kind": "InterfaceDeclaration",
+        "start": 41,
+        "end": 71,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 51,
+        "end": 68,
+        "parent": 5
+      },
+      {
+        "kind": "InterfaceDeclaration",
+        "start": 71,
+        "end": 100,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 81,
+        "end": 97,
+        "parent": 7
+      },
+      {
+        "kind": "InterfaceDeclaration",
+        "start": 100,
+        "end": 124,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 110,
+        "end": 121,
+        "parent": 9
+      },
+      {
+        "kind": "InterfaceDeclaration",
+        "start": 124,
+        "end": 144,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 134,
+        "end": 141,
+        "parent": 11
+      },
+      {
+        "kind": "InterfaceDeclaration",
+        "start": 144,
+        "end": 164,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 154,
+        "end": 161,
+        "parent": 13
+      },
+      {
+        "kind": "InterfaceDeclaration",
+        "start": 164,
+        "end": 185,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 174,
+        "end": 182,
+        "parent": 15
+      },
+      {
+        "kind": "InterfaceDeclaration",
+        "start": 185,
+        "end": 205,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 195,
+        "end": 202,
+        "parent": 17
+      },
+      {
+        "kind": "InterfaceDeclaration",
+        "start": 205,
+        "end": 227,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 215,
+        "end": 221,
+        "parent": 19
+      },
+      {
+        "kind": "TypeParameter",
+        "start": 222,
+        "end": 223,
+        "parent": 19
+      },
+      {
+        "kind": "Identifier",
+        "start": 222,
+        "end": 223,
+        "parent": 21
+      },
+      {
+        "kind": "TypeAliasDeclaration",
+        "start": 227,
+        "end": 248,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 232,
+        "end": 237,
+        "parent": 23
+      },
+      {
+        "kind": "BooleanKeyword",
+        "start": 239,
+        "end": 247,
+        "parent": 23
+      },
+      {
+        "kind": "VariableStatement",
+        "start": 248,
+        "end": 289,
+        "parent": 0
+      },
+      {
+        "kind": "DeclareKeyword",
+        "start": 248,
+        "end": 256,
+        "parent": 26
+      },
+      {
+        "kind": "VariableDeclarationList",
+        "start": 256,
+        "end": 288,
+        "parent": 26
+      },
+      {
+        "kind": "VariableDeclaration",
+        "start": 262,
+        "end": 288,
+        "parent": 28
+      },
+      {
+        "kind": "Identifier",
+        "start": 262,
+        "end": 273,
+        "parent": 29
+      },
+      {
+        "kind": "TypeOperator",
+        "start": 274,
+        "end": 288,
+        "parent": 29
+      },
+      {
+        "kind": "SymbolKeyword",
+        "start": 281,
+        "end": 288,
+        "parent": 31
+      },
+      {
+        "kind": "TypeAliasDeclaration",
+        "start": 289,
+        "end": 342,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 294,
+        "end": 298,
+        "parent": 33
+      },
+      {
+        "kind": "IntersectionType",
+        "start": 300,
+        "end": 341,
+        "parent": 33
+      },
+      {
+        "kind": "NumberKeyword",
+        "start": 300,
+        "end": 307,
+        "parent": 35
+      },
+      {
+        "kind": "TypeLiteral",
+        "start": 309,
+        "end": 341,
+        "parent": 35
+      },
+      {
+        "kind": "PropertySignature",
+        "start": 311,
+        "end": 339,
+        "parent": 37
+      },
+      {
+        "kind": "ReadonlyKeyword",
+        "start": 311,
+        "end": 320,
+        "parent": 38
+      },
+      {
+        "kind": "ComputedPropertyName",
+        "start": 320,
+        "end": 333,
+        "parent": 38
+      },
+      {
+        "kind": "Identifier",
+        "start": 322,
+        "end": 332,
+        "parent": 40
+      },
+      {
+        "kind": "LiteralType",
+        "start": 334,
+        "end": 339,
+        "parent": 38
+      },
+      {
+        "kind": "TrueKeyword",
+        "start": 334,
+        "end": 339,
+        "parent": 42
+      },
+      {
+        "kind": "TypeAliasDeclaration",
+        "start": 342,
+        "end": 361,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 347,
+        "end": 351,
+        "parent": 44
+      },
+      {
+        "kind": "NumberKeyword",
+        "start": 353,
+        "end": 360,
+        "parent": 44
+      },
+      {
+        "kind": "VariableStatement",
+        "start": 361,
+        "end": 401,
+        "parent": 0
+      },
+      {
+        "kind": "DeclareKeyword",
+        "start": 361,
+        "end": 369,
+        "parent": 47
+      },
+      {
+        "kind": "VariableDeclarationList",
+        "start": 369,
+        "end": 400,
+        "parent": 47
+      },
+      {
+        "kind": "VariableDeclaration",
+        "start": 375,
+        "end": 400,
+        "parent": 49
+      },
+      {
+        "kind": "Identifier",
+        "start": 375,
+        "end": 385,
+        "parent": 50
+      },
+      {
+        "kind": "TypeOperator",
+        "start": 386,
+        "end": 400,
+        "parent": 50
+      },
+      {
+        "kind": "SymbolKeyword",
+        "start": 393,
+        "end": 400,
+        "parent": 52
+      },
+      {
+        "kind": "TypeAliasDeclaration",
+        "start": 401,
+        "end": 452,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 406,
+        "end": 409,
+        "parent": 54
+      },
+      {
+        "kind": "IntersectionType",
+        "start": 411,
+        "end": 451,
+        "parent": 54
+      },
+      {
+        "kind": "NumberKeyword",
+        "start": 411,
+        "end": 418,
+        "parent": 56
+      },
+      {
+        "kind": "TypeLiteral",
+        "start": 420,
+        "end": 451,
+        "parent": 56
+      },
+      {
+        "kind": "PropertySignature",
+        "start": 422,
+        "end": 449,
+        "parent": 58
+      },
+      {
+        "kind": "ReadonlyKeyword",
+        "start": 422,
+        "end": 431,
+        "parent": 59
+      },
+      {
+        "kind": "ComputedPropertyName",
+        "start": 431,
+        "end": 443,
+        "parent": 59
+      },
+      {
+        "kind": "Identifier",
+        "start": 433,
+        "end": 442,
+        "parent": 61
+      },
+      {
+        "kind": "LiteralType",
+        "start": 444,
+        "end": 449,
+        "parent": 59
+      },
+      {
+        "kind": "TrueKeyword",
+        "start": 444,
+        "end": 449,
+        "parent": 63
+      },
+      {
+        "kind": "VariableStatement",
+        "start": 452,
+        "end": 493,
+        "parent": 0
+      },
+      {
+        "kind": "DeclareKeyword",
+        "start": 452,
+        "end": 460,
+        "parent": 65
+      },
+      {
+        "kind": "VariableDeclarationList",
+        "start": 460,
+        "end": 492,
+        "parent": 65
+      },
+      {
+        "kind": "VariableDeclaration",
+        "start": 466,
+        "end": 492,
+        "parent": 67
+      },
+      {
+        "kind": "Identifier",
+        "start": 466,
+        "end": 477,
+        "parent": 68
+      },
+      {
+        "kind": "TypeOperator",
+        "start": 478,
+        "end": 492,
+        "parent": 68
+      },
+      {
+        "kind": "SymbolKeyword",
+        "start": 485,
+        "end": 492,
+        "parent": 70
+      },
+      {
+        "kind": "TypeAliasDeclaration",
+        "start": 493,
+        "end": 546,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 498,
+        "end": 502,
+        "parent": 72
+      },
+      {
+        "kind": "IntersectionType",
+        "start": 504,
+        "end": 545,
+        "parent": 72
+      },
+      {
+        "kind": "NumberKeyword",
+        "start": 504,
+        "end": 511,
+        "parent": 74
+      },
+      {
+        "kind": "TypeLiteral",
+        "start": 513,
+        "end": 545,
+        "parent": 74
+      },
+      {
+        "kind": "PropertySignature",
+        "start": 515,
+        "end": 543,
+        "parent": 76
+      },
+      {
+        "kind": "ReadonlyKeyword",
+        "start": 515,
+        "end": 524,
+        "parent": 77
+      },
+      {
+        "kind": "ComputedPropertyName",
+        "start": 524,
+        "end": 537,
+        "parent": 77
+      },
+      {
+        "kind": "Identifier",
+        "start": 526,
+        "end": 536,
+        "parent": 79
+      },
+      {
+        "kind": "LiteralType",
+        "start": 538,
+        "end": 543,
+        "parent": 77
+      },
+      {
+        "kind": "TrueKeyword",
+        "start": 538,
+        "end": 543,
+        "parent": 81
+      },
+      {
+        "kind": "VariableStatement",
+        "start": 546,
+        "end": 587,
+        "parent": 0
+      },
+      {
+        "kind": "DeclareKeyword",
+        "start": 546,
+        "end": 554,
+        "parent": 83
+      },
+      {
+        "kind": "VariableDeclarationList",
+        "start": 554,
+        "end": 586,
+        "parent": 83
+      },
+      {
+        "kind": "VariableDeclaration",
+        "start": 560,
+        "end": 586,
+        "parent": 85
+      },
+      {
+        "kind": "Identifier",
+        "start": 560,
+        "end": 571,
+        "parent": 86
+      },
+      {
+        "kind": "TypeOperator",
+        "start": 572,
+        "end": 586,
+        "parent": 86
+      },
+      {
+        "kind": "SymbolKeyword",
+        "start": 579,
+        "end": 586,
+        "parent": 88
+      },
+      {
+        "kind": "TypeAliasDeclaration",
+        "start": 587,
+        "end": 640,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 592,
+        "end": 596,
+        "parent": 90
+      },
+      {
+        "kind": "IntersectionType",
+        "start": 598,
+        "end": 639,
+        "parent": 90
+      },
+      {
+        "kind": "NumberKeyword",
+        "start": 598,
+        "end": 605,
+        "parent": 92
+      },
+      {
+        "kind": "TypeLiteral",
+        "start": 607,
+        "end": 639,
+        "parent": 92
+      },
+      {
+        "kind": "PropertySignature",
+        "start": 609,
+        "end": 637,
+        "parent": 94
+      },
+      {
+        "kind": "ReadonlyKeyword",
+        "start": 609,
+        "end": 618,
+        "parent": 95
+      },
+      {
+        "kind": "ComputedPropertyName",
+        "start": 618,
+        "end": 631,
+        "parent": 95
+      },
+      {
+        "kind": "Identifier",
+        "start": 620,
+        "end": 630,
+        "parent": 97
+      },
+      {
+        "kind": "LiteralType",
+        "start": 632,
+        "end": 637,
+        "parent": 95
+      },
+      {
+        "kind": "TrueKeyword",
+        "start": 632,
+        "end": 637,
+        "parent": 99
+      },
+      {
+        "kind": "VariableStatement",
+        "start": 640,
+        "end": 680,
+        "parent": 0
+      },
+      {
+        "kind": "DeclareKeyword",
+        "start": 640,
+        "end": 648,
+        "parent": 101
+      },
+      {
+        "kind": "VariableDeclarationList",
+        "start": 648,
+        "end": 679,
+        "parent": 101
+      },
+      {
+        "kind": "VariableDeclaration",
+        "start": 654,
+        "end": 679,
+        "parent": 103
+      },
+      {
+        "kind": "Identifier",
+        "start": 654,
+        "end": 664,
+        "parent": 104
+      },
+      {
+        "kind": "TypeOperator",
+        "start": 665,
+        "end": 679,
+        "parent": 104
+      },
+      {
+        "kind": "SymbolKeyword",
+        "start": 672,
+        "end": 679,
+        "parent": 106
+      },
+      {
+        "kind": "TypeAliasDeclaration",
+        "start": 680,
+        "end": 731,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 685,
+        "end": 688,
+        "parent": 108
+      },
+      {
+        "kind": "IntersectionType",
+        "start": 690,
+        "end": 730,
+        "parent": 108
+      },
+      {
+        "kind": "NumberKeyword",
+        "start": 690,
+        "end": 697,
+        "parent": 110
+      },
+      {
+        "kind": "TypeLiteral",
+        "start": 699,
+        "end": 730,
+        "parent": 110
+      },
+      {
+        "kind": "PropertySignature",
+        "start": 701,
+        "end": 728,
+        "parent": 112
+      },
+      {
+        "kind": "ReadonlyKeyword",
+        "start": 701,
+        "end": 710,
+        "parent": 113
+      },
+      {
+        "kind": "ComputedPropertyName",
+        "start": 710,
+        "end": 722,
+        "parent": 113
+      },
+      {
+        "kind": "Identifier",
+        "start": 712,
+        "end": 721,
+        "parent": 115
+      },
+      {
+        "kind": "LiteralType",
+        "start": 723,
+        "end": 728,
+        "parent": 113
+      },
+      {
+        "kind": "TrueKeyword",
+        "start": 723,
+        "end": 728,
+        "parent": 117
+      },
+      {
+        "kind": "VariableStatement",
+        "start": 731,
+        "end": 772,
+        "parent": 0
+      },
+      {
+        "kind": "DeclareKeyword",
+        "start": 731,
+        "end": 739,
+        "parent": 119
+      },
+      {
+        "kind": "VariableDeclarationList",
+        "start": 739,
+        "end": 771,
+        "parent": 119
+      },
+      {
+        "kind": "VariableDeclaration",
+        "start": 745,
+        "end": 771,
+        "parent": 121
+      },
+      {
+        "kind": "Identifier",
+        "start": 745,
+        "end": 756,
+        "parent": 122
+      },
+      {
+        "kind": "TypeOperator",
+        "start": 757,
+        "end": 771,
+        "parent": 122
+      },
+      {
+        "kind": "SymbolKeyword",
+        "start": 764,
+        "end": 771,
+        "parent": 124
+      },
+      {
+        "kind": "TypeAliasDeclaration",
+        "start": 772,
+        "end": 825,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 777,
+        "end": 781,
+        "parent": 126
+      },
+      {
+        "kind": "IntersectionType",
+        "start": 783,
+        "end": 824,
+        "parent": 126
+      },
+      {
+        "kind": "NumberKeyword",
+        "start": 783,
+        "end": 790,
+        "parent": 128
+      },
+      {
+        "kind": "TypeLiteral",
+        "start": 792,
+        "end": 824,
+        "parent": 128
+      },
+      {
+        "kind": "PropertySignature",
+        "start": 794,
+        "end": 822,
+        "parent": 130
+      },
+      {
+        "kind": "ReadonlyKeyword",
+        "start": 794,
+        "end": 803,
+        "parent": 131
+      },
+      {
+        "kind": "ComputedPropertyName",
+        "start": 803,
+        "end": 816,
+        "parent": 131
+      },
+      {
+        "kind": "Identifier",
+        "start": 805,
+        "end": 815,
+        "parent": 133
+      },
+      {
+        "kind": "LiteralType",
+        "start": 817,
+        "end": 822,
+        "parent": 131
+      },
+      {
+        "kind": "TrueKeyword",
+        "start": 817,
+        "end": 822,
+        "parent": 135
+      },
+      {
+        "kind": "VariableStatement",
+        "start": 825,
+        "end": 866,
+        "parent": 0
+      },
+      {
+        "kind": "DeclareKeyword",
+        "start": 825,
+        "end": 833,
+        "parent": 137
+      },
+      {
+        "kind": "VariableDeclarationList",
+        "start": 833,
+        "end": 865,
+        "parent": 137
+      },
+      {
+        "kind": "VariableDeclaration",
+        "start": 839,
+        "end": 865,
+        "parent": 139
+      },
+      {
+        "kind": "Identifier",
+        "start": 839,
+        "end": 850,
+        "parent": 140
+      },
+      {
+        "kind": "TypeOperator",
+        "start": 851,
+        "end": 865,
+        "parent": 140
+      },
+      {
+        "kind": "SymbolKeyword",
+        "start": 858,
+        "end": 865,
+        "parent": 142
+      },
+      {
+        "kind": "TypeAliasDeclaration",
+        "start": 866,
+        "end": 919,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 871,
+        "end": 875,
+        "parent": 144
+      },
+      {
+        "kind": "IntersectionType",
+        "start": 877,
+        "end": 918,
+        "parent": 144
+      },
+      {
+        "kind": "NumberKeyword",
+        "start": 877,
+        "end": 884,
+        "parent": 146
+      },
+      {
+        "kind": "TypeLiteral",
+        "start": 886,
+        "end": 918,
+        "parent": 146
+      },
+      {
+        "kind": "PropertySignature",
+        "start": 888,
+        "end": 916,
+        "parent": 148
+      },
+      {
+        "kind": "ReadonlyKeyword",
+        "start": 888,
+        "end": 897,
+        "parent": 149
+      },
+      {
+        "kind": "ComputedPropertyName",
+        "start": 897,
+        "end": 910,
+        "parent": 149
+      },
+      {
+        "kind": "Identifier",
+        "start": 899,
+        "end": 909,
+        "parent": 151
+      },
+      {
+        "kind": "LiteralType",
+        "start": 911,
+        "end": 916,
+        "parent": 149
+      },
+      {
+        "kind": "TrueKeyword",
+        "start": 911,
+        "end": 916,
+        "parent": 153
+      },
+      {
+        "kind": "VariableStatement",
+        "start": 919,
+        "end": 960,
+        "parent": 0
+      },
+      {
+        "kind": "DeclareKeyword",
+        "start": 919,
+        "end": 927,
+        "parent": 155
+      },
+      {
+        "kind": "VariableDeclarationList",
+        "start": 927,
+        "end": 959,
+        "parent": 155
+      },
+      {
+        "kind": "VariableDeclaration",
+        "start": 933,
+        "end": 959,
+        "parent": 157
+      },
+      {
+        "kind": "Identifier",
+        "start": 933,
+        "end": 944,
+        "parent": 158
+      },
+      {
+        "kind": "TypeOperator",
+        "start": 945,
+        "end": 959,
+        "parent": 158
+      },
+      {
+        "kind": "SymbolKeyword",
+        "start": 952,
+        "end": 959,
+        "parent": 160
+      },
+      {
+        "kind": "TypeAliasDeclaration",
+        "start": 960,
+        "end": 1013,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 965,
+        "end": 969,
+        "parent": 162
+      },
+      {
+        "kind": "IntersectionType",
+        "start": 971,
+        "end": 1012,
+        "parent": 162
+      },
+      {
+        "kind": "NumberKeyword",
+        "start": 971,
+        "end": 978,
+        "parent": 164
+      },
+      {
+        "kind": "TypeLiteral",
+        "start": 980,
+        "end": 1012,
+        "parent": 164
+      },
+      {
+        "kind": "PropertySignature",
+        "start": 982,
+        "end": 1010,
+        "parent": 166
+      },
+      {
+        "kind": "ReadonlyKeyword",
+        "start": 982,
+        "end": 991,
+        "parent": 167
+      },
+      {
+        "kind": "ComputedPropertyName",
+        "start": 991,
+        "end": 1004,
+        "parent": 167
+      },
+      {
+        "kind": "Identifier",
+        "start": 993,
+        "end": 1003,
+        "parent": 169
+      },
+      {
+        "kind": "LiteralType",
+        "start": 1005,
+        "end": 1010,
+        "parent": 167
+      },
+      {
+        "kind": "TrueKeyword",
+        "start": 1005,
+        "end": 1010,
+        "parent": 171
+      },
+      {
+        "kind": "VariableStatement",
+        "start": 1013,
+        "end": 1056,
+        "parent": 0
+      },
+      {
+        "kind": "DeclareKeyword",
+        "start": 1013,
+        "end": 1021,
+        "parent": 173
+      },
+      {
+        "kind": "VariableDeclarationList",
+        "start": 1021,
+        "end": 1055,
+        "parent": 173
+      },
+      {
+        "kind": "VariableDeclaration",
+        "start": 1027,
+        "end": 1055,
+        "parent": 175
+      },
+      {
+        "kind": "Identifier",
+        "start": 1027,
+        "end": 1040,
+        "parent": 176
+      },
+      {
+        "kind": "TypeOperator",
+        "start": 1041,
+        "end": 1055,
+        "parent": 176
+      },
+      {
+        "kind": "SymbolKeyword",
+        "start": 1048,
+        "end": 1055,
+        "parent": 178
+      },
+      {
+        "kind": "TypeAliasDeclaration",
+        "start": 1056,
+        "end": 1113,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 1061,
+        "end": 1067,
+        "parent": 180
+      },
+      {
+        "kind": "IntersectionType",
+        "start": 1069,
+        "end": 1112,
+        "parent": 180
+      },
+      {
+        "kind": "NumberKeyword",
+        "start": 1069,
+        "end": 1076,
+        "parent": 182
+      },
+      {
+        "kind": "TypeLiteral",
+        "start": 1078,
+        "end": 1112,
+        "parent": 182
+      },
+      {
+        "kind": "PropertySignature",
+        "start": 1080,
+        "end": 1110,
+        "parent": 184
+      },
+      {
+        "kind": "ReadonlyKeyword",
+        "start": 1080,
+        "end": 1089,
+        "parent": 185
+      },
+      {
+        "kind": "ComputedPropertyName",
+        "start": 1089,
+        "end": 1104,
+        "parent": 185
+      },
+      {
+        "kind": "Identifier",
+        "start": 1091,
+        "end": 1103,
+        "parent": 187
+      },
+      {
+        "kind": "LiteralType",
+        "start": 1105,
+        "end": 1110,
+        "parent": 185
+      },
+      {
+        "kind": "TrueKeyword",
+        "start": 1105,
+        "end": 1110,
+        "parent": 189
+      },
+      {
+        "kind": "VariableStatement",
+        "start": 1113,
+        "end": 1156,
+        "parent": 0
+      },
+      {
+        "kind": "DeclareKeyword",
+        "start": 1113,
+        "end": 1121,
+        "parent": 191
+      },
+      {
+        "kind": "VariableDeclarationList",
+        "start": 1121,
+        "end": 1155,
+        "parent": 191
+      },
+      {
+        "kind": "VariableDeclaration",
+        "start": 1127,
+        "end": 1155,
+        "parent": 193
+      },
+      {
+        "kind": "Identifier",
+        "start": 1127,
+        "end": 1140,
+        "parent": 194
+      },
+      {
+        "kind": "TypeOperator",
+        "start": 1141,
+        "end": 1155,
+        "parent": 194
+      },
+      {
+        "kind": "SymbolKeyword",
+        "start": 1148,
+        "end": 1155,
+        "parent": 196
+      },
+      {
+        "kind": "TypeAliasDeclaration",
+        "start": 1156,
+        "end": 1213,
+        "parent": 0
+      },
+      {
+        "kind": "Identifier",
+        "start": 1161,
+        "end": 1167,
+        "parent": 198
+      },
+      {
+        "kind": "IntersectionType",
+        "start": 1169,
+        "end": 1212,
+        "parent": 198
+      },
+      {
+        "kind": "NumberKeyword",
+        "start": 1169,
+        "end": 1176,
+        "parent": 200
+      },
+      {
+        "kind": "TypeLiteral",
+        "start": 1178,
+        "end": 1212,
+        "parent": 200
+      },
+      {
+        "kind": "PropertySignature",
+        "start": 1180,
+        "end": 1210,
+        "parent": 202
+      },
+      {
+        "kind": "ReadonlyKeyword",
+        "start": 1180,
+        "end": 1189,
+        "parent": 203
+      },
+      {
+        "kind": "ComputedPropertyName",
+        "start": 1189,
+        "end": 1204,
+        "parent": 203
+      },
+      {
+        "kind": "Identifier",
+        "start": 1191,
+        "end": 1203,
+        "parent": 205
+      },
+      {
+        "kind": "LiteralType",
+        "start": 1205,
+        "end": 1210,
+        "parent": 203
+      },
+      {
+        "kind": "TrueKeyword",
+        "start": 1205,
+        "end": 1210,
+        "parent": 207
+      },
+      {
+        "kind": "EndOfFile",
+        "start": 1213,
+        "end": 1214,
+        "parent": 0
+      }
+    ],
+    "appSymbolGroups": {
+      "s1": [
+        4,
+        19,
+        53
+      ],
+      "s2": [
+        9,
+        26
+      ],
+      "s3": [
+        25,
+        39
+      ],
+      "s4": [
+        29
+      ],
+      "s5": [
+        43
+      ],
+      "s6": [
+        11,
+        21
+      ],
+      "s7": [
+        31,
+        40
+      ],
+      "s8": [
+        45,
+        55
+      ],
+      "type.bool": [
+        6,
+        13,
+        15,
+        33,
+        35,
+        47,
+        49
+      ]
+    },
+    "declarationSymbolGroups": {
+      "interface.Object": [
+        2
+      ],
+      "interface.Function": [
+        4
+      ],
+      "interface.CallableFunction": [
+        6
+      ],
+      "interface.NewableFunction": [
+        8
+      ],
+      "interface.IArguments": [
+        10
+      ],
+      "interface.String": [
+        12
+      ],
+      "interface.Number": [
+        14
+      ],
+      "interface.Boolean": [
+        16
+      ],
+      "interface.RegExp": [
+        18
+      ],
+      "interface.Array": [
+        20
+      ],
+      "Array.T": [
+        22
+      ],
+      "type.bool": [
+        24
+      ],
+      "__tsfg_i32": [
+        30,
+        41
+      ],
+      "type.i32": [
+        34
+      ],
+      "type.f64": [
+        45
+      ],
+      "__tsfg_i8": [
+        51,
+        62
+      ],
+      "type.i8": [
+        55
+      ],
+      "__tsfg_i16": [
+        69,
+        80
+      ],
+      "type.i16": [
+        73
+      ],
+      "__tsfg_i64": [
+        87,
+        98
+      ],
+      "type.i64": [
+        91
+      ],
+      "__tsfg_u8": [
+        105,
+        116
+      ],
+      "type.u8": [
+        109
+      ],
+      "__tsfg_u16": [
+        123,
+        134
+      ],
+      "type.u16": [
+        127
+      ],
+      "__tsfg_u32": [
+        141,
+        152
+      ],
+      "type.u32": [
+        145
+      ],
+      "__tsfg_u64": [
+        159,
+        170
+      ],
+      "type.u64": [
+        163
+      ],
+      "__tsfg_isize": [
+        177,
+        188
+      ],
+      "type.isize": [
+        181
+      ],
+      "__tsfg_usize": [
+        195,
+        206
+      ],
+      "type.usize": [
+        199
+      ]
+    }
+  },
+  "expectedFacts": {
+    "status": "ok",
+    "inputs": [
+      "/src/app.ts",
+      "/src/minimal-integers-v3.d.ts"
+    ],
+    "symbols": [
+      {
+        "sourcePath": "/src/app.ts",
+        "bindingKind": "source",
+        "id": "s1",
+        "name": "shared",
+        "kind": "global",
+        "type": "bool",
+        "writable": true,
+        "range": {
+          "start": 22,
+          "end": 29
+        }
+      },
+      {
+        "sourcePath": "/src/app.ts",
+        "id": "s2",
+        "name": "leaf",
+        "kind": "function",
+        "type": "bool",
+        "writable": false,
+        "range": {
+          "start": 53,
+          "end": 58
+        }
+      },
+      {
+        "sourcePath": "/src/app.ts",
+        "bindingKind": "source",
+        "id": "s3",
+        "name": "op",
+        "kind": "global",
+        "type": "function",
+        "writable": false,
+        "range": {
+          "start": 111,
+          "end": 114
+        },
+        "signature": {
+          "parameters": [
+            "bool"
+          ],
+          "returnType": "bool"
+        }
+      },
+      {
+        "sourcePath": "/src/app.ts",
+        "id": "s4",
+        "name": "entry",
+        "kind": "function",
+        "type": "bool",
+        "writable": false,
+        "range": {
+          "start": 138,
+          "end": 144
+        }
+      },
+      {
+        "sourcePath": "/src/app.ts",
+        "id": "s5",
+        "name": "peer",
+        "kind": "function",
+        "type": "bool",
+        "writable": false,
+        "range": {
+          "start": 201,
+          "end": 206
+        }
+      },
+      {
+        "sourcePath": "/src/app.ts",
+        "id": "s6",
+        "name": "value",
+        "kind": "parameter",
+        "type": "bool",
+        "writable": true,
+        "range": {
+          "start": 59,
+          "end": 64
+        },
+        "presence": {
+          "undefined": false,
+          "null": false,
+          "optional": false,
+          "default": false,
+          "range": {
+            "start": 59,
+            "end": 70
+          },
+          "annotation": {
+            "start": 66,
+            "end": 70
+          }
+        }
+      },
+      {
+        "sourcePath": "/src/app.ts",
+        "id": "s7",
+        "name": "value",
+        "kind": "parameter",
+        "type": "bool",
+        "writable": true,
+        "range": {
+          "start": 145,
+          "end": 150
+        },
+        "presence": {
+          "undefined": false,
+          "null": false,
+          "optional": false,
+          "default": false,
+          "range": {
+            "start": 145,
+            "end": 156
+          },
+          "annotation": {
+            "start": 152,
+            "end": 156
+          }
+        }
+      },
+      {
+        "sourcePath": "/src/app.ts",
+        "id": "s8",
+        "name": "value",
+        "kind": "parameter",
+        "type": "bool",
+        "writable": true,
+        "range": {
+          "start": 207,
+          "end": 212
+        },
+        "presence": {
+          "undefined": false,
+          "null": false,
+          "optional": false,
+          "default": false,
+          "range": {
+            "start": 207,
+            "end": 218
+          },
+          "annotation": {
+            "start": 214,
+            "end": 218
+          }
+        }
+      }
+    ],
+    "functions": [
+      {
+        "sourcePath": "/src/app.ts",
+        "name": "leaf",
+        "symbol": "s2",
+        "parameters": [
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s6",
+            "name": "value",
+            "kind": "parameter",
+            "type": "bool",
+            "writable": true,
+            "range": {
+              "start": 59,
+              "end": 64
+            },
+            "presence": {
+              "undefined": false,
+              "null": false,
+              "optional": false,
+              "default": false,
+              "range": {
+                "start": 59,
+                "end": 70
+              },
+              "annotation": {
+                "start": 66,
+                "end": 70
+              }
+            }
+          }
+        ],
+        "returnType": "bool",
+        "range": {
+          "start": 44,
+          "end": 105
+        },
+        "body": [
+          {
+            "kind": "return",
+            "range": {
+              "start": 79,
+              "end": 103
+            },
+            "expression": {
+              "kind": "shortCircuit",
+              "type": "bool",
+              "operator": "||",
+              "range": {
+                "start": 87,
+                "end": 102
+              },
+              "left": {
+                "kind": "reference",
+                "type": "bool",
+                "symbol": "s1",
+                "name": "shared",
+                "range": {
+                  "start": 87,
+                  "end": 93
+                }
+              },
+              "right": {
+                "kind": "reference",
+                "type": "bool",
+                "symbol": "s6",
+                "name": "value",
+                "range": {
+                  "start": 97,
+                  "end": 102
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "sourcePath": "/src/app.ts",
+        "name": "entry",
+        "symbol": "s4",
+        "parameters": [
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s7",
+            "name": "value",
+            "kind": "parameter",
+            "type": "bool",
+            "writable": true,
+            "range": {
+              "start": 145,
+              "end": 150
+            },
+            "presence": {
+              "undefined": false,
+              "null": false,
+              "optional": false,
+              "default": false,
+              "range": {
+                "start": 145,
+                "end": 156
+              },
+              "annotation": {
+                "start": 152,
+                "end": 156
+              }
+            }
+          }
+        ],
+        "returnType": "bool",
+        "range": {
+          "start": 122,
+          "end": 185
+        },
+        "body": [
+          {
+            "kind": "return",
+            "range": {
+              "start": 165,
+              "end": 183
+            },
+            "expression": {
+              "kind": "indirectCall",
+              "type": "bool",
+              "name": "op",
+              "signature": {
+                "parameters": [
+                  "bool"
+                ],
+                "returnType": "bool"
+              },
+              "range": {
+                "start": 172,
+                "end": 182
+              },
+              "callee": {
+                "kind": "reference",
+                "type": "function",
+                "symbol": "s3",
+                "name": "op",
+                "signature": {
+                  "parameters": [
+                    "bool"
+                  ],
+                  "returnType": "bool"
+                },
+                "range": {
+                  "start": 172,
+                  "end": 175
+                }
+              },
+              "arguments": [
+                {
+                  "kind": "reference",
+                  "type": "bool",
+                  "symbol": "s7",
+                  "name": "value",
+                  "range": {
+                    "start": 176,
+                    "end": 181
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "sourcePath": "/src/app.ts",
+        "name": "peer",
+        "symbol": "s5",
+        "parameters": [
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s8",
+            "name": "value",
+            "kind": "parameter",
+            "type": "bool",
+            "writable": true,
+            "range": {
+              "start": 207,
+              "end": 212
+            },
+            "presence": {
+              "undefined": false,
+              "null": false,
+              "optional": false,
+              "default": false,
+              "range": {
+                "start": 207,
+                "end": 218
+              },
+              "annotation": {
+                "start": 214,
+                "end": 218
+              }
+            }
+          }
+        ],
+        "returnType": "bool",
+        "range": {
+          "start": 185,
+          "end": 253
+        },
+        "body": [
+          {
+            "kind": "return",
+            "range": {
+              "start": 227,
+              "end": 251
+            },
+            "expression": {
+              "kind": "shortCircuit",
+              "type": "bool",
+              "operator": "||",
+              "range": {
+                "start": 235,
+                "end": 250
+              },
+              "left": {
+                "kind": "reference",
+                "type": "bool",
+                "symbol": "s1",
+                "name": "shared",
+                "range": {
+                  "start": 235,
+                  "end": 241
+                }
+              },
+              "right": {
+                "kind": "reference",
+                "type": "bool",
+                "symbol": "s8",
+                "name": "value",
+                "range": {
+                  "start": 245,
+                  "end": 250
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "modules": [
+      {
+        "sourcePath": "/src/app.ts",
+        "external": true,
+        "imports": [],
+        "exports": [
+          {
+            "name": "entry",
+            "target": "s4",
+            "range": {
+              "start": 122,
+              "end": 185
+            }
+          },
+          {
+            "name": "peer",
+            "target": "s5",
+            "range": {
+              "start": 185,
+              "end": 253
+            }
+          }
+        ],
+        "globals": [
+          "s1",
+          "s3"
+        ],
+        "initialization": [
+          {
+            "kind": "initialize",
+            "symbol": {
+              "sourcePath": "/src/app.ts",
+              "bindingKind": "source",
+              "id": "s1",
+              "name": "shared",
+              "kind": "global",
+              "type": "bool",
+              "writable": true,
+              "range": {
+                "start": 22,
+                "end": 29
+              }
+            },
+            "initializer": {
+              "kind": "boolean",
+              "type": "bool",
+              "boolean": false,
+              "range": {
+                "start": 37,
+                "end": 43
+              }
+            },
+            "range": {
+              "start": 22,
+              "end": 43
+            }
+          },
+          {
+            "kind": "initialize",
+            "symbol": {
+              "sourcePath": "/src/app.ts",
+              "bindingKind": "source",
+              "id": "s3",
+              "name": "op",
+              "kind": "global",
+              "type": "function",
+              "writable": false,
+              "range": {
+                "start": 111,
+                "end": 114
+              },
+              "signature": {
+                "parameters": [
+                  "bool"
+                ],
+                "returnType": "bool"
+              }
+            },
+            "initializer": {
+              "kind": "functionReference",
+              "type": "function",
+              "target": "s2",
+              "name": "leaf",
+              "signature": {
+                "parameters": [
+                  "bool"
+                ],
+                "returnType": "bool"
+              },
+              "range": {
+                "start": 116,
+                "end": 121
+              }
+            },
+            "range": {
+              "start": 111,
+              "end": 121
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "corrections": {
+    "originalDraft": {
+      "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/M23g-immutable-callable-global-DESIGN-PREP-20261020/first-whole-independent-draft.json",
+      "sha256": "f1bfc7e282f320e5adf5b11ac0decc4ddd07f02b07d47689f97b49fb42b3c035"
+    },
+    "handCorrectedBeforeOfficial": [
+      {
+        "node": 2,
+        "field": "rawStart",
+        "old": 19,
+        "new": 0,
+        "reason": "Original parser parseVariableDeclarationList nodePos uses TokenFullStart including initial comment trivia."
+      },
+      {
+        "node": 23,
+        "field": "rawStart",
+        "old": 106,
+        "new": 105,
+        "reason": "Original const token has the preceding newline in TokenFullStart."
+      }
+    ],
+    "noActualOutputUsed": true,
+    "astCountRemainsUnconfirmedUntilRootPrior": 57,
+    "officialStatusAtInitialFreeze": "NOT_RUN",
+    "kindConvention": {
+      "officialEnum": {
+        "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/worktrees/r03-m23g-immutable-callable-source-root01/typescript/tsc/internal/ast/kind_generated.go",
+        "bytes": 26919,
+        "sha256": "71938899d16c732689ba3b650faefbee06615520f315a7aaa84cecfc44deee35"
+      },
+      "officialStringer": {
+        "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/worktrees/r03-m23g-immutable-callable-source-root01/typescript/tsc/internal/ast/kind_stringer_generated.go",
+        "bytes": 20597,
+        "sha256": "c3cdd3cdc865e44c3f6dbb45295556fb6321e5c555c7dfde7c652b2dbefc0a66"
+      },
+      "adapter": "Strip official Stringer Kind prefix; every literal kind checked against official Kind enum declarations.",
+      "literalCorrection": "Go declares KindEndOfFile, not TypeScript JS EndOfFileToken; exactly two EOF literal labels corrected.",
+      "originalData": {
+        "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/M23g-immutable-callable-global-checks-20261020/Source-first-whole-before-kind-fix.json",
+        "bytes": 48839,
+        "sha256": "3bb9d221876639bb902320536d6c04768c4cb3111c4798f1b47706bb26795948"
+      },
+      "FIRST": {
+        "result": {
+          "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/M23g-immutable-callable-global-checks-20261020/Source-official-whole-FIRST-result.json",
+          "bytes": 3779,
+          "sha256": "6178a156c6cd75661c6a09dfc4ac4dec2b4459593e40694ee1f48af61c806a6c"
+        },
+        "raw": {
+          "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/M23g-immutable-callable-global-checks-20261020/Source-M23g-official-whole-FIRST01/stdout.bin",
+          "bytes": 6805,
+          "sha256": "ed04ab4a16bc51d16e6848e2f66464d82b73c194fd14d9e9f75761b87a507731"
+        },
+        "meaning": "Official metadata oracle representation mismatch; not owned semantic capability RED. No actual AST rows copied."
+      }
+    }
+  }
+}

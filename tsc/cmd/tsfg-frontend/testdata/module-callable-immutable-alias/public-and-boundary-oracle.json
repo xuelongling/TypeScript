@@ -1,0 +1,3345 @@
+{
+  "format": {
+    "family": "tsfg.m23g-independent-public-boundaries",
+    "version": 1
+  },
+  "basis": {
+    "descriptor": {
+      "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/M23g-immutable-callable-global-checks-20261020/protocol/module-callable-candidate-v2.json",
+      "bytes": 40688,
+      "sha256": "8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e"
+    },
+    "SourceOfficial": {
+      "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/M23g-immutable-callable-global-checks-20261020/Source-official-whole-qualification.json",
+      "bytes": 12007,
+      "sha256": "13c36ca5f158b78e4d7cca1af15c096d38f9085a553bf0c89b02b92c1dfe2518"
+    },
+    "SourceTypedRED": {
+      "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/M23g-immutable-callable-global-checks-20261020/Source-typed-capability-RED-qualification.json",
+      "bytes": 3829,
+      "sha256": "222697c30dcc1595330368830508904f5f70e79a64432ae9fbe3139842ab8204"
+    },
+    "boolFrozenData": {
+      "path": "E:/ws/pro_tsfg/.scratch/tsfg_r03/worktrees/r03-m23g-immutable-callable-source-root01/typescript/tsc/cmd/tsfg-frontend/testdata/module-callable-immutable-alias/first-whole-oracle.json",
+      "bytes": 50736,
+      "sha256": "6fbb13b045c23d7a7e97e0134d5f095fa42e357a7ab5d3cf6166516cc9ff447c"
+    }
+  },
+  "command": "--module-callable-facts-io-v2",
+  "methods": {
+    "independentLiteralOnly": true,
+    "actualOutputUsedForGold": false,
+    "publicHashDomains": [
+      "tsfg.module-callable-facts.input.v2 NUL",
+      "tsfg.module-callable-facts.request.v2 NUL",
+      "tsfg.module-callable-facts.package.v2 NUL"
+    ],
+    "logicalDomains": "candidate.v1 unchanged",
+    "originMeaning": "Complete original function/parameter annotation and export origin records in packet payload; no forged executable/source-lock origin.",
+    "i32Scope": "Independent nominal i32 alias forwarding, no scalar globals or nominal literals. Not a bool shared/RR substitution."
+  },
+  "publicCases": [
+    {
+      "name": "bool-original-shared",
+      "input": {
+        "sourceRoot": "/src",
+        "rootFile": "/src/app.ts",
+        "files": [
+          {
+            "path": "/src/app.ts",
+            "content": "// 🧭 static alias\nlet shared: bool = false;\nfunction leaf(value: bool): bool { return shared || value; }\nconst op = leaf;\nexport function entry(value: bool): bool { return op(value); }\nexport function peer(value: bool): bool { return shared || value; }\n",
+            "sha256": "96b6db8cf548132041bab6f138b1cc548711658eb3ad35ecac27057f92501285"
+          },
+          {
+            "path": "/src/minimal-integers-v3.d.ts",
+            "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+            "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+          }
+        ],
+        "declarations": {
+          "version": "minimal-integers-v3",
+          "paths": [
+            "/src/minimal-integers-v3.d.ts"
+          ]
+        },
+        "config": {
+          "strict": true,
+          "noEmit": true,
+          "allowJs": false
+        },
+        "target": {
+          "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+          "pointerBits": "64",
+          "target": "windows-x86_64-msvc",
+          "triple": "x86_64-pc-windows-msvc"
+        },
+        "compilationClosure": {
+          "roots": [
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "entry"
+            },
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "peer"
+            }
+          ],
+          "requiredRoots": []
+        },
+        "hostImports": []
+      },
+      "facts": {
+        "status": "ok",
+        "inputs": [
+          "/src/app.ts",
+          "/src/minimal-integers-v3.d.ts"
+        ],
+        "symbols": [
+          {
+            "sourcePath": "/src/app.ts",
+            "bindingKind": "source",
+            "id": "s1",
+            "name": "shared",
+            "kind": "global",
+            "type": "bool",
+            "writable": true,
+            "range": {
+              "start": 22,
+              "end": 29
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s2",
+            "name": "leaf",
+            "kind": "function",
+            "type": "bool",
+            "writable": false,
+            "range": {
+              "start": 53,
+              "end": 58
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "bindingKind": "source",
+            "id": "s3",
+            "name": "op",
+            "kind": "global",
+            "type": "function",
+            "writable": false,
+            "range": {
+              "start": 111,
+              "end": 114
+            },
+            "signature": {
+              "parameters": [
+                "bool"
+              ],
+              "returnType": "bool"
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s4",
+            "name": "entry",
+            "kind": "function",
+            "type": "bool",
+            "writable": false,
+            "range": {
+              "start": 138,
+              "end": 144
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s5",
+            "name": "peer",
+            "kind": "function",
+            "type": "bool",
+            "writable": false,
+            "range": {
+              "start": 201,
+              "end": 206
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s6",
+            "name": "value",
+            "kind": "parameter",
+            "type": "bool",
+            "writable": true,
+            "range": {
+              "start": 59,
+              "end": 64
+            },
+            "presence": {
+              "undefined": false,
+              "null": false,
+              "optional": false,
+              "default": false,
+              "range": {
+                "start": 59,
+                "end": 70
+              },
+              "annotation": {
+                "start": 66,
+                "end": 70
+              }
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s7",
+            "name": "value",
+            "kind": "parameter",
+            "type": "bool",
+            "writable": true,
+            "range": {
+              "start": 145,
+              "end": 150
+            },
+            "presence": {
+              "undefined": false,
+              "null": false,
+              "optional": false,
+              "default": false,
+              "range": {
+                "start": 145,
+                "end": 156
+              },
+              "annotation": {
+                "start": 152,
+                "end": 156
+              }
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s8",
+            "name": "value",
+            "kind": "parameter",
+            "type": "bool",
+            "writable": true,
+            "range": {
+              "start": 207,
+              "end": 212
+            },
+            "presence": {
+              "undefined": false,
+              "null": false,
+              "optional": false,
+              "default": false,
+              "range": {
+                "start": 207,
+                "end": 218
+              },
+              "annotation": {
+                "start": 214,
+                "end": 218
+              }
+            }
+          }
+        ],
+        "functions": [
+          {
+            "sourcePath": "/src/app.ts",
+            "name": "leaf",
+            "symbol": "s2",
+            "parameters": [
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s6",
+                "name": "value",
+                "kind": "parameter",
+                "type": "bool",
+                "writable": true,
+                "range": {
+                  "start": 59,
+                  "end": 64
+                },
+                "presence": {
+                  "undefined": false,
+                  "null": false,
+                  "optional": false,
+                  "default": false,
+                  "range": {
+                    "start": 59,
+                    "end": 70
+                  },
+                  "annotation": {
+                    "start": 66,
+                    "end": 70
+                  }
+                }
+              }
+            ],
+            "returnType": "bool",
+            "range": {
+              "start": 44,
+              "end": 105
+            },
+            "body": [
+              {
+                "kind": "return",
+                "range": {
+                  "start": 79,
+                  "end": 103
+                },
+                "expression": {
+                  "kind": "shortCircuit",
+                  "type": "bool",
+                  "operator": "||",
+                  "range": {
+                    "start": 87,
+                    "end": 102
+                  },
+                  "left": {
+                    "kind": "reference",
+                    "type": "bool",
+                    "symbol": "s1",
+                    "name": "shared",
+                    "range": {
+                      "start": 87,
+                      "end": 93
+                    }
+                  },
+                  "right": {
+                    "kind": "reference",
+                    "type": "bool",
+                    "symbol": "s6",
+                    "name": "value",
+                    "range": {
+                      "start": 97,
+                      "end": 102
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "name": "entry",
+            "symbol": "s4",
+            "parameters": [
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s7",
+                "name": "value",
+                "kind": "parameter",
+                "type": "bool",
+                "writable": true,
+                "range": {
+                  "start": 145,
+                  "end": 150
+                },
+                "presence": {
+                  "undefined": false,
+                  "null": false,
+                  "optional": false,
+                  "default": false,
+                  "range": {
+                    "start": 145,
+                    "end": 156
+                  },
+                  "annotation": {
+                    "start": 152,
+                    "end": 156
+                  }
+                }
+              }
+            ],
+            "returnType": "bool",
+            "range": {
+              "start": 122,
+              "end": 185
+            },
+            "body": [
+              {
+                "kind": "return",
+                "range": {
+                  "start": 165,
+                  "end": 183
+                },
+                "expression": {
+                  "kind": "indirectCall",
+                  "type": "bool",
+                  "name": "op",
+                  "signature": {
+                    "parameters": [
+                      "bool"
+                    ],
+                    "returnType": "bool"
+                  },
+                  "range": {
+                    "start": 172,
+                    "end": 182
+                  },
+                  "callee": {
+                    "kind": "reference",
+                    "type": "function",
+                    "symbol": "s3",
+                    "name": "op",
+                    "signature": {
+                      "parameters": [
+                        "bool"
+                      ],
+                      "returnType": "bool"
+                    },
+                    "range": {
+                      "start": 172,
+                      "end": 175
+                    }
+                  },
+                  "arguments": [
+                    {
+                      "kind": "reference",
+                      "type": "bool",
+                      "symbol": "s7",
+                      "name": "value",
+                      "range": {
+                        "start": 176,
+                        "end": 181
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "name": "peer",
+            "symbol": "s5",
+            "parameters": [
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s8",
+                "name": "value",
+                "kind": "parameter",
+                "type": "bool",
+                "writable": true,
+                "range": {
+                  "start": 207,
+                  "end": 212
+                },
+                "presence": {
+                  "undefined": false,
+                  "null": false,
+                  "optional": false,
+                  "default": false,
+                  "range": {
+                    "start": 207,
+                    "end": 218
+                  },
+                  "annotation": {
+                    "start": 214,
+                    "end": 218
+                  }
+                }
+              }
+            ],
+            "returnType": "bool",
+            "range": {
+              "start": 185,
+              "end": 253
+            },
+            "body": [
+              {
+                "kind": "return",
+                "range": {
+                  "start": 227,
+                  "end": 251
+                },
+                "expression": {
+                  "kind": "shortCircuit",
+                  "type": "bool",
+                  "operator": "||",
+                  "range": {
+                    "start": 235,
+                    "end": 250
+                  },
+                  "left": {
+                    "kind": "reference",
+                    "type": "bool",
+                    "symbol": "s1",
+                    "name": "shared",
+                    "range": {
+                      "start": 235,
+                      "end": 241
+                    }
+                  },
+                  "right": {
+                    "kind": "reference",
+                    "type": "bool",
+                    "symbol": "s8",
+                    "name": "value",
+                    "range": {
+                      "start": 245,
+                      "end": 250
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "modules": [
+          {
+            "sourcePath": "/src/app.ts",
+            "external": true,
+            "imports": [],
+            "exports": [
+              {
+                "name": "entry",
+                "target": "s4",
+                "range": {
+                  "start": 122,
+                  "end": 185
+                }
+              },
+              {
+                "name": "peer",
+                "target": "s5",
+                "range": {
+                  "start": 185,
+                  "end": 253
+                }
+              }
+            ],
+            "globals": [
+              "s1",
+              "s3"
+            ],
+            "initialization": [
+              {
+                "kind": "initialize",
+                "symbol": {
+                  "sourcePath": "/src/app.ts",
+                  "bindingKind": "source",
+                  "id": "s1",
+                  "name": "shared",
+                  "kind": "global",
+                  "type": "bool",
+                  "writable": true,
+                  "range": {
+                    "start": 22,
+                    "end": 29
+                  }
+                },
+                "initializer": {
+                  "kind": "boolean",
+                  "type": "bool",
+                  "boolean": false,
+                  "range": {
+                    "start": 37,
+                    "end": 43
+                  }
+                },
+                "range": {
+                  "start": 22,
+                  "end": 43
+                }
+              },
+              {
+                "kind": "initialize",
+                "symbol": {
+                  "sourcePath": "/src/app.ts",
+                  "bindingKind": "source",
+                  "id": "s3",
+                  "name": "op",
+                  "kind": "global",
+                  "type": "function",
+                  "writable": false,
+                  "range": {
+                    "start": 111,
+                    "end": 114
+                  },
+                  "signature": {
+                    "parameters": [
+                      "bool"
+                    ],
+                    "returnType": "bool"
+                  }
+                },
+                "initializer": {
+                  "kind": "functionReference",
+                  "type": "function",
+                  "target": "s2",
+                  "name": "leaf",
+                  "signature": {
+                    "parameters": [
+                      "bool"
+                    ],
+                    "returnType": "bool"
+                  },
+                  "range": {
+                    "start": 116,
+                    "end": 121
+                  }
+                },
+                "range": {
+                  "start": 111,
+                  "end": 121
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "annotations": [
+        {
+          "symbol": "s2",
+          "sourcePath": "/src/app.ts",
+          "declarationRange": {
+            "start": 44,
+            "end": 105
+          },
+          "nameRange": {
+            "start": 53,
+            "end": 58
+          },
+          "returnAnnotationRange": {
+            "start": 73,
+            "end": 77
+          },
+          "parameters": [
+            {
+              "symbol": "s6",
+              "declarationRange": {
+                "start": 59,
+                "end": 70
+              },
+              "nameRange": {
+                "start": 59,
+                "end": 64
+              },
+              "annotationRange": {
+                "start": 66,
+                "end": 70
+              }
+            }
+          ]
+        },
+        {
+          "symbol": "s4",
+          "sourcePath": "/src/app.ts",
+          "declarationRange": {
+            "start": 122,
+            "end": 185
+          },
+          "nameRange": {
+            "start": 138,
+            "end": 144
+          },
+          "returnAnnotationRange": {
+            "start": 159,
+            "end": 163
+          },
+          "parameters": [
+            {
+              "symbol": "s7",
+              "declarationRange": {
+                "start": 145,
+                "end": 156
+              },
+              "nameRange": {
+                "start": 145,
+                "end": 150
+              },
+              "annotationRange": {
+                "start": 152,
+                "end": 156
+              }
+            }
+          ]
+        },
+        {
+          "symbol": "s5",
+          "sourcePath": "/src/app.ts",
+          "declarationRange": {
+            "start": 185,
+            "end": 253
+          },
+          "nameRange": {
+            "start": 201,
+            "end": 206
+          },
+          "returnAnnotationRange": {
+            "start": 221,
+            "end": 225
+          },
+          "parameters": [
+            {
+              "symbol": "s8",
+              "declarationRange": {
+                "start": 207,
+                "end": 218
+              },
+              "nameRange": {
+                "start": 207,
+                "end": 212
+              },
+              "annotationRange": {
+                "start": 214,
+                "end": 218
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "sourcePath": "/src/app.ts",
+          "external": true,
+          "bindings": [
+            {
+              "name": "entry",
+              "target": "s4",
+              "range": {
+                "start": 123,
+                "end": 185
+              },
+              "originSourcePath": "/src/app.ts",
+              "definitionRange": {
+                "start": 122,
+                "end": 185
+              },
+              "nameRange": {
+                "start": 138,
+                "end": 144
+              }
+            },
+            {
+              "name": "peer",
+              "target": "s5",
+              "range": {
+                "start": 186,
+                "end": 253
+              },
+              "originSourcePath": "/src/app.ts",
+              "definitionRange": {
+                "start": 185,
+                "end": 253
+              },
+              "nameRange": {
+                "start": 201,
+                "end": 206
+              }
+            }
+          ]
+        }
+      ],
+      "manifest": [
+        {
+          "path": "/src/app.ts",
+          "digest": "sha256:96b6db8cf548132041bab6f138b1cc548711658eb3ad35ecac27057f92501285",
+          "byteLength": 256,
+          "length": 254,
+          "positionUnit": "utf16"
+        },
+        {
+          "path": "/src/minimal-integers-v3.d.ts",
+          "digest": "sha256:9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e",
+          "byteLength": 1214,
+          "length": 1214,
+          "positionUnit": "utf16"
+        }
+      ],
+      "request": {
+        "family": "tsfg.module-callable-facts-request-candidate",
+        "version": 2,
+        "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
+        "input": {
+          "sourceRoot": "/src",
+          "rootFile": "/src/app.ts",
+          "files": [
+            {
+              "path": "/src/app.ts",
+              "content": "// 🧭 static alias\nlet shared: bool = false;\nfunction leaf(value: bool): bool { return shared || value; }\nconst op = leaf;\nexport function entry(value: bool): bool { return op(value); }\nexport function peer(value: bool): bool { return shared || value; }\n",
+              "sha256": "96b6db8cf548132041bab6f138b1cc548711658eb3ad35ecac27057f92501285"
+            },
+            {
+              "path": "/src/minimal-integers-v3.d.ts",
+              "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+              "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+            }
+          ],
+          "declarations": {
+            "version": "minimal-integers-v3",
+            "paths": [
+              "/src/minimal-integers-v3.d.ts"
+            ]
+          },
+          "config": {
+            "strict": true,
+            "noEmit": true,
+            "allowJs": false
+          },
+          "target": {
+            "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+            "pointerBits": "64",
+            "target": "windows-x86_64-msvc",
+            "triple": "x86_64-pc-windows-msvc"
+          },
+          "compilationClosure": {
+            "roots": [
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "entry"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "peer"
+              }
+            ],
+            "requiredRoots": []
+          },
+          "hostImports": []
+        }
+      },
+      "packet": {
+        "family": "tsfg.module-callable-facts-package-candidate",
+        "version": 2,
+        "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
+        "requestId": "sha256:de23f949ce4499bffcb8184f653777f9909720ded531444d7b123ed14fdc7039",
+        "payload": {
+          "inputIdentity": "sha256:eb1164b3a681be1aa760d2f32f42991b587878cccddd57904d9fa8ce59c7040e",
+          "files": [
+            {
+              "path": "/src/app.ts",
+              "digest": "sha256:96b6db8cf548132041bab6f138b1cc548711658eb3ad35ecac27057f92501285",
+              "byteLength": 256,
+              "length": 254,
+              "positionUnit": "utf16"
+            },
+            {
+              "path": "/src/minimal-integers-v3.d.ts",
+              "digest": "sha256:9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e",
+              "byteLength": 1214,
+              "length": 1214,
+              "positionUnit": "utf16"
+            }
+          ],
+          "facts": {
+            "status": "ok",
+            "inputs": [
+              "/src/app.ts",
+              "/src/minimal-integers-v3.d.ts"
+            ],
+            "symbols": [
+              {
+                "sourcePath": "/src/app.ts",
+                "bindingKind": "source",
+                "id": "s1",
+                "name": "shared",
+                "kind": "global",
+                "type": "bool",
+                "writable": true,
+                "range": {
+                  "start": 22,
+                  "end": 29
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s2",
+                "name": "leaf",
+                "kind": "function",
+                "type": "bool",
+                "writable": false,
+                "range": {
+                  "start": 53,
+                  "end": 58
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "bindingKind": "source",
+                "id": "s3",
+                "name": "op",
+                "kind": "global",
+                "type": "function",
+                "writable": false,
+                "range": {
+                  "start": 111,
+                  "end": 114
+                },
+                "signature": {
+                  "parameters": [
+                    "bool"
+                  ],
+                  "returnType": "bool"
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s4",
+                "name": "entry",
+                "kind": "function",
+                "type": "bool",
+                "writable": false,
+                "range": {
+                  "start": 138,
+                  "end": 144
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s5",
+                "name": "peer",
+                "kind": "function",
+                "type": "bool",
+                "writable": false,
+                "range": {
+                  "start": 201,
+                  "end": 206
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s6",
+                "name": "value",
+                "kind": "parameter",
+                "type": "bool",
+                "writable": true,
+                "range": {
+                  "start": 59,
+                  "end": 64
+                },
+                "presence": {
+                  "undefined": false,
+                  "null": false,
+                  "optional": false,
+                  "default": false,
+                  "range": {
+                    "start": 59,
+                    "end": 70
+                  },
+                  "annotation": {
+                    "start": 66,
+                    "end": 70
+                  }
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s7",
+                "name": "value",
+                "kind": "parameter",
+                "type": "bool",
+                "writable": true,
+                "range": {
+                  "start": 145,
+                  "end": 150
+                },
+                "presence": {
+                  "undefined": false,
+                  "null": false,
+                  "optional": false,
+                  "default": false,
+                  "range": {
+                    "start": 145,
+                    "end": 156
+                  },
+                  "annotation": {
+                    "start": 152,
+                    "end": 156
+                  }
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s8",
+                "name": "value",
+                "kind": "parameter",
+                "type": "bool",
+                "writable": true,
+                "range": {
+                  "start": 207,
+                  "end": 212
+                },
+                "presence": {
+                  "undefined": false,
+                  "null": false,
+                  "optional": false,
+                  "default": false,
+                  "range": {
+                    "start": 207,
+                    "end": 218
+                  },
+                  "annotation": {
+                    "start": 214,
+                    "end": 218
+                  }
+                }
+              }
+            ],
+            "functions": [
+              {
+                "sourcePath": "/src/app.ts",
+                "name": "leaf",
+                "symbol": "s2",
+                "parameters": [
+                  {
+                    "sourcePath": "/src/app.ts",
+                    "id": "s6",
+                    "name": "value",
+                    "kind": "parameter",
+                    "type": "bool",
+                    "writable": true,
+                    "range": {
+                      "start": 59,
+                      "end": 64
+                    },
+                    "presence": {
+                      "undefined": false,
+                      "null": false,
+                      "optional": false,
+                      "default": false,
+                      "range": {
+                        "start": 59,
+                        "end": 70
+                      },
+                      "annotation": {
+                        "start": 66,
+                        "end": 70
+                      }
+                    }
+                  }
+                ],
+                "returnType": "bool",
+                "range": {
+                  "start": 44,
+                  "end": 105
+                },
+                "body": [
+                  {
+                    "kind": "return",
+                    "range": {
+                      "start": 79,
+                      "end": 103
+                    },
+                    "expression": {
+                      "kind": "shortCircuit",
+                      "type": "bool",
+                      "operator": "||",
+                      "range": {
+                        "start": 87,
+                        "end": 102
+                      },
+                      "left": {
+                        "kind": "reference",
+                        "type": "bool",
+                        "symbol": "s1",
+                        "name": "shared",
+                        "range": {
+                          "start": 87,
+                          "end": 93
+                        }
+                      },
+                      "right": {
+                        "kind": "reference",
+                        "type": "bool",
+                        "symbol": "s6",
+                        "name": "value",
+                        "range": {
+                          "start": 97,
+                          "end": 102
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "name": "entry",
+                "symbol": "s4",
+                "parameters": [
+                  {
+                    "sourcePath": "/src/app.ts",
+                    "id": "s7",
+                    "name": "value",
+                    "kind": "parameter",
+                    "type": "bool",
+                    "writable": true,
+                    "range": {
+                      "start": 145,
+                      "end": 150
+                    },
+                    "presence": {
+                      "undefined": false,
+                      "null": false,
+                      "optional": false,
+                      "default": false,
+                      "range": {
+                        "start": 145,
+                        "end": 156
+                      },
+                      "annotation": {
+                        "start": 152,
+                        "end": 156
+                      }
+                    }
+                  }
+                ],
+                "returnType": "bool",
+                "range": {
+                  "start": 122,
+                  "end": 185
+                },
+                "body": [
+                  {
+                    "kind": "return",
+                    "range": {
+                      "start": 165,
+                      "end": 183
+                    },
+                    "expression": {
+                      "kind": "indirectCall",
+                      "type": "bool",
+                      "name": "op",
+                      "signature": {
+                        "parameters": [
+                          "bool"
+                        ],
+                        "returnType": "bool"
+                      },
+                      "range": {
+                        "start": 172,
+                        "end": 182
+                      },
+                      "callee": {
+                        "kind": "reference",
+                        "type": "function",
+                        "symbol": "s3",
+                        "name": "op",
+                        "signature": {
+                          "parameters": [
+                            "bool"
+                          ],
+                          "returnType": "bool"
+                        },
+                        "range": {
+                          "start": 172,
+                          "end": 175
+                        }
+                      },
+                      "arguments": [
+                        {
+                          "kind": "reference",
+                          "type": "bool",
+                          "symbol": "s7",
+                          "name": "value",
+                          "range": {
+                            "start": 176,
+                            "end": 181
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "name": "peer",
+                "symbol": "s5",
+                "parameters": [
+                  {
+                    "sourcePath": "/src/app.ts",
+                    "id": "s8",
+                    "name": "value",
+                    "kind": "parameter",
+                    "type": "bool",
+                    "writable": true,
+                    "range": {
+                      "start": 207,
+                      "end": 212
+                    },
+                    "presence": {
+                      "undefined": false,
+                      "null": false,
+                      "optional": false,
+                      "default": false,
+                      "range": {
+                        "start": 207,
+                        "end": 218
+                      },
+                      "annotation": {
+                        "start": 214,
+                        "end": 218
+                      }
+                    }
+                  }
+                ],
+                "returnType": "bool",
+                "range": {
+                  "start": 185,
+                  "end": 253
+                },
+                "body": [
+                  {
+                    "kind": "return",
+                    "range": {
+                      "start": 227,
+                      "end": 251
+                    },
+                    "expression": {
+                      "kind": "shortCircuit",
+                      "type": "bool",
+                      "operator": "||",
+                      "range": {
+                        "start": 235,
+                        "end": 250
+                      },
+                      "left": {
+                        "kind": "reference",
+                        "type": "bool",
+                        "symbol": "s1",
+                        "name": "shared",
+                        "range": {
+                          "start": 235,
+                          "end": 241
+                        }
+                      },
+                      "right": {
+                        "kind": "reference",
+                        "type": "bool",
+                        "symbol": "s8",
+                        "name": "value",
+                        "range": {
+                          "start": 245,
+                          "end": 250
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "modules": [
+              {
+                "sourcePath": "/src/app.ts",
+                "external": true,
+                "imports": [],
+                "exports": [
+                  {
+                    "name": "entry",
+                    "target": "s4",
+                    "range": {
+                      "start": 122,
+                      "end": 185
+                    }
+                  },
+                  {
+                    "name": "peer",
+                    "target": "s5",
+                    "range": {
+                      "start": 185,
+                      "end": 253
+                    }
+                  }
+                ],
+                "globals": [
+                  "s1",
+                  "s3"
+                ],
+                "initialization": [
+                  {
+                    "kind": "initialize",
+                    "symbol": {
+                      "sourcePath": "/src/app.ts",
+                      "bindingKind": "source",
+                      "id": "s1",
+                      "name": "shared",
+                      "kind": "global",
+                      "type": "bool",
+                      "writable": true,
+                      "range": {
+                        "start": 22,
+                        "end": 29
+                      }
+                    },
+                    "initializer": {
+                      "kind": "boolean",
+                      "type": "bool",
+                      "boolean": false,
+                      "range": {
+                        "start": 37,
+                        "end": 43
+                      }
+                    },
+                    "range": {
+                      "start": 22,
+                      "end": 43
+                    }
+                  },
+                  {
+                    "kind": "initialize",
+                    "symbol": {
+                      "sourcePath": "/src/app.ts",
+                      "bindingKind": "source",
+                      "id": "s3",
+                      "name": "op",
+                      "kind": "global",
+                      "type": "function",
+                      "writable": false,
+                      "range": {
+                        "start": 111,
+                        "end": 114
+                      },
+                      "signature": {
+                        "parameters": [
+                          "bool"
+                        ],
+                        "returnType": "bool"
+                      }
+                    },
+                    "initializer": {
+                      "kind": "functionReference",
+                      "type": "function",
+                      "target": "s2",
+                      "name": "leaf",
+                      "signature": {
+                        "parameters": [
+                          "bool"
+                        ],
+                        "returnType": "bool"
+                      },
+                      "range": {
+                        "start": 116,
+                        "end": 121
+                      }
+                    },
+                    "range": {
+                      "start": 111,
+                      "end": 121
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "annotations": [
+            {
+              "symbol": "s2",
+              "sourcePath": "/src/app.ts",
+              "declarationRange": {
+                "start": 44,
+                "end": 105
+              },
+              "nameRange": {
+                "start": 53,
+                "end": 58
+              },
+              "returnAnnotationRange": {
+                "start": 73,
+                "end": 77
+              },
+              "parameters": [
+                {
+                  "symbol": "s6",
+                  "declarationRange": {
+                    "start": 59,
+                    "end": 70
+                  },
+                  "nameRange": {
+                    "start": 59,
+                    "end": 64
+                  },
+                  "annotationRange": {
+                    "start": 66,
+                    "end": 70
+                  }
+                }
+              ]
+            },
+            {
+              "symbol": "s4",
+              "sourcePath": "/src/app.ts",
+              "declarationRange": {
+                "start": 122,
+                "end": 185
+              },
+              "nameRange": {
+                "start": 138,
+                "end": 144
+              },
+              "returnAnnotationRange": {
+                "start": 159,
+                "end": 163
+              },
+              "parameters": [
+                {
+                  "symbol": "s7",
+                  "declarationRange": {
+                    "start": 145,
+                    "end": 156
+                  },
+                  "nameRange": {
+                    "start": 145,
+                    "end": 150
+                  },
+                  "annotationRange": {
+                    "start": 152,
+                    "end": 156
+                  }
+                }
+              ]
+            },
+            {
+              "symbol": "s5",
+              "sourcePath": "/src/app.ts",
+              "declarationRange": {
+                "start": 185,
+                "end": 253
+              },
+              "nameRange": {
+                "start": 201,
+                "end": 206
+              },
+              "returnAnnotationRange": {
+                "start": 221,
+                "end": 225
+              },
+              "parameters": [
+                {
+                  "symbol": "s8",
+                  "declarationRange": {
+                    "start": 207,
+                    "end": 218
+                  },
+                  "nameRange": {
+                    "start": 207,
+                    "end": 212
+                  },
+                  "annotationRange": {
+                    "start": 214,
+                    "end": 218
+                  }
+                }
+              ]
+            }
+          ],
+          "exports": [
+            {
+              "sourcePath": "/src/app.ts",
+              "external": true,
+              "bindings": [
+                {
+                  "name": "entry",
+                  "target": "s4",
+                  "range": {
+                    "start": 123,
+                    "end": 185
+                  },
+                  "originSourcePath": "/src/app.ts",
+                  "definitionRange": {
+                    "start": 122,
+                    "end": 185
+                  },
+                  "nameRange": {
+                    "start": 138,
+                    "end": 144
+                  }
+                },
+                {
+                  "name": "peer",
+                  "target": "s5",
+                  "range": {
+                    "start": 186,
+                    "end": 253
+                  },
+                  "originSourcePath": "/src/app.ts",
+                  "definitionRange": {
+                    "start": 185,
+                    "end": 253
+                  },
+                  "nameRange": {
+                    "start": 201,
+                    "end": 206
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "packageId": "sha256:1f6d91737987e9be585a33fb85026cd75ca902d9e4cb0032e73c6884240a87e2"
+      },
+      "requestBytes": "{\"family\":\"tsfg.module-callable-facts-request-candidate\",\"input\":{\"compilationClosure\":{\"requiredRoots\":[],\"roots\":[{\"kind\":\"kernel\",\"name\":\"entry\",\"sourcePath\":\"/src/app.ts\"},{\"kind\":\"kernel\",\"name\":\"peer\",\"sourcePath\":\"/src/app.ts\"}]},\"config\":{\"allowJs\":false,\"noEmit\":true,\"strict\":true},\"declarations\":{\"paths\":[\"/src/minimal-integers-v3.d.ts\"],\"version\":\"minimal-integers-v3\"},\"files\":[{\"content\":\"// 🧭 static alias\\nlet shared: bool = false;\\nfunction leaf(value: bool): bool { return shared || value; }\\nconst op = leaf;\\nexport function entry(value: bool): bool { return op(value); }\\nexport function peer(value: bool): bool { return shared || value; }\\n\",\"path\":\"/src/app.ts\",\"sha256\":\"96b6db8cf548132041bab6f138b1cc548711658eb3ad35ecac27057f92501285\"},{\"content\":\"interface Object {}\\ninterface Function {}\\ninterface CallableFunction {}\\ninterface NewableFunction {}\\ninterface IArguments {}\\ninterface String {}\\ninterface Number {}\\ninterface Boolean {}\\ninterface RegExp {}\\ninterface Array<T> {}\\ntype bool = boolean;\\ndeclare const __tsfg_i32: unique symbol;\\ntype i32 = number & { readonly [__tsfg_i32]: true };\\ntype f64 = number;\\ndeclare const __tsfg_i8: unique symbol;\\ntype i8 = number & { readonly [__tsfg_i8]: true };\\ndeclare const __tsfg_i16: unique symbol;\\ntype i16 = number & { readonly [__tsfg_i16]: true };\\ndeclare const __tsfg_i64: unique symbol;\\ntype i64 = number & { readonly [__tsfg_i64]: true };\\ndeclare const __tsfg_u8: unique symbol;\\ntype u8 = number & { readonly [__tsfg_u8]: true };\\ndeclare const __tsfg_u16: unique symbol;\\ntype u16 = number & { readonly [__tsfg_u16]: true };\\ndeclare const __tsfg_u32: unique symbol;\\ntype u32 = number & { readonly [__tsfg_u32]: true };\\ndeclare const __tsfg_u64: unique symbol;\\ntype u64 = number & { readonly [__tsfg_u64]: true };\\ndeclare const __tsfg_isize: unique symbol;\\ntype isize = number & { readonly [__tsfg_isize]: true };\\ndeclare const __tsfg_usize: unique symbol;\\ntype usize = number & { readonly [__tsfg_usize]: true };\\n\",\"path\":\"/src/minimal-integers-v3.d.ts\",\"sha256\":\"9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e\"}],\"hostImports\":[],\"rootFile\":\"/src/app.ts\",\"sourceRoot\":\"/src\",\"target\":{\"llvmDataLayout\":\"e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128\",\"pointerBits\":\"64\",\"target\":\"windows-x86_64-msvc\",\"triple\":\"x86_64-pc-windows-msvc\"}},\"schemaHash\":\"sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e\",\"version\":2}\n",
+      "packetBytes": "{\"family\":\"tsfg.module-callable-facts-package-candidate\",\"packageId\":\"sha256:1f6d91737987e9be585a33fb85026cd75ca902d9e4cb0032e73c6884240a87e2\",\"payload\":{\"annotations\":[{\"declarationRange\":{\"end\":105,\"start\":44},\"nameRange\":{\"end\":58,\"start\":53},\"parameters\":[{\"annotationRange\":{\"end\":70,\"start\":66},\"declarationRange\":{\"end\":70,\"start\":59},\"nameRange\":{\"end\":64,\"start\":59},\"symbol\":\"s6\"}],\"returnAnnotationRange\":{\"end\":77,\"start\":73},\"sourcePath\":\"/src/app.ts\",\"symbol\":\"s2\"},{\"declarationRange\":{\"end\":185,\"start\":122},\"nameRange\":{\"end\":144,\"start\":138},\"parameters\":[{\"annotationRange\":{\"end\":156,\"start\":152},\"declarationRange\":{\"end\":156,\"start\":145},\"nameRange\":{\"end\":150,\"start\":145},\"symbol\":\"s7\"}],\"returnAnnotationRange\":{\"end\":163,\"start\":159},\"sourcePath\":\"/src/app.ts\",\"symbol\":\"s4\"},{\"declarationRange\":{\"end\":253,\"start\":185},\"nameRange\":{\"end\":206,\"start\":201},\"parameters\":[{\"annotationRange\":{\"end\":218,\"start\":214},\"declarationRange\":{\"end\":218,\"start\":207},\"nameRange\":{\"end\":212,\"start\":207},\"symbol\":\"s8\"}],\"returnAnnotationRange\":{\"end\":225,\"start\":221},\"sourcePath\":\"/src/app.ts\",\"symbol\":\"s5\"}],\"exports\":[{\"bindings\":[{\"definitionRange\":{\"end\":185,\"start\":122},\"name\":\"entry\",\"nameRange\":{\"end\":144,\"start\":138},\"originSourcePath\":\"/src/app.ts\",\"range\":{\"end\":185,\"start\":123},\"target\":\"s4\"},{\"definitionRange\":{\"end\":253,\"start\":185},\"name\":\"peer\",\"nameRange\":{\"end\":206,\"start\":201},\"originSourcePath\":\"/src/app.ts\",\"range\":{\"end\":253,\"start\":186},\"target\":\"s5\"}],\"external\":true,\"sourcePath\":\"/src/app.ts\"}],\"facts\":{\"functions\":[{\"body\":[{\"expression\":{\"kind\":\"shortCircuit\",\"left\":{\"kind\":\"reference\",\"name\":\"shared\",\"range\":{\"end\":93,\"start\":87},\"symbol\":\"s1\",\"type\":\"bool\"},\"operator\":\"||\",\"range\":{\"end\":102,\"start\":87},\"right\":{\"kind\":\"reference\",\"name\":\"value\",\"range\":{\"end\":102,\"start\":97},\"symbol\":\"s6\",\"type\":\"bool\"},\"type\":\"bool\"},\"kind\":\"return\",\"range\":{\"end\":103,\"start\":79}}],\"name\":\"leaf\",\"parameters\":[{\"id\":\"s6\",\"kind\":\"parameter\",\"name\":\"value\",\"presence\":{\"annotation\":{\"end\":70,\"start\":66},\"default\":false,\"null\":false,\"optional\":false,\"range\":{\"end\":70,\"start\":59},\"undefined\":false},\"range\":{\"end\":64,\"start\":59},\"sourcePath\":\"/src/app.ts\",\"type\":\"bool\",\"writable\":true}],\"range\":{\"end\":105,\"start\":44},\"returnType\":\"bool\",\"sourcePath\":\"/src/app.ts\",\"symbol\":\"s2\"},{\"body\":[{\"expression\":{\"arguments\":[{\"kind\":\"reference\",\"name\":\"value\",\"range\":{\"end\":181,\"start\":176},\"symbol\":\"s7\",\"type\":\"bool\"}],\"callee\":{\"kind\":\"reference\",\"name\":\"op\",\"range\":{\"end\":175,\"start\":172},\"signature\":{\"parameters\":[\"bool\"],\"returnType\":\"bool\"},\"symbol\":\"s3\",\"type\":\"function\"},\"kind\":\"indirectCall\",\"name\":\"op\",\"range\":{\"end\":182,\"start\":172},\"signature\":{\"parameters\":[\"bool\"],\"returnType\":\"bool\"},\"type\":\"bool\"},\"kind\":\"return\",\"range\":{\"end\":183,\"start\":165}}],\"name\":\"entry\",\"parameters\":[{\"id\":\"s7\",\"kind\":\"parameter\",\"name\":\"value\",\"presence\":{\"annotation\":{\"end\":156,\"start\":152},\"default\":false,\"null\":false,\"optional\":false,\"range\":{\"end\":156,\"start\":145},\"undefined\":false},\"range\":{\"end\":150,\"start\":145},\"sourcePath\":\"/src/app.ts\",\"type\":\"bool\",\"writable\":true}],\"range\":{\"end\":185,\"start\":122},\"returnType\":\"bool\",\"sourcePath\":\"/src/app.ts\",\"symbol\":\"s4\"},{\"body\":[{\"expression\":{\"kind\":\"shortCircuit\",\"left\":{\"kind\":\"reference\",\"name\":\"shared\",\"range\":{\"end\":241,\"start\":235},\"symbol\":\"s1\",\"type\":\"bool\"},\"operator\":\"||\",\"range\":{\"end\":250,\"start\":235},\"right\":{\"kind\":\"reference\",\"name\":\"value\",\"range\":{\"end\":250,\"start\":245},\"symbol\":\"s8\",\"type\":\"bool\"},\"type\":\"bool\"},\"kind\":\"return\",\"range\":{\"end\":251,\"start\":227}}],\"name\":\"peer\",\"parameters\":[{\"id\":\"s8\",\"kind\":\"parameter\",\"name\":\"value\",\"presence\":{\"annotation\":{\"end\":218,\"start\":214},\"default\":false,\"null\":false,\"optional\":false,\"range\":{\"end\":218,\"start\":207},\"undefined\":false},\"range\":{\"end\":212,\"start\":207},\"sourcePath\":\"/src/app.ts\",\"type\":\"bool\",\"writable\":true}],\"range\":{\"end\":253,\"start\":185},\"returnType\":\"bool\",\"sourcePath\":\"/src/app.ts\",\"symbol\":\"s5\"}],\"inputs\":[\"/src/app.ts\",\"/src/minimal-integers-v3.d.ts\"],\"modules\":[{\"exports\":[{\"name\":\"entry\",\"range\":{\"end\":185,\"start\":122},\"target\":\"s4\"},{\"name\":\"peer\",\"range\":{\"end\":253,\"start\":185},\"target\":\"s5\"}],\"external\":true,\"globals\":[\"s1\",\"s3\"],\"imports\":[],\"initialization\":[{\"initializer\":{\"boolean\":false,\"kind\":\"boolean\",\"range\":{\"end\":43,\"start\":37},\"type\":\"bool\"},\"kind\":\"initialize\",\"range\":{\"end\":43,\"start\":22},\"symbol\":{\"bindingKind\":\"source\",\"id\":\"s1\",\"kind\":\"global\",\"name\":\"shared\",\"range\":{\"end\":29,\"start\":22},\"sourcePath\":\"/src/app.ts\",\"type\":\"bool\",\"writable\":true}},{\"initializer\":{\"kind\":\"functionReference\",\"name\":\"leaf\",\"range\":{\"end\":121,\"start\":116},\"signature\":{\"parameters\":[\"bool\"],\"returnType\":\"bool\"},\"target\":\"s2\",\"type\":\"function\"},\"kind\":\"initialize\",\"range\":{\"end\":121,\"start\":111},\"symbol\":{\"bindingKind\":\"source\",\"id\":\"s3\",\"kind\":\"global\",\"name\":\"op\",\"range\":{\"end\":114,\"start\":111},\"signature\":{\"parameters\":[\"bool\"],\"returnType\":\"bool\"},\"sourcePath\":\"/src/app.ts\",\"type\":\"function\",\"writable\":false}}],\"sourcePath\":\"/src/app.ts\"}],\"status\":\"ok\",\"symbols\":[{\"bindingKind\":\"source\",\"id\":\"s1\",\"kind\":\"global\",\"name\":\"shared\",\"range\":{\"end\":29,\"start\":22},\"sourcePath\":\"/src/app.ts\",\"type\":\"bool\",\"writable\":true},{\"id\":\"s2\",\"kind\":\"function\",\"name\":\"leaf\",\"range\":{\"end\":58,\"start\":53},\"sourcePath\":\"/src/app.ts\",\"type\":\"bool\",\"writable\":false},{\"bindingKind\":\"source\",\"id\":\"s3\",\"kind\":\"global\",\"name\":\"op\",\"range\":{\"end\":114,\"start\":111},\"signature\":{\"parameters\":[\"bool\"],\"returnType\":\"bool\"},\"sourcePath\":\"/src/app.ts\",\"type\":\"function\",\"writable\":false},{\"id\":\"s4\",\"kind\":\"function\",\"name\":\"entry\",\"range\":{\"end\":144,\"start\":138},\"sourcePath\":\"/src/app.ts\",\"type\":\"bool\",\"writable\":false},{\"id\":\"s5\",\"kind\":\"function\",\"name\":\"peer\",\"range\":{\"end\":206,\"start\":201},\"sourcePath\":\"/src/app.ts\",\"type\":\"bool\",\"writable\":false},{\"id\":\"s6\",\"kind\":\"parameter\",\"name\":\"value\",\"presence\":{\"annotation\":{\"end\":70,\"start\":66},\"default\":false,\"null\":false,\"optional\":false,\"range\":{\"end\":70,\"start\":59},\"undefined\":false},\"range\":{\"end\":64,\"start\":59},\"sourcePath\":\"/src/app.ts\",\"type\":\"bool\",\"writable\":true},{\"id\":\"s7\",\"kind\":\"parameter\",\"name\":\"value\",\"presence\":{\"annotation\":{\"end\":156,\"start\":152},\"default\":false,\"null\":false,\"optional\":false,\"range\":{\"end\":156,\"start\":145},\"undefined\":false},\"range\":{\"end\":150,\"start\":145},\"sourcePath\":\"/src/app.ts\",\"type\":\"bool\",\"writable\":true},{\"id\":\"s8\",\"kind\":\"parameter\",\"name\":\"value\",\"presence\":{\"annotation\":{\"end\":218,\"start\":214},\"default\":false,\"null\":false,\"optional\":false,\"range\":{\"end\":218,\"start\":207},\"undefined\":false},\"range\":{\"end\":212,\"start\":207},\"sourcePath\":\"/src/app.ts\",\"type\":\"bool\",\"writable\":true}]},\"files\":[{\"byteLength\":256,\"digest\":\"sha256:96b6db8cf548132041bab6f138b1cc548711658eb3ad35ecac27057f92501285\",\"length\":254,\"path\":\"/src/app.ts\",\"positionUnit\":\"utf16\"},{\"byteLength\":1214,\"digest\":\"sha256:9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e\",\"length\":1214,\"path\":\"/src/minimal-integers-v3.d.ts\",\"positionUnit\":\"utf16\"}],\"inputIdentity\":\"sha256:eb1164b3a681be1aa760d2f32f42991b587878cccddd57904d9fa8ce59c7040e\"},\"requestId\":\"sha256:de23f949ce4499bffcb8184f653777f9909720ded531444d7b123ed14fdc7039\",\"schemaHash\":\"sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e\",\"version\":2}\n",
+      "requestSHA256": "ed1818ef45dcf043641aa6225e6768083822766e81c14b5e5778df9f0d3ca1a7",
+      "packetSHA256": "070b025f97e3d2ce513a4810c55ab752e2d7f858c419149719ef462b46564d1a"
+    },
+    {
+      "name": "i32-nominal-forwarding",
+      "input": {
+        "sourceRoot": "/src",
+        "rootFile": "/src/app.ts",
+        "files": [
+          {
+            "path": "/src/app.ts",
+            "content": "// 🧭 static alias\nfunction leaf(value: i32): i32 { return value; }\nconst op = leaf;\nexport function entry(value: i32): i32 { return op(value); }\nexport function peer(value: i32): i32 { return value; }\n",
+            "sha256": "7ea7b47324d264055dd2a39e99e3b57f57ba9898f5f62df2f0cade02e03ae743"
+          },
+          {
+            "path": "/src/minimal-integers-v3.d.ts",
+            "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+            "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+          }
+        ],
+        "declarations": {
+          "version": "minimal-integers-v3",
+          "paths": [
+            "/src/minimal-integers-v3.d.ts"
+          ]
+        },
+        "config": {
+          "strict": true,
+          "noEmit": true,
+          "allowJs": false
+        },
+        "target": {
+          "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+          "pointerBits": "64",
+          "target": "windows-x86_64-msvc",
+          "triple": "x86_64-pc-windows-msvc"
+        },
+        "compilationClosure": {
+          "roots": [
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "entry"
+            },
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "peer"
+            }
+          ],
+          "requiredRoots": []
+        },
+        "hostImports": []
+      },
+      "facts": {
+        "status": "ok",
+        "inputs": [
+          "/src/app.ts",
+          "/src/minimal-integers-v3.d.ts"
+        ],
+        "symbols": [
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s1",
+            "name": "leaf",
+            "kind": "function",
+            "type": "i32",
+            "writable": false,
+            "range": {
+              "start": 27,
+              "end": 32
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "bindingKind": "source",
+            "id": "s2",
+            "name": "op",
+            "kind": "global",
+            "type": "function",
+            "writable": false,
+            "range": {
+              "start": 73,
+              "end": 76
+            },
+            "signature": {
+              "parameters": [
+                "i32"
+              ],
+              "returnType": "i32"
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s3",
+            "name": "entry",
+            "kind": "function",
+            "type": "i32",
+            "writable": false,
+            "range": {
+              "start": 100,
+              "end": 106
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s4",
+            "name": "peer",
+            "kind": "function",
+            "type": "i32",
+            "writable": false,
+            "range": {
+              "start": 161,
+              "end": 166
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s5",
+            "name": "value",
+            "kind": "parameter",
+            "type": "i32",
+            "writable": true,
+            "range": {
+              "start": 33,
+              "end": 38
+            },
+            "presence": {
+              "undefined": false,
+              "null": false,
+              "optional": false,
+              "default": false,
+              "range": {
+                "start": 33,
+                "end": 43
+              },
+              "annotation": {
+                "start": 40,
+                "end": 43
+              }
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s6",
+            "name": "value",
+            "kind": "parameter",
+            "type": "i32",
+            "writable": true,
+            "range": {
+              "start": 107,
+              "end": 112
+            },
+            "presence": {
+              "undefined": false,
+              "null": false,
+              "optional": false,
+              "default": false,
+              "range": {
+                "start": 107,
+                "end": 117
+              },
+              "annotation": {
+                "start": 114,
+                "end": 117
+              }
+            }
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "id": "s7",
+            "name": "value",
+            "kind": "parameter",
+            "type": "i32",
+            "writable": true,
+            "range": {
+              "start": 167,
+              "end": 172
+            },
+            "presence": {
+              "undefined": false,
+              "null": false,
+              "optional": false,
+              "default": false,
+              "range": {
+                "start": 167,
+                "end": 177
+              },
+              "annotation": {
+                "start": 174,
+                "end": 177
+              }
+            }
+          }
+        ],
+        "functions": [
+          {
+            "sourcePath": "/src/app.ts",
+            "name": "leaf",
+            "symbol": "s1",
+            "parameters": [
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s5",
+                "name": "value",
+                "kind": "parameter",
+                "type": "i32",
+                "writable": true,
+                "range": {
+                  "start": 33,
+                  "end": 38
+                },
+                "presence": {
+                  "undefined": false,
+                  "null": false,
+                  "optional": false,
+                  "default": false,
+                  "range": {
+                    "start": 33,
+                    "end": 43
+                  },
+                  "annotation": {
+                    "start": 40,
+                    "end": 43
+                  }
+                }
+              }
+            ],
+            "returnType": "i32",
+            "range": {
+              "start": 0,
+              "end": 67
+            },
+            "body": [
+              {
+                "kind": "return",
+                "range": {
+                  "start": 51,
+                  "end": 65
+                },
+                "expression": {
+                  "kind": "reference",
+                  "type": "i32",
+                  "symbol": "s5",
+                  "name": "value",
+                  "range": {
+                    "start": 58,
+                    "end": 64
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "name": "entry",
+            "symbol": "s3",
+            "parameters": [
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s6",
+                "name": "value",
+                "kind": "parameter",
+                "type": "i32",
+                "writable": true,
+                "range": {
+                  "start": 107,
+                  "end": 112
+                },
+                "presence": {
+                  "undefined": false,
+                  "null": false,
+                  "optional": false,
+                  "default": false,
+                  "range": {
+                    "start": 107,
+                    "end": 117
+                  },
+                  "annotation": {
+                    "start": 114,
+                    "end": 117
+                  }
+                }
+              }
+            ],
+            "returnType": "i32",
+            "range": {
+              "start": 84,
+              "end": 145
+            },
+            "body": [
+              {
+                "kind": "return",
+                "range": {
+                  "start": 125,
+                  "end": 143
+                },
+                "expression": {
+                  "kind": "indirectCall",
+                  "type": "i32",
+                  "name": "op",
+                  "signature": {
+                    "parameters": [
+                      "i32"
+                    ],
+                    "returnType": "i32"
+                  },
+                  "range": {
+                    "start": 132,
+                    "end": 142
+                  },
+                  "callee": {
+                    "kind": "reference",
+                    "type": "function",
+                    "symbol": "s2",
+                    "name": "op",
+                    "signature": {
+                      "parameters": [
+                        "i32"
+                      ],
+                      "returnType": "i32"
+                    },
+                    "range": {
+                      "start": 132,
+                      "end": 135
+                    }
+                  },
+                  "arguments": [
+                    {
+                      "kind": "reference",
+                      "type": "i32",
+                      "symbol": "s6",
+                      "name": "value",
+                      "range": {
+                        "start": 136,
+                        "end": 141
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "sourcePath": "/src/app.ts",
+            "name": "peer",
+            "symbol": "s4",
+            "parameters": [
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s7",
+                "name": "value",
+                "kind": "parameter",
+                "type": "i32",
+                "writable": true,
+                "range": {
+                  "start": 167,
+                  "end": 172
+                },
+                "presence": {
+                  "undefined": false,
+                  "null": false,
+                  "optional": false,
+                  "default": false,
+                  "range": {
+                    "start": 167,
+                    "end": 177
+                  },
+                  "annotation": {
+                    "start": 174,
+                    "end": 177
+                  }
+                }
+              }
+            ],
+            "returnType": "i32",
+            "range": {
+              "start": 145,
+              "end": 201
+            },
+            "body": [
+              {
+                "kind": "return",
+                "range": {
+                  "start": 185,
+                  "end": 199
+                },
+                "expression": {
+                  "kind": "reference",
+                  "type": "i32",
+                  "symbol": "s7",
+                  "name": "value",
+                  "range": {
+                    "start": 192,
+                    "end": 198
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "modules": [
+          {
+            "sourcePath": "/src/app.ts",
+            "external": true,
+            "imports": [],
+            "exports": [
+              {
+                "name": "entry",
+                "target": "s3",
+                "range": {
+                  "start": 84,
+                  "end": 145
+                }
+              },
+              {
+                "name": "peer",
+                "target": "s4",
+                "range": {
+                  "start": 145,
+                  "end": 201
+                }
+              }
+            ],
+            "globals": [
+              "s2"
+            ],
+            "initialization": [
+              {
+                "kind": "initialize",
+                "symbol": {
+                  "sourcePath": "/src/app.ts",
+                  "bindingKind": "source",
+                  "id": "s2",
+                  "name": "op",
+                  "kind": "global",
+                  "type": "function",
+                  "writable": false,
+                  "range": {
+                    "start": 73,
+                    "end": 76
+                  },
+                  "signature": {
+                    "parameters": [
+                      "i32"
+                    ],
+                    "returnType": "i32"
+                  }
+                },
+                "initializer": {
+                  "kind": "functionReference",
+                  "type": "function",
+                  "target": "s1",
+                  "name": "leaf",
+                  "signature": {
+                    "parameters": [
+                      "i32"
+                    ],
+                    "returnType": "i32"
+                  },
+                  "range": {
+                    "start": 78,
+                    "end": 83
+                  }
+                },
+                "range": {
+                  "start": 73,
+                  "end": 83
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "annotations": [
+        {
+          "symbol": "s1",
+          "sourcePath": "/src/app.ts",
+          "declarationRange": {
+            "start": 0,
+            "end": 67
+          },
+          "nameRange": {
+            "start": 27,
+            "end": 32
+          },
+          "returnAnnotationRange": {
+            "start": 46,
+            "end": 49
+          },
+          "parameters": [
+            {
+              "symbol": "s5",
+              "declarationRange": {
+                "start": 33,
+                "end": 43
+              },
+              "nameRange": {
+                "start": 33,
+                "end": 38
+              },
+              "annotationRange": {
+                "start": 40,
+                "end": 43
+              }
+            }
+          ]
+        },
+        {
+          "symbol": "s3",
+          "sourcePath": "/src/app.ts",
+          "declarationRange": {
+            "start": 84,
+            "end": 145
+          },
+          "nameRange": {
+            "start": 100,
+            "end": 106
+          },
+          "returnAnnotationRange": {
+            "start": 120,
+            "end": 123
+          },
+          "parameters": [
+            {
+              "symbol": "s6",
+              "declarationRange": {
+                "start": 107,
+                "end": 117
+              },
+              "nameRange": {
+                "start": 107,
+                "end": 112
+              },
+              "annotationRange": {
+                "start": 114,
+                "end": 117
+              }
+            }
+          ]
+        },
+        {
+          "symbol": "s4",
+          "sourcePath": "/src/app.ts",
+          "declarationRange": {
+            "start": 145,
+            "end": 201
+          },
+          "nameRange": {
+            "start": 161,
+            "end": 166
+          },
+          "returnAnnotationRange": {
+            "start": 180,
+            "end": 183
+          },
+          "parameters": [
+            {
+              "symbol": "s7",
+              "declarationRange": {
+                "start": 167,
+                "end": 177
+              },
+              "nameRange": {
+                "start": 167,
+                "end": 172
+              },
+              "annotationRange": {
+                "start": 174,
+                "end": 177
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "sourcePath": "/src/app.ts",
+          "external": true,
+          "bindings": [
+            {
+              "name": "entry",
+              "target": "s3",
+              "range": {
+                "start": 85,
+                "end": 145
+              },
+              "originSourcePath": "/src/app.ts",
+              "definitionRange": {
+                "start": 84,
+                "end": 145
+              },
+              "nameRange": {
+                "start": 100,
+                "end": 106
+              }
+            },
+            {
+              "name": "peer",
+              "target": "s4",
+              "range": {
+                "start": 146,
+                "end": 201
+              },
+              "originSourcePath": "/src/app.ts",
+              "definitionRange": {
+                "start": 145,
+                "end": 201
+              },
+              "nameRange": {
+                "start": 161,
+                "end": 166
+              }
+            }
+          ]
+        }
+      ],
+      "manifest": [
+        {
+          "path": "/src/app.ts",
+          "digest": "sha256:7ea7b47324d264055dd2a39e99e3b57f57ba9898f5f62df2f0cade02e03ae743",
+          "byteLength": 204,
+          "length": 202,
+          "positionUnit": "utf16"
+        },
+        {
+          "path": "/src/minimal-integers-v3.d.ts",
+          "digest": "sha256:9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e",
+          "byteLength": 1214,
+          "length": 1214,
+          "positionUnit": "utf16"
+        }
+      ],
+      "request": {
+        "family": "tsfg.module-callable-facts-request-candidate",
+        "version": 2,
+        "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
+        "input": {
+          "sourceRoot": "/src",
+          "rootFile": "/src/app.ts",
+          "files": [
+            {
+              "path": "/src/app.ts",
+              "content": "// 🧭 static alias\nfunction leaf(value: i32): i32 { return value; }\nconst op = leaf;\nexport function entry(value: i32): i32 { return op(value); }\nexport function peer(value: i32): i32 { return value; }\n",
+              "sha256": "7ea7b47324d264055dd2a39e99e3b57f57ba9898f5f62df2f0cade02e03ae743"
+            },
+            {
+              "path": "/src/minimal-integers-v3.d.ts",
+              "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+              "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+            }
+          ],
+          "declarations": {
+            "version": "minimal-integers-v3",
+            "paths": [
+              "/src/minimal-integers-v3.d.ts"
+            ]
+          },
+          "config": {
+            "strict": true,
+            "noEmit": true,
+            "allowJs": false
+          },
+          "target": {
+            "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+            "pointerBits": "64",
+            "target": "windows-x86_64-msvc",
+            "triple": "x86_64-pc-windows-msvc"
+          },
+          "compilationClosure": {
+            "roots": [
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "entry"
+              },
+              {
+                "kind": "kernel",
+                "sourcePath": "/src/app.ts",
+                "name": "peer"
+              }
+            ],
+            "requiredRoots": []
+          },
+          "hostImports": []
+        }
+      },
+      "packet": {
+        "family": "tsfg.module-callable-facts-package-candidate",
+        "version": 2,
+        "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
+        "requestId": "sha256:60d7e7b802d0f2a8a8c44f95200db92ad8b307f8a3d779282f63acea00027fdf",
+        "payload": {
+          "inputIdentity": "sha256:be61479e8b8267a2b57b2cce5b5041bec891187fa468b6149a12c6ce868dbe69",
+          "files": [
+            {
+              "path": "/src/app.ts",
+              "digest": "sha256:7ea7b47324d264055dd2a39e99e3b57f57ba9898f5f62df2f0cade02e03ae743",
+              "byteLength": 204,
+              "length": 202,
+              "positionUnit": "utf16"
+            },
+            {
+              "path": "/src/minimal-integers-v3.d.ts",
+              "digest": "sha256:9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e",
+              "byteLength": 1214,
+              "length": 1214,
+              "positionUnit": "utf16"
+            }
+          ],
+          "facts": {
+            "status": "ok",
+            "inputs": [
+              "/src/app.ts",
+              "/src/minimal-integers-v3.d.ts"
+            ],
+            "symbols": [
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s1",
+                "name": "leaf",
+                "kind": "function",
+                "type": "i32",
+                "writable": false,
+                "range": {
+                  "start": 27,
+                  "end": 32
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "bindingKind": "source",
+                "id": "s2",
+                "name": "op",
+                "kind": "global",
+                "type": "function",
+                "writable": false,
+                "range": {
+                  "start": 73,
+                  "end": 76
+                },
+                "signature": {
+                  "parameters": [
+                    "i32"
+                  ],
+                  "returnType": "i32"
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s3",
+                "name": "entry",
+                "kind": "function",
+                "type": "i32",
+                "writable": false,
+                "range": {
+                  "start": 100,
+                  "end": 106
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s4",
+                "name": "peer",
+                "kind": "function",
+                "type": "i32",
+                "writable": false,
+                "range": {
+                  "start": 161,
+                  "end": 166
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s5",
+                "name": "value",
+                "kind": "parameter",
+                "type": "i32",
+                "writable": true,
+                "range": {
+                  "start": 33,
+                  "end": 38
+                },
+                "presence": {
+                  "undefined": false,
+                  "null": false,
+                  "optional": false,
+                  "default": false,
+                  "range": {
+                    "start": 33,
+                    "end": 43
+                  },
+                  "annotation": {
+                    "start": 40,
+                    "end": 43
+                  }
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s6",
+                "name": "value",
+                "kind": "parameter",
+                "type": "i32",
+                "writable": true,
+                "range": {
+                  "start": 107,
+                  "end": 112
+                },
+                "presence": {
+                  "undefined": false,
+                  "null": false,
+                  "optional": false,
+                  "default": false,
+                  "range": {
+                    "start": 107,
+                    "end": 117
+                  },
+                  "annotation": {
+                    "start": 114,
+                    "end": 117
+                  }
+                }
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "id": "s7",
+                "name": "value",
+                "kind": "parameter",
+                "type": "i32",
+                "writable": true,
+                "range": {
+                  "start": 167,
+                  "end": 172
+                },
+                "presence": {
+                  "undefined": false,
+                  "null": false,
+                  "optional": false,
+                  "default": false,
+                  "range": {
+                    "start": 167,
+                    "end": 177
+                  },
+                  "annotation": {
+                    "start": 174,
+                    "end": 177
+                  }
+                }
+              }
+            ],
+            "functions": [
+              {
+                "sourcePath": "/src/app.ts",
+                "name": "leaf",
+                "symbol": "s1",
+                "parameters": [
+                  {
+                    "sourcePath": "/src/app.ts",
+                    "id": "s5",
+                    "name": "value",
+                    "kind": "parameter",
+                    "type": "i32",
+                    "writable": true,
+                    "range": {
+                      "start": 33,
+                      "end": 38
+                    },
+                    "presence": {
+                      "undefined": false,
+                      "null": false,
+                      "optional": false,
+                      "default": false,
+                      "range": {
+                        "start": 33,
+                        "end": 43
+                      },
+                      "annotation": {
+                        "start": 40,
+                        "end": 43
+                      }
+                    }
+                  }
+                ],
+                "returnType": "i32",
+                "range": {
+                  "start": 0,
+                  "end": 67
+                },
+                "body": [
+                  {
+                    "kind": "return",
+                    "range": {
+                      "start": 51,
+                      "end": 65
+                    },
+                    "expression": {
+                      "kind": "reference",
+                      "type": "i32",
+                      "symbol": "s5",
+                      "name": "value",
+                      "range": {
+                        "start": 58,
+                        "end": 64
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "name": "entry",
+                "symbol": "s3",
+                "parameters": [
+                  {
+                    "sourcePath": "/src/app.ts",
+                    "id": "s6",
+                    "name": "value",
+                    "kind": "parameter",
+                    "type": "i32",
+                    "writable": true,
+                    "range": {
+                      "start": 107,
+                      "end": 112
+                    },
+                    "presence": {
+                      "undefined": false,
+                      "null": false,
+                      "optional": false,
+                      "default": false,
+                      "range": {
+                        "start": 107,
+                        "end": 117
+                      },
+                      "annotation": {
+                        "start": 114,
+                        "end": 117
+                      }
+                    }
+                  }
+                ],
+                "returnType": "i32",
+                "range": {
+                  "start": 84,
+                  "end": 145
+                },
+                "body": [
+                  {
+                    "kind": "return",
+                    "range": {
+                      "start": 125,
+                      "end": 143
+                    },
+                    "expression": {
+                      "kind": "indirectCall",
+                      "type": "i32",
+                      "name": "op",
+                      "signature": {
+                        "parameters": [
+                          "i32"
+                        ],
+                        "returnType": "i32"
+                      },
+                      "range": {
+                        "start": 132,
+                        "end": 142
+                      },
+                      "callee": {
+                        "kind": "reference",
+                        "type": "function",
+                        "symbol": "s2",
+                        "name": "op",
+                        "signature": {
+                          "parameters": [
+                            "i32"
+                          ],
+                          "returnType": "i32"
+                        },
+                        "range": {
+                          "start": 132,
+                          "end": 135
+                        }
+                      },
+                      "arguments": [
+                        {
+                          "kind": "reference",
+                          "type": "i32",
+                          "symbol": "s6",
+                          "name": "value",
+                          "range": {
+                            "start": 136,
+                            "end": 141
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "sourcePath": "/src/app.ts",
+                "name": "peer",
+                "symbol": "s4",
+                "parameters": [
+                  {
+                    "sourcePath": "/src/app.ts",
+                    "id": "s7",
+                    "name": "value",
+                    "kind": "parameter",
+                    "type": "i32",
+                    "writable": true,
+                    "range": {
+                      "start": 167,
+                      "end": 172
+                    },
+                    "presence": {
+                      "undefined": false,
+                      "null": false,
+                      "optional": false,
+                      "default": false,
+                      "range": {
+                        "start": 167,
+                        "end": 177
+                      },
+                      "annotation": {
+                        "start": 174,
+                        "end": 177
+                      }
+                    }
+                  }
+                ],
+                "returnType": "i32",
+                "range": {
+                  "start": 145,
+                  "end": 201
+                },
+                "body": [
+                  {
+                    "kind": "return",
+                    "range": {
+                      "start": 185,
+                      "end": 199
+                    },
+                    "expression": {
+                      "kind": "reference",
+                      "type": "i32",
+                      "symbol": "s7",
+                      "name": "value",
+                      "range": {
+                        "start": 192,
+                        "end": 198
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "modules": [
+              {
+                "sourcePath": "/src/app.ts",
+                "external": true,
+                "imports": [],
+                "exports": [
+                  {
+                    "name": "entry",
+                    "target": "s3",
+                    "range": {
+                      "start": 84,
+                      "end": 145
+                    }
+                  },
+                  {
+                    "name": "peer",
+                    "target": "s4",
+                    "range": {
+                      "start": 145,
+                      "end": 201
+                    }
+                  }
+                ],
+                "globals": [
+                  "s2"
+                ],
+                "initialization": [
+                  {
+                    "kind": "initialize",
+                    "symbol": {
+                      "sourcePath": "/src/app.ts",
+                      "bindingKind": "source",
+                      "id": "s2",
+                      "name": "op",
+                      "kind": "global",
+                      "type": "function",
+                      "writable": false,
+                      "range": {
+                        "start": 73,
+                        "end": 76
+                      },
+                      "signature": {
+                        "parameters": [
+                          "i32"
+                        ],
+                        "returnType": "i32"
+                      }
+                    },
+                    "initializer": {
+                      "kind": "functionReference",
+                      "type": "function",
+                      "target": "s1",
+                      "name": "leaf",
+                      "signature": {
+                        "parameters": [
+                          "i32"
+                        ],
+                        "returnType": "i32"
+                      },
+                      "range": {
+                        "start": 78,
+                        "end": 83
+                      }
+                    },
+                    "range": {
+                      "start": 73,
+                      "end": 83
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "annotations": [
+            {
+              "symbol": "s1",
+              "sourcePath": "/src/app.ts",
+              "declarationRange": {
+                "start": 0,
+                "end": 67
+              },
+              "nameRange": {
+                "start": 27,
+                "end": 32
+              },
+              "returnAnnotationRange": {
+                "start": 46,
+                "end": 49
+              },
+              "parameters": [
+                {
+                  "symbol": "s5",
+                  "declarationRange": {
+                    "start": 33,
+                    "end": 43
+                  },
+                  "nameRange": {
+                    "start": 33,
+                    "end": 38
+                  },
+                  "annotationRange": {
+                    "start": 40,
+                    "end": 43
+                  }
+                }
+              ]
+            },
+            {
+              "symbol": "s3",
+              "sourcePath": "/src/app.ts",
+              "declarationRange": {
+                "start": 84,
+                "end": 145
+              },
+              "nameRange": {
+                "start": 100,
+                "end": 106
+              },
+              "returnAnnotationRange": {
+                "start": 120,
+                "end": 123
+              },
+              "parameters": [
+                {
+                  "symbol": "s6",
+                  "declarationRange": {
+                    "start": 107,
+                    "end": 117
+                  },
+                  "nameRange": {
+                    "start": 107,
+                    "end": 112
+                  },
+                  "annotationRange": {
+                    "start": 114,
+                    "end": 117
+                  }
+                }
+              ]
+            },
+            {
+              "symbol": "s4",
+              "sourcePath": "/src/app.ts",
+              "declarationRange": {
+                "start": 145,
+                "end": 201
+              },
+              "nameRange": {
+                "start": 161,
+                "end": 166
+              },
+              "returnAnnotationRange": {
+                "start": 180,
+                "end": 183
+              },
+              "parameters": [
+                {
+                  "symbol": "s7",
+                  "declarationRange": {
+                    "start": 167,
+                    "end": 177
+                  },
+                  "nameRange": {
+                    "start": 167,
+                    "end": 172
+                  },
+                  "annotationRange": {
+                    "start": 174,
+                    "end": 177
+                  }
+                }
+              ]
+            }
+          ],
+          "exports": [
+            {
+              "sourcePath": "/src/app.ts",
+              "external": true,
+              "bindings": [
+                {
+                  "name": "entry",
+                  "target": "s3",
+                  "range": {
+                    "start": 85,
+                    "end": 145
+                  },
+                  "originSourcePath": "/src/app.ts",
+                  "definitionRange": {
+                    "start": 84,
+                    "end": 145
+                  },
+                  "nameRange": {
+                    "start": 100,
+                    "end": 106
+                  }
+                },
+                {
+                  "name": "peer",
+                  "target": "s4",
+                  "range": {
+                    "start": 146,
+                    "end": 201
+                  },
+                  "originSourcePath": "/src/app.ts",
+                  "definitionRange": {
+                    "start": 145,
+                    "end": 201
+                  },
+                  "nameRange": {
+                    "start": 161,
+                    "end": 166
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "packageId": "sha256:7de52b459f2c917aa1fa2f1428b7b67e24c206de8a26013fcd2abbfdb50cbdb1"
+      },
+      "requestBytes": "{\"family\":\"tsfg.module-callable-facts-request-candidate\",\"input\":{\"compilationClosure\":{\"requiredRoots\":[],\"roots\":[{\"kind\":\"kernel\",\"name\":\"entry\",\"sourcePath\":\"/src/app.ts\"},{\"kind\":\"kernel\",\"name\":\"peer\",\"sourcePath\":\"/src/app.ts\"}]},\"config\":{\"allowJs\":false,\"noEmit\":true,\"strict\":true},\"declarations\":{\"paths\":[\"/src/minimal-integers-v3.d.ts\"],\"version\":\"minimal-integers-v3\"},\"files\":[{\"content\":\"// 🧭 static alias\\nfunction leaf(value: i32): i32 { return value; }\\nconst op = leaf;\\nexport function entry(value: i32): i32 { return op(value); }\\nexport function peer(value: i32): i32 { return value; }\\n\",\"path\":\"/src/app.ts\",\"sha256\":\"7ea7b47324d264055dd2a39e99e3b57f57ba9898f5f62df2f0cade02e03ae743\"},{\"content\":\"interface Object {}\\ninterface Function {}\\ninterface CallableFunction {}\\ninterface NewableFunction {}\\ninterface IArguments {}\\ninterface String {}\\ninterface Number {}\\ninterface Boolean {}\\ninterface RegExp {}\\ninterface Array<T> {}\\ntype bool = boolean;\\ndeclare const __tsfg_i32: unique symbol;\\ntype i32 = number & { readonly [__tsfg_i32]: true };\\ntype f64 = number;\\ndeclare const __tsfg_i8: unique symbol;\\ntype i8 = number & { readonly [__tsfg_i8]: true };\\ndeclare const __tsfg_i16: unique symbol;\\ntype i16 = number & { readonly [__tsfg_i16]: true };\\ndeclare const __tsfg_i64: unique symbol;\\ntype i64 = number & { readonly [__tsfg_i64]: true };\\ndeclare const __tsfg_u8: unique symbol;\\ntype u8 = number & { readonly [__tsfg_u8]: true };\\ndeclare const __tsfg_u16: unique symbol;\\ntype u16 = number & { readonly [__tsfg_u16]: true };\\ndeclare const __tsfg_u32: unique symbol;\\ntype u32 = number & { readonly [__tsfg_u32]: true };\\ndeclare const __tsfg_u64: unique symbol;\\ntype u64 = number & { readonly [__tsfg_u64]: true };\\ndeclare const __tsfg_isize: unique symbol;\\ntype isize = number & { readonly [__tsfg_isize]: true };\\ndeclare const __tsfg_usize: unique symbol;\\ntype usize = number & { readonly [__tsfg_usize]: true };\\n\",\"path\":\"/src/minimal-integers-v3.d.ts\",\"sha256\":\"9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e\"}],\"hostImports\":[],\"rootFile\":\"/src/app.ts\",\"sourceRoot\":\"/src\",\"target\":{\"llvmDataLayout\":\"e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128\",\"pointerBits\":\"64\",\"target\":\"windows-x86_64-msvc\",\"triple\":\"x86_64-pc-windows-msvc\"}},\"schemaHash\":\"sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e\",\"version\":2}\n",
+      "packetBytes": "{\"family\":\"tsfg.module-callable-facts-package-candidate\",\"packageId\":\"sha256:7de52b459f2c917aa1fa2f1428b7b67e24c206de8a26013fcd2abbfdb50cbdb1\",\"payload\":{\"annotations\":[{\"declarationRange\":{\"end\":67,\"start\":0},\"nameRange\":{\"end\":32,\"start\":27},\"parameters\":[{\"annotationRange\":{\"end\":43,\"start\":40},\"declarationRange\":{\"end\":43,\"start\":33},\"nameRange\":{\"end\":38,\"start\":33},\"symbol\":\"s5\"}],\"returnAnnotationRange\":{\"end\":49,\"start\":46},\"sourcePath\":\"/src/app.ts\",\"symbol\":\"s1\"},{\"declarationRange\":{\"end\":145,\"start\":84},\"nameRange\":{\"end\":106,\"start\":100},\"parameters\":[{\"annotationRange\":{\"end\":117,\"start\":114},\"declarationRange\":{\"end\":117,\"start\":107},\"nameRange\":{\"end\":112,\"start\":107},\"symbol\":\"s6\"}],\"returnAnnotationRange\":{\"end\":123,\"start\":120},\"sourcePath\":\"/src/app.ts\",\"symbol\":\"s3\"},{\"declarationRange\":{\"end\":201,\"start\":145},\"nameRange\":{\"end\":166,\"start\":161},\"parameters\":[{\"annotationRange\":{\"end\":177,\"start\":174},\"declarationRange\":{\"end\":177,\"start\":167},\"nameRange\":{\"end\":172,\"start\":167},\"symbol\":\"s7\"}],\"returnAnnotationRange\":{\"end\":183,\"start\":180},\"sourcePath\":\"/src/app.ts\",\"symbol\":\"s4\"}],\"exports\":[{\"bindings\":[{\"definitionRange\":{\"end\":145,\"start\":84},\"name\":\"entry\",\"nameRange\":{\"end\":106,\"start\":100},\"originSourcePath\":\"/src/app.ts\",\"range\":{\"end\":145,\"start\":85},\"target\":\"s3\"},{\"definitionRange\":{\"end\":201,\"start\":145},\"name\":\"peer\",\"nameRange\":{\"end\":166,\"start\":161},\"originSourcePath\":\"/src/app.ts\",\"range\":{\"end\":201,\"start\":146},\"target\":\"s4\"}],\"external\":true,\"sourcePath\":\"/src/app.ts\"}],\"facts\":{\"functions\":[{\"body\":[{\"expression\":{\"kind\":\"reference\",\"name\":\"value\",\"range\":{\"end\":64,\"start\":58},\"symbol\":\"s5\",\"type\":\"i32\"},\"kind\":\"return\",\"range\":{\"end\":65,\"start\":51}}],\"name\":\"leaf\",\"parameters\":[{\"id\":\"s5\",\"kind\":\"parameter\",\"name\":\"value\",\"presence\":{\"annotation\":{\"end\":43,\"start\":40},\"default\":false,\"null\":false,\"optional\":false,\"range\":{\"end\":43,\"start\":33},\"undefined\":false},\"range\":{\"end\":38,\"start\":33},\"sourcePath\":\"/src/app.ts\",\"type\":\"i32\",\"writable\":true}],\"range\":{\"end\":67,\"start\":0},\"returnType\":\"i32\",\"sourcePath\":\"/src/app.ts\",\"symbol\":\"s1\"},{\"body\":[{\"expression\":{\"arguments\":[{\"kind\":\"reference\",\"name\":\"value\",\"range\":{\"end\":141,\"start\":136},\"symbol\":\"s6\",\"type\":\"i32\"}],\"callee\":{\"kind\":\"reference\",\"name\":\"op\",\"range\":{\"end\":135,\"start\":132},\"signature\":{\"parameters\":[\"i32\"],\"returnType\":\"i32\"},\"symbol\":\"s2\",\"type\":\"function\"},\"kind\":\"indirectCall\",\"name\":\"op\",\"range\":{\"end\":142,\"start\":132},\"signature\":{\"parameters\":[\"i32\"],\"returnType\":\"i32\"},\"type\":\"i32\"},\"kind\":\"return\",\"range\":{\"end\":143,\"start\":125}}],\"name\":\"entry\",\"parameters\":[{\"id\":\"s6\",\"kind\":\"parameter\",\"name\":\"value\",\"presence\":{\"annotation\":{\"end\":117,\"start\":114},\"default\":false,\"null\":false,\"optional\":false,\"range\":{\"end\":117,\"start\":107},\"undefined\":false},\"range\":{\"end\":112,\"start\":107},\"sourcePath\":\"/src/app.ts\",\"type\":\"i32\",\"writable\":true}],\"range\":{\"end\":145,\"start\":84},\"returnType\":\"i32\",\"sourcePath\":\"/src/app.ts\",\"symbol\":\"s3\"},{\"body\":[{\"expression\":{\"kind\":\"reference\",\"name\":\"value\",\"range\":{\"end\":198,\"start\":192},\"symbol\":\"s7\",\"type\":\"i32\"},\"kind\":\"return\",\"range\":{\"end\":199,\"start\":185}}],\"name\":\"peer\",\"parameters\":[{\"id\":\"s7\",\"kind\":\"parameter\",\"name\":\"value\",\"presence\":{\"annotation\":{\"end\":177,\"start\":174},\"default\":false,\"null\":false,\"optional\":false,\"range\":{\"end\":177,\"start\":167},\"undefined\":false},\"range\":{\"end\":172,\"start\":167},\"sourcePath\":\"/src/app.ts\",\"type\":\"i32\",\"writable\":true}],\"range\":{\"end\":201,\"start\":145},\"returnType\":\"i32\",\"sourcePath\":\"/src/app.ts\",\"symbol\":\"s4\"}],\"inputs\":[\"/src/app.ts\",\"/src/minimal-integers-v3.d.ts\"],\"modules\":[{\"exports\":[{\"name\":\"entry\",\"range\":{\"end\":145,\"start\":84},\"target\":\"s3\"},{\"name\":\"peer\",\"range\":{\"end\":201,\"start\":145},\"target\":\"s4\"}],\"external\":true,\"globals\":[\"s2\"],\"imports\":[],\"initialization\":[{\"initializer\":{\"kind\":\"functionReference\",\"name\":\"leaf\",\"range\":{\"end\":83,\"start\":78},\"signature\":{\"parameters\":[\"i32\"],\"returnType\":\"i32\"},\"target\":\"s1\",\"type\":\"function\"},\"kind\":\"initialize\",\"range\":{\"end\":83,\"start\":73},\"symbol\":{\"bindingKind\":\"source\",\"id\":\"s2\",\"kind\":\"global\",\"name\":\"op\",\"range\":{\"end\":76,\"start\":73},\"signature\":{\"parameters\":[\"i32\"],\"returnType\":\"i32\"},\"sourcePath\":\"/src/app.ts\",\"type\":\"function\",\"writable\":false}}],\"sourcePath\":\"/src/app.ts\"}],\"status\":\"ok\",\"symbols\":[{\"id\":\"s1\",\"kind\":\"function\",\"name\":\"leaf\",\"range\":{\"end\":32,\"start\":27},\"sourcePath\":\"/src/app.ts\",\"type\":\"i32\",\"writable\":false},{\"bindingKind\":\"source\",\"id\":\"s2\",\"kind\":\"global\",\"name\":\"op\",\"range\":{\"end\":76,\"start\":73},\"signature\":{\"parameters\":[\"i32\"],\"returnType\":\"i32\"},\"sourcePath\":\"/src/app.ts\",\"type\":\"function\",\"writable\":false},{\"id\":\"s3\",\"kind\":\"function\",\"name\":\"entry\",\"range\":{\"end\":106,\"start\":100},\"sourcePath\":\"/src/app.ts\",\"type\":\"i32\",\"writable\":false},{\"id\":\"s4\",\"kind\":\"function\",\"name\":\"peer\",\"range\":{\"end\":166,\"start\":161},\"sourcePath\":\"/src/app.ts\",\"type\":\"i32\",\"writable\":false},{\"id\":\"s5\",\"kind\":\"parameter\",\"name\":\"value\",\"presence\":{\"annotation\":{\"end\":43,\"start\":40},\"default\":false,\"null\":false,\"optional\":false,\"range\":{\"end\":43,\"start\":33},\"undefined\":false},\"range\":{\"end\":38,\"start\":33},\"sourcePath\":\"/src/app.ts\",\"type\":\"i32\",\"writable\":true},{\"id\":\"s6\",\"kind\":\"parameter\",\"name\":\"value\",\"presence\":{\"annotation\":{\"end\":117,\"start\":114},\"default\":false,\"null\":false,\"optional\":false,\"range\":{\"end\":117,\"start\":107},\"undefined\":false},\"range\":{\"end\":112,\"start\":107},\"sourcePath\":\"/src/app.ts\",\"type\":\"i32\",\"writable\":true},{\"id\":\"s7\",\"kind\":\"parameter\",\"name\":\"value\",\"presence\":{\"annotation\":{\"end\":177,\"start\":174},\"default\":false,\"null\":false,\"optional\":false,\"range\":{\"end\":177,\"start\":167},\"undefined\":false},\"range\":{\"end\":172,\"start\":167},\"sourcePath\":\"/src/app.ts\",\"type\":\"i32\",\"writable\":true}]},\"files\":[{\"byteLength\":204,\"digest\":\"sha256:7ea7b47324d264055dd2a39e99e3b57f57ba9898f5f62df2f0cade02e03ae743\",\"length\":202,\"path\":\"/src/app.ts\",\"positionUnit\":\"utf16\"},{\"byteLength\":1214,\"digest\":\"sha256:9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e\",\"length\":1214,\"path\":\"/src/minimal-integers-v3.d.ts\",\"positionUnit\":\"utf16\"}],\"inputIdentity\":\"sha256:be61479e8b8267a2b57b2cce5b5041bec891187fa468b6149a12c6ce868dbe69\"},\"requestId\":\"sha256:60d7e7b802d0f2a8a8c44f95200db92ad8b307f8a3d779282f63acea00027fdf\",\"schemaHash\":\"sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e\",\"version\":2}\n",
+      "requestSHA256": "379217f8835ca203a169fe0dea2231fd2a1d2d1dd07e0b968dc8f0ee3dcc6e4f",
+      "packetSHA256": "09a8ef70f510d0030149a17affb58726dd155c6a77bcc11bdf290e1de8396857"
+    }
+  ],
+  "boundaryCases": [
+    {
+      "name": "mutable-callable-binding",
+      "input": {
+        "sourceRoot": "/src",
+        "rootFile": "/src/app.ts",
+        "files": [
+          {
+            "path": "/src/app.ts",
+            "content": "// 🧭 static alias\nlet shared: bool = false;\nfunction leaf(value: bool): bool { return shared || value; }\nlet op = leaf;\nexport function entry(value: bool): bool { return op(value); }\nexport function peer(value: bool): bool { return shared || value; }\n",
+            "sha256": "30a87c7af5316326932e2e6eb84d87a2729c73dfbb614543ff0792e856f2e49a"
+          },
+          {
+            "path": "/src/minimal-integers-v3.d.ts",
+            "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+            "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+          }
+        ],
+        "declarations": {
+          "version": "minimal-integers-v3",
+          "paths": [
+            "/src/minimal-integers-v3.d.ts"
+          ]
+        },
+        "config": {
+          "strict": true,
+          "noEmit": true,
+          "allowJs": false
+        },
+        "target": {
+          "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+          "pointerBits": "64",
+          "target": "windows-x86_64-msvc",
+          "triple": "x86_64-pc-windows-msvc"
+        },
+        "compilationClosure": {
+          "roots": [
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "entry"
+            },
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "peer"
+            }
+          ],
+          "requiredRoots": []
+        },
+        "hostImports": []
+      },
+      "expectedAnchor": {
+        "kind": "VariableDeclaration",
+        "start": 110,
+        "end": 119,
+        "spelling": "op = leaf"
+      },
+      "expectedResponse": {
+        "status": "error",
+        "symbols": null,
+        "diagnostics": [
+          {
+            "code": "r02b-d-unsupported",
+            "ruleId": "r01-ts-baseline",
+            "ruleIds": [
+              "r01-ts-baseline"
+            ],
+            "category": "unsupported",
+            "phase": "capability",
+            "severity": "error",
+            "file": "/src/app.ts",
+            "range": {
+              "start": 110,
+              "end": 119
+            },
+            "primary": {
+              "sourceId": "/src/app.ts",
+              "start": 110,
+              "end": 119,
+              "startLine": 3,
+              "startColumn": 4,
+              "endLine": 3,
+              "endColumn": 13
+            }
+          }
+        ]
+      },
+      "expectedCallbackCount": 0,
+      "officialDiagnosticCounts": {
+        "syntax": 0,
+        "semantic": 0,
+        "program": 0,
+        "global": 0
+      },
+      "rule": "Source proof2: callable binding must be const.",
+      "reason": "Only const→let; same original target and use."
+    },
+    {
+      "name": "alias-used-as-comparison-value",
+      "input": {
+        "sourceRoot": "/src",
+        "rootFile": "/src/app.ts",
+        "files": [
+          {
+            "path": "/src/app.ts",
+            "content": "// 🧭 static alias\nlet shared: bool = false;\nfunction leaf(value: bool): bool { return shared || value; }\nconst op = leaf;\nexport function entry(value: bool): bool { return op === leaf; }\nexport function peer(value: bool): bool { return shared || value; }\n",
+            "sha256": "aa5b67eb70ab98291a7b6ba14deb78bb420f1cfec7093d3daffb4e3b8399faf5"
+          },
+          {
+            "path": "/src/minimal-integers-v3.d.ts",
+            "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+            "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+          }
+        ],
+        "declarations": {
+          "version": "minimal-integers-v3",
+          "paths": [
+            "/src/minimal-integers-v3.d.ts"
+          ]
+        },
+        "config": {
+          "strict": true,
+          "noEmit": true,
+          "allowJs": false
+        },
+        "target": {
+          "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+          "pointerBits": "64",
+          "target": "windows-x86_64-msvc",
+          "triple": "x86_64-pc-windows-msvc"
+        },
+        "compilationClosure": {
+          "roots": [
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "entry"
+            },
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "peer"
+            }
+          ],
+          "requiredRoots": []
+        },
+        "hostImports": []
+      },
+      "expectedAnchor": {
+        "kind": "Identifier",
+        "start": 173,
+        "end": 175,
+        "spelling": "op"
+      },
+      "expectedResponse": {
+        "status": "error",
+        "symbols": null,
+        "diagnostics": [
+          {
+            "code": "r02b-d-unsupported",
+            "ruleId": "r01-ts-baseline",
+            "ruleIds": [
+              "r01-ts-baseline"
+            ],
+            "category": "unsupported",
+            "phase": "capability",
+            "severity": "error",
+            "file": "/src/app.ts",
+            "range": {
+              "start": 173,
+              "end": 175
+            },
+            "primary": {
+              "sourceId": "/src/app.ts",
+              "start": 173,
+              "end": 175,
+              "startLine": 4,
+              "startColumn": 50,
+              "endLine": 4,
+              "endColumn": 52
+            }
+          }
+        ]
+      },
+      "expectedCallbackCount": 0,
+      "officialDiagnosticCounts": {
+        "syntax": 0,
+        "semantic": 0,
+        "program": 0,
+        "global": 0
+      },
+      "rule": "Source proof5: original op symbol may occur only as direct Identifier call callee.",
+      "reason": "Existing bool return annotation retained; equality of callable values is official legal and returns bool. No function-return header added."
+    },
+    {
+      "name": "second-alias-chain",
+      "input": {
+        "sourceRoot": "/src",
+        "rootFile": "/src/app.ts",
+        "files": [
+          {
+            "path": "/src/app.ts",
+            "content": "// 🧭 static alias\nlet shared: bool = false;\nfunction leaf(value: bool): bool { return shared || value; }\nconst op = leaf;\nconst second = op;\nexport function entry(value: bool): bool { return op(value); }\nexport function peer(value: bool): bool { return shared || value; }\n",
+            "sha256": "d32bdc8306fa6ce7d4eabbf7f417b452de9879cd8bd21d8af4ceece2a1536e78"
+          },
+          {
+            "path": "/src/minimal-integers-v3.d.ts",
+            "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+            "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+          }
+        ],
+        "declarations": {
+          "version": "minimal-integers-v3",
+          "paths": [
+            "/src/minimal-integers-v3.d.ts"
+          ]
+        },
+        "config": {
+          "strict": true,
+          "noEmit": true,
+          "allowJs": false
+        },
+        "target": {
+          "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+          "pointerBits": "64",
+          "target": "windows-x86_64-msvc",
+          "triple": "x86_64-pc-windows-msvc"
+        },
+        "compilationClosure": {
+          "roots": [
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "entry"
+            },
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "peer"
+            }
+          ],
+          "requiredRoots": []
+        },
+        "hostImports": []
+      },
+      "expectedAnchor": {
+        "kind": "VariableDeclaration",
+        "start": 129,
+        "end": 140,
+        "spelling": "second = op"
+      },
+      "expectedResponse": {
+        "status": "error",
+        "symbols": null,
+        "diagnostics": [
+          {
+            "code": "r02b-d-unsupported",
+            "ruleId": "r01-ts-baseline",
+            "ruleIds": [
+              "r01-ts-baseline"
+            ],
+            "category": "unsupported",
+            "phase": "capability",
+            "severity": "error",
+            "file": "/src/app.ts",
+            "range": {
+              "start": 129,
+              "end": 140
+            },
+            "primary": {
+              "sourceId": "/src/app.ts",
+              "start": 129,
+              "end": 140,
+              "startLine": 4,
+              "startColumn": 6,
+              "endLine": 4,
+              "endColumn": 17
+            }
+          }
+        ]
+      },
+      "expectedCallbackCount": 0,
+      "officialDiagnosticCounts": {
+        "syntax": 0,
+        "semantic": 0,
+        "program": 0,
+        "global": 0
+      },
+      "rule": "Source proof1/2/6: only one callable global; initializer must be original named-function Symbol, not alias chain.",
+      "reason": "The second declaration is simultaneously the extra callable alias and chain binding; both rules select this same first new declaration."
+    },
+    {
+      "name": "transitive-leaf-helper-op-cycle",
+      "input": {
+        "sourceRoot": "/src",
+        "rootFile": "/src/app.ts",
+        "files": [
+          {
+            "path": "/src/app.ts",
+            "content": "// 🧭 static alias\nlet shared: bool = false;\nfunction leaf(value: bool): bool { return helper(value); }\nfunction helper(value: bool): bool { return op(value); }\nconst op = leaf;\nexport function entry(value: bool): bool { return op(value); }\nexport function peer(value: bool): bool { return shared || value; }\n",
+            "sha256": "142d2c29beaec2970776d5f9bfedf868d3c5bbc5cbca357a47de95d6c459e866"
+          },
+          {
+            "path": "/src/minimal-integers-v3.d.ts",
+            "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+            "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+          }
+        ],
+        "declarations": {
+          "version": "minimal-integers-v3",
+          "paths": [
+            "/src/minimal-integers-v3.d.ts"
+          ]
+        },
+        "config": {
+          "strict": true,
+          "noEmit": true,
+          "allowJs": false
+        },
+        "target": {
+          "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+          "pointerBits": "64",
+          "target": "windows-x86_64-msvc",
+          "triple": "x86_64-pc-windows-msvc"
+        },
+        "compilationClosure": {
+          "roots": [
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "entry"
+            },
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "peer"
+            }
+          ],
+          "requiredRoots": []
+        },
+        "hostImports": []
+      },
+      "expectedAnchor": {
+        "kind": "VariableDeclaration",
+        "start": 167,
+        "end": 176,
+        "spelling": "op = leaf"
+      },
+      "expectedResponse": {
+        "status": "error",
+        "symbols": null,
+        "diagnostics": [
+          {
+            "code": "r02b-d-unsupported",
+            "ruleId": "r01-ts-baseline",
+            "ruleIds": [
+              "r01-ts-baseline"
+            ],
+            "category": "unsupported",
+            "phase": "capability",
+            "severity": "error",
+            "file": "/src/app.ts",
+            "range": {
+              "start": 167,
+              "end": 176
+            },
+            "primary": {
+              "sourceId": "/src/app.ts",
+              "start": 167,
+              "end": 176,
+              "startLine": 4,
+              "startColumn": 6,
+              "endLine": 4,
+              "endColumn": 15
+            }
+          }
+        ]
+      },
+      "expectedCallbackCount": 0,
+      "officialDiagnosticCounts": {
+        "syntax": 0,
+        "semantic": 0,
+        "program": 0,
+        "global": 0
+      },
+      "rule": "Source proof6 and Root transitive extension: leaf original-Symbol direct-call closure must not reach original op use.",
+      "reason": "Functions are declared before const but no call occurs during initialization. Actual original-Symbol path is leaf→helper→op→leaf; no fabricated packet or broken call graph."
+    },
+    {
+      "name": "initialization-time-call",
+      "input": {
+        "sourceRoot": "/src",
+        "rootFile": "/src/app.ts",
+        "files": [
+          {
+            "path": "/src/app.ts",
+            "content": "// 🧭 static alias\nlet shared: bool = false;\nfunction leaf(value: bool): bool { return shared || value; }\nlet boot: bool = leaf(false);\nconst op = leaf;\nexport function entry(value: bool): bool { return op(value); }\nexport function peer(value: bool): bool { return shared || value; }\n",
+            "sha256": "47979d5441fb0b51004a39c880442df5a27c1ca70c1fa9e6a1491dfee1008543"
+          },
+          {
+            "path": "/src/minimal-integers-v3.d.ts",
+            "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+            "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+          }
+        ],
+        "declarations": {
+          "version": "minimal-integers-v3",
+          "paths": [
+            "/src/minimal-integers-v3.d.ts"
+          ]
+        },
+        "config": {
+          "strict": true,
+          "noEmit": true,
+          "allowJs": false
+        },
+        "target": {
+          "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+          "pointerBits": "64",
+          "target": "windows-x86_64-msvc",
+          "triple": "x86_64-pc-windows-msvc"
+        },
+        "compilationClosure": {
+          "roots": [
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "entry"
+            },
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "peer"
+            }
+          ],
+          "requiredRoots": []
+        },
+        "hostImports": []
+      },
+      "expectedAnchor": {
+        "kind": "VariableDeclaration",
+        "start": 110,
+        "end": 134,
+        "spelling": "boot: bool = leaf(false)"
+      },
+      "expectedResponse": {
+        "status": "error",
+        "symbols": null,
+        "diagnostics": [
+          {
+            "code": "r02b-d-unsupported",
+            "ruleId": "r01-ts-baseline",
+            "ruleIds": [
+              "r01-ts-baseline"
+            ],
+            "category": "unsupported",
+            "phase": "capability",
+            "severity": "error",
+            "file": "/src/app.ts",
+            "range": {
+              "start": 110,
+              "end": 134
+            },
+            "primary": {
+              "sourceId": "/src/app.ts",
+              "start": 110,
+              "end": 134,
+              "startLine": 3,
+              "startColumn": 4,
+              "endLine": 3,
+              "endColumn": 28
+            }
+          }
+        ]
+      },
+      "expectedCallbackCount": 0,
+      "officialDiagnosticCounts": {
+        "syntax": 0,
+        "semantic": 0,
+        "program": 0,
+        "global": 0
+      },
+      "rule": "Source proof7: alias module top-level scalar initializers must be bool/i32 literal; no initialization-time call.",
+      "reason": "Only new scalar bool initializer invokes existing leaf with legal false argument."
+    },
+    {
+      "name": "exported-callable-alias",
+      "input": {
+        "sourceRoot": "/src",
+        "rootFile": "/src/app.ts",
+        "files": [
+          {
+            "path": "/src/app.ts",
+            "content": "// 🧭 static alias\nlet shared: bool = false;\nfunction leaf(value: bool): bool { return shared || value; }\nexport const op = leaf;\nexport function entry(value: bool): bool { return op(value); }\nexport function peer(value: bool): bool { return shared || value; }\n",
+            "sha256": "3ed0e9daa076d898ce80ffca26acc5470198d585ebf90dedb2e47920ce4bdba1"
+          },
+          {
+            "path": "/src/minimal-integers-v3.d.ts",
+            "content": "interface Object {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface String {}\ninterface Number {}\ninterface Boolean {}\ninterface RegExp {}\ninterface Array<T> {}\ntype bool = boolean;\ndeclare const __tsfg_i32: unique symbol;\ntype i32 = number & { readonly [__tsfg_i32]: true };\ntype f64 = number;\ndeclare const __tsfg_i8: unique symbol;\ntype i8 = number & { readonly [__tsfg_i8]: true };\ndeclare const __tsfg_i16: unique symbol;\ntype i16 = number & { readonly [__tsfg_i16]: true };\ndeclare const __tsfg_i64: unique symbol;\ntype i64 = number & { readonly [__tsfg_i64]: true };\ndeclare const __tsfg_u8: unique symbol;\ntype u8 = number & { readonly [__tsfg_u8]: true };\ndeclare const __tsfg_u16: unique symbol;\ntype u16 = number & { readonly [__tsfg_u16]: true };\ndeclare const __tsfg_u32: unique symbol;\ntype u32 = number & { readonly [__tsfg_u32]: true };\ndeclare const __tsfg_u64: unique symbol;\ntype u64 = number & { readonly [__tsfg_u64]: true };\ndeclare const __tsfg_isize: unique symbol;\ntype isize = number & { readonly [__tsfg_isize]: true };\ndeclare const __tsfg_usize: unique symbol;\ntype usize = number & { readonly [__tsfg_usize]: true };\n",
+            "sha256": "9fc1955899e303b5815590f7150f60662f3cece0a633c94a2a06669cf509a96e"
+          }
+        ],
+        "declarations": {
+          "version": "minimal-integers-v3",
+          "paths": [
+            "/src/minimal-integers-v3.d.ts"
+          ]
+        },
+        "config": {
+          "strict": true,
+          "noEmit": true,
+          "allowJs": false
+        },
+        "target": {
+          "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+          "pointerBits": "64",
+          "target": "windows-x86_64-msvc",
+          "triple": "x86_64-pc-windows-msvc"
+        },
+        "compilationClosure": {
+          "roots": [
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "entry"
+            },
+            {
+              "kind": "kernel",
+              "sourcePath": "/src/app.ts",
+              "name": "peer"
+            }
+          ],
+          "requiredRoots": []
+        },
+        "hostImports": []
+      },
+      "expectedAnchor": {
+        "kind": "VariableDeclaration",
+        "start": 119,
+        "end": 128,
+        "spelling": "op = leaf"
+      },
+      "expectedResponse": {
+        "status": "error",
+        "symbols": null,
+        "diagnostics": [
+          {
+            "code": "r02b-d-unsupported",
+            "ruleId": "r01-ts-baseline",
+            "ruleIds": [
+              "r01-ts-baseline"
+            ],
+            "category": "unsupported",
+            "phase": "capability",
+            "severity": "error",
+            "file": "/src/app.ts",
+            "range": {
+              "start": 119,
+              "end": 128
+            },
+            "primary": {
+              "sourceId": "/src/app.ts",
+              "start": 119,
+              "end": 128,
+              "startLine": 3,
+              "startColumn": 13,
+              "endLine": 3,
+              "endColumn": 22
+            }
+          }
+        ]
+      },
+      "expectedCallbackCount": 0,
+      "officialDiagnosticCounts": {
+        "syntax": 0,
+        "semantic": 0,
+        "program": 0,
+        "global": 0
+      },
+      "rule": "Source proof1/2: alias is unique nonexport module-local const.",
+      "reason": "Only export modifier added to same original alias declaration."
+    }
+  ]
+}

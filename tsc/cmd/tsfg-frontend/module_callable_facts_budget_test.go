@@ -110,7 +110,7 @@ func mcAcceptPublicBudget23d(t *testing.T, input []byte, wantSources, wantFuncti
 	t.Helper()
 	before := bytes.Clone(input)
 	output := &mcPublicWriter23d{}
-	if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v1"}, bytes.NewReader(input), output); err != nil {
+	if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v2"}, bytes.NewReader(input), output); err != nil {
 		t.Fatalf("legal adjacent public boundary must succeed: %v", err)
 	}
 	if output.writes != 1 || !bytes.Equal(input, before) {
@@ -126,16 +126,16 @@ func mcAcceptPublicBudget23d(t *testing.T, input []byte, wantSources, wantFuncti
 	if !bytes.Equal(output.Bytes(), append(mcCanonical23d(t, packet), '\n')) {
 		t.Fatal("legal boundary packet must be complete canonical JSON plus one LF")
 	}
-	if len(packet) != 6 || packet["family"] != "tsfg.module-callable-facts-package-candidate" || packet["version"] != float64(1) || packet["schemaHash"] != mcHash23d(moduleCallableSchema23d) || packet["requestId"] != mcDomain23d(t, "tsfg.module-callable-facts.request.v1", requestObject) {
+	if len(packet) != 6 || packet["family"] != "tsfg.module-callable-facts-package-candidate" || packet["version"] != float64(2) || packet["schemaHash"] != mcHash23d(moduleCallableSchema23d) || packet["requestId"] != mcDomain23d(t, "tsfg.module-callable-facts.request.v2", requestObject) {
 		t.Fatal("legal boundary envelope/request identity differs")
 	}
 	packageID := packet["packageId"]
 	delete(packet, "packageId")
-	if packageID != mcDomain23d(t, "tsfg.module-callable-facts.package.v1", packet) {
+	if packageID != mcDomain23d(t, "tsfg.module-callable-facts.package.v2", packet) {
 		t.Fatal("legal boundary complete package identity differs")
 	}
 	payload, ok := packet["payload"].(map[string]any)
-	if !ok || len(payload) != 5 || payload["inputIdentity"] != mcDomain23d(t, "tsfg.module-callable-facts.input.v1", requestObject["input"]) {
+	if !ok || len(payload) != 5 || payload["inputIdentity"] != mcDomain23d(t, "tsfg.module-callable-facts.input.v2", requestObject["input"]) {
 		t.Fatal("legal boundary complete payload/input identity differs")
 	}
 	manifest, ok := payload["files"].([]any)

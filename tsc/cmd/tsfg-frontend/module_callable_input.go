@@ -64,7 +64,7 @@ func moduleCallableInputs(input moduleCallableInput) (request, string, []moduleC
 	if declarationCount != 1 {
 		return bad("input")
 	}
-	identity, err := moduleCallableDigest("tsfg.module-callable-facts.input.v1", input)
+	identity, err := moduleCallableDigest("tsfg.module-callable-facts.input.v2", input)
 	if err != nil {
 		return request{}, "", nil, err
 	}

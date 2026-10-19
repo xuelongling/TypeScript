@@ -49,7 +49,7 @@ func mcRejectPublic23d(t *testing.T, input []byte) {
 	t.Helper()
 	before := bytes.Clone(input)
 	output := &mcPublicWriter23d{}
-	err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v1"}, bytes.NewReader(input), output)
+	err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v2"}, bytes.NewReader(input), output)
 	if err == nil || output.writes != 0 || output.Len() != 0 {
 		t.Fatalf("invalid complete candidate must fail before publication: err=%v writes=%d bytes=%d", err, output.writes, output.Len())
 	}
@@ -73,10 +73,10 @@ func TestModuleCallableFactsStrictWire(t *testing.T) {
 		"pretty-json":        pretty.Bytes(),
 		"bom":                append([]byte{0xef, 0xbb, 0xbf}, input...),
 		"trailing-value":     append(bytes.Clone(input), []byte("{}")...),
-		"duplicate-top":      bytes.Replace(input, []byte("\"version\":1"), []byte("\"version\":1,\"version\":1"), 1),
+		"duplicate-top":      bytes.Replace(input, []byte("\"version\":2"), []byte("\"version\":2,\"version\":2"), 1),
 		"duplicate-config":   bytes.Replace(input, []byte("\"strict\":true"), []byte("\"strict\":true,\"strict\":true"), 1),
-		"negative-zero":      bytes.Replace(input, []byte("\"version\":1"), []byte("\"version\":-0"), 1),
-		"unsafe-integer":     bytes.Replace(input, []byte("\"version\":1"), []byte("\"version\":9007199254740992"), 1),
+		"negative-zero":      bytes.Replace(input, []byte("\"version\":2"), []byte("\"version\":-0"), 1),
+		"unsafe-integer":     bytes.Replace(input, []byte("\"version\":2"), []byte("\"version\":9007199254740992"), 1),
 		"unpaired-surrogate": bytes.Replace(input, []byte("\"sourceRoot\":\"/src\""), []byte("\"sourceRoot\":\"/src/\\ud800\""), 1),
 		"invalid-utf8":       append([]byte{0xff}, input...),
 	}

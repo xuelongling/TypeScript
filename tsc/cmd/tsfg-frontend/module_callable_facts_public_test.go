@@ -70,7 +70,7 @@ func TestModuleCallableFactsPublicWholeCorpus(t *testing.T) {
 			_, input, expected := mcPublicFixture23d(t, row.Name)
 			before := bytes.Clone(input)
 			output := &mcPublicWriter23d{}
-			if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v1"}, bytes.NewReader(input), output); err != nil {
+			if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v2"}, bytes.NewReader(input), output); err != nil {
 				t.Fatalf("ordinary official-checked module source must publish complete facts: %v", err)
 			}
 			if !bytes.Equal(input, before) {
@@ -105,7 +105,7 @@ func TestModuleCallableFactsCancellationAndSingleWrite(t *testing.T) {
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 		output := &mcPublicWriter23d{}
-		err := runFrontendCommand(ctx, []string{"--module-callable-facts-io-v1"}, bytes.NewReader(input), output)
+		err := runFrontendCommand(ctx, []string{"--module-callable-facts-io-v2"}, bytes.NewReader(input), output)
 		if !errors.Is(err, context.Canceled) || output.writes != 0 {
 			t.Fatalf("cancelled request must produce no package: err=%v writes=%d", err, output.writes)
 		}
@@ -115,7 +115,7 @@ func TestModuleCallableFactsCancellationAndSingleWrite(t *testing.T) {
 		defer cancel()
 		reader := &mcCancelReader23d{reader: bytes.NewReader(input), cancel: cancel}
 		output := &mcPublicWriter23d{}
-		err := runFrontendCommand(ctx, []string{"--module-callable-facts-io-v1"}, reader, output)
+		err := runFrontendCommand(ctx, []string{"--module-callable-facts-io-v2"}, reader, output)
 		if !errors.Is(err, context.Canceled) || output.writes != 0 {
 			t.Fatalf("input-time cancellation must publish no partial package: err=%v writes=%d", err, output.writes)
 		}
@@ -123,14 +123,14 @@ func TestModuleCallableFactsCancellationAndSingleWrite(t *testing.T) {
 	t.Run("terminal-writer-failure", func(t *testing.T) {
 		sentinel := errors.New("independent terminal writer failure")
 		output := &mcPublicWriter23d{failure: sentinel}
-		err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v1"}, bytes.NewReader(input), output)
+		err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v2"}, bytes.NewReader(input), output)
 		if !errors.Is(err, sentinel) || output.writes != 1 || output.Len() != 0 {
 			t.Fatalf("terminal write failure must be returned once: err=%v writes=%d", err, output.writes)
 		}
 	})
 	t.Run("one-complete-write", func(t *testing.T) {
 		output := &mcPublicWriter23d{}
-		if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v1"}, bytes.NewReader(input), output); err != nil {
+		if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v2"}, bytes.NewReader(input), output); err != nil {
 			t.Fatal(err)
 		}
 		if output.writes != 1 || !bytes.Equal(output.Bytes(), expected) {
@@ -151,7 +151,7 @@ func (r *mcCancelReader23d) Read(data []byte) (int, error) {
 }
 
 func TestModuleCallableFactsSelectorBeforeIO(t *testing.T) {
-	for index, args := range [][]string{{"--module-callable-facts-io-v1", "extra"}, {"--module-callable-facts-io-v2"}, {"--module-callable-facts-io-v1=true"}, {" --module-callable-facts-io-v1"}} {
+	for index, args := range [][]string{{"--module-callable-facts-io-v2", "extra"}, {"--module-callable-facts-io-v1"}, {"--module-callable-facts-io-v2=true"}, {" --module-callable-facts-io-v2"}} {
 		t.Run(fmt.Sprint(index), func(t *testing.T) {
 			streams := &mcUntouchedIO23d{}
 			if err := runFrontendCommand(t.Context(), args, streams, streams); err == nil || streams.reads != 0 || streams.writes != 0 {

@@ -15,13 +15,22 @@ import (
 	"strings"
 )
 
-func projectModules(r request, program *compiler.Program, check *checker.Checker, result response, conversions *conversionFacts, finish ownedProjectionHook) response {
+func projectModules(r request, program *compiler.Program, check *checker.Checker, result response, conversions *conversionFacts, callableAliases map[*ast.Symbol]moduleCallableAliasProof, finish ownedProjectionHook) response {
 	result.Modules = []moduleFact{}
 	functions := map[*ast.Symbol]functionInfo{}
 	if conversions != nil {
 		maps.Copy(functions, conversions.Functions)
 	}
 	globals := moduleGlobals(program, check)
+	if r.moduleCallable {
+		// Keep the original variable symbol separate from its initializer target.
+		for original, proof := range callableAliases {
+			binding := globals[original]
+			binding.Type = "function"
+			binding.Signature = proof.ownedSignature
+			globals[original] = binding
+		}
+	}
 	files := []*ast.SourceFile{}
 	for _, file := range program.GetSourceFiles() {
 		if !strings.HasSuffix(file.FileName(), ".d.ts") {

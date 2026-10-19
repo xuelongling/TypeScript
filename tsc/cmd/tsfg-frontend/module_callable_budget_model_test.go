@@ -56,7 +56,7 @@ func mcModelRun23d(t *testing.T, r mcObject23d, want string) []byte {
 		t.Fatal("model probe unexpectedly exceeded request bytes")
 	}
 	output := &mcPublicWriter23d{}
-	err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v1"}, bytes.NewReader(input), output)
+	err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v2"}, bytes.NewReader(input), output)
 	if !bytes.Equal(input, before) {
 		t.Fatal("model public request mutated")
 	}
@@ -73,12 +73,12 @@ func mcModelRun23d(t *testing.T, r mcObject23d, want string) []byte {
 	if err := json.Unmarshal(output.Bytes(), &packet); err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Equal(output.Bytes(), append(mcCanonical23d(t, packet), '\n')) || packet["requestId"] != mcDomain23d(t, "tsfg.module-callable-facts.request.v1", r) {
+	if !bytes.Equal(output.Bytes(), append(mcCanonical23d(t, packet), '\n')) || packet["requestId"] != mcDomain23d(t, "tsfg.module-callable-facts.request.v2", r) {
 		t.Fatal("model full canonical publication/request differs")
 	}
 	id := packet["packageId"]
 	delete(packet, "packageId")
-	if id != mcDomain23d(t, "tsfg.module-callable-facts.package.v1", packet) {
+	if id != mcDomain23d(t, "tsfg.module-callable-facts.package.v2", packet) {
 		t.Fatal("model full package digest differs")
 	}
 	return bytes.Clone(output.Bytes())

@@ -47,7 +47,7 @@ func mcPublicDirectedWhole23d(t *testing.T, fixtureBytes []byte, name string) {
 		t.Fatal(err)
 	}
 	output := &mcPublicWriter23d{}
-	if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v1"}, bytes.NewReader(input), output); err != nil {
+	if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v2"}, bytes.NewReader(input), output); err != nil {
 		t.Fatalf("ordinary independent directed source must publish complete facts: %v", err)
 	}
 	if !bytes.Equal(input, before) {
@@ -71,7 +71,7 @@ func TestModuleCallableFactsDefaultIntegerGlobal(t *testing.T) {
 	t.Log("TSFG_MODULE_CALLABLE_23D_DEFAULT_INTEGER_OFFICIAL_PASS diagnostics=0 originalNumericLiteral=1 annotation=false officialNumberLike=true")
 	before := bytes.Clone(input)
 	output := &mcPublicWriter23d{}
-	if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v1"}, bytes.NewReader(input), output); err != nil {
+	if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v2"}, bytes.NewReader(input), output); err != nil {
 		t.Fatalf("ordinary R01 default integer global must publish facts as i32: %v", err)
 	}
 	if output.writes != 1 || !bytes.Equal(input, before) {
@@ -82,16 +82,16 @@ func TestModuleCallableFactsDefaultIntegerGlobal(t *testing.T) {
 	if err := json.Unmarshal(output.Bytes(), &packet); err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Equal(output.Bytes(), append(mcCanonical23d(t, packet), '\n')) || len(packet) != 6 || packet["family"] != "tsfg.module-callable-facts-package-candidate" || packet["version"] != float64(1) || packet["schemaHash"] != mcHash23d(moduleCallableSchema23d) || packet["requestId"] != mcDomain23d(t, "tsfg.module-callable-facts.request.v1", requestObject) {
+	if !bytes.Equal(output.Bytes(), append(mcCanonical23d(t, packet), '\n')) || len(packet) != 6 || packet["family"] != "tsfg.module-callable-facts-package-candidate" || packet["version"] != float64(2) || packet["schemaHash"] != mcHash23d(moduleCallableSchema23d) || packet["requestId"] != mcDomain23d(t, "tsfg.module-callable-facts.request.v2", requestObject) {
 		t.Fatal("default integer complete canonical envelope/request identity differs")
 	}
 	packageID := packet["packageId"]
 	delete(packet, "packageId")
-	if packageID != mcDomain23d(t, "tsfg.module-callable-facts.package.v1", packet) {
+	if packageID != mcDomain23d(t, "tsfg.module-callable-facts.package.v2", packet) {
 		t.Fatal("default integer complete package digest differs")
 	}
 	payload, ok := packet["payload"].(map[string]any)
-	if !ok || len(payload) != 5 || payload["inputIdentity"] != mcDomain23d(t, "tsfg.module-callable-facts.input.v1", requestObject["input"]) {
+	if !ok || len(payload) != 5 || payload["inputIdentity"] != mcDomain23d(t, "tsfg.module-callable-facts.input.v2", requestObject["input"]) {
 		t.Fatal("default integer input/payload identity differs")
 	}
 	manifest, ok := payload["files"].([]any)

@@ -53,7 +53,7 @@ func mcBudgetCapture23d(t *testing.T, tc mcBudgetCase23d) {
 	}
 	output := &mcPublicWriter23d{}
 	before := bytes.Clone(input)
-	if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v1"}, bytes.NewReader(input), output); err != nil {
+	if err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v2"}, bytes.NewReader(input), output); err != nil {
 		t.Fatalf("independently legal budget Source must publish complete packet, not an earlier guard: %v official=%+v", err, official)
 	}
 	if output.writes != 1 || !bytes.Equal(input, before) {
@@ -63,17 +63,17 @@ func mcBudgetCapture23d(t *testing.T, tc mcBudgetCase23d) {
 	if err := json.Unmarshal(output.Bytes(), &packet); err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Equal(output.Bytes(), append(mcCanonical23d(t, packet), '\n')) || packet["requestId"] != mcDomain23d(t, "tsfg.module-callable-facts.request.v1", r) || packet["schemaHash"] != mcHash23d(moduleCallableSchema23d) {
+	if !bytes.Equal(output.Bytes(), append(mcCanonical23d(t, packet), '\n')) || packet["requestId"] != mcDomain23d(t, "tsfg.module-callable-facts.request.v2", r) || packet["schemaHash"] != mcHash23d(moduleCallableSchema23d) {
 		t.Fatal("budget complete packet/request identity differs")
 	}
 	packageID := packet["packageId"]
 	delete(packet, "packageId")
-	if packageID != mcDomain23d(t, "tsfg.module-callable-facts.package.v1", packet) {
+	if packageID != mcDomain23d(t, "tsfg.module-callable-facts.package.v2", packet) {
 		t.Fatal("budget packet complete digest differs")
 	}
 	packet["packageId"] = packageID
 	payload := packet["payload"].(map[string]any)
-	if payload["inputIdentity"] != mcDomain23d(t, "tsfg.module-callable-facts.input.v1", r["input"]) {
+	if payload["inputIdentity"] != mcDomain23d(t, "tsfg.module-callable-facts.input.v2", r["input"]) {
 		t.Fatal("budget input identity differs")
 	}
 	facts := payload["facts"].(map[string]any)

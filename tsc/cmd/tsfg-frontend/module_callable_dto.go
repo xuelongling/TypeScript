@@ -14,7 +14,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/json"
 )
 
-const moduleCallableFactsSchema = "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990"
+const moduleCallableFactsSchema = "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e"
 const moduleCallableMaxBytes = 8388608
 
 //go:embed testdata/module-callable-facts-v1/schema.json
@@ -180,7 +180,7 @@ func decodeModuleCallableRequest(data []byte) (moduleCallableRequest, error) {
 	if !bytes.Equal(raw, encoded) {
 		return r, moduleCallableError("canonical")
 	}
-	if r.Family != "tsfg.module-callable-facts-request-candidate" || r.Version != 1 {
+	if r.Family != "tsfg.module-callable-facts-request-candidate" || r.Version != 2 {
 		return r, moduleCallableError("input")
 	}
 	if r.SchemaHash != moduleCallableFactsSchema || moduleCallableHash(moduleCallableSchemaBytes) != moduleCallableFactsSchema {

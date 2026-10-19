@@ -3,15 +3,15 @@
     "family": "tsfg.module-callable-independent-scenarios",
     "version": 1
   },
-  "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+  "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
   "cases": [
     {
       "name": "first-rr",
       "group": "reexport-param-return",
       "request": {
         "family": "tsfg.module-callable-facts-request-candidate",
-        "version": 1,
-        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "version": 2,
+        "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
         "input": {
           "sourceRoot": "/src",
           "rootFile": "/src/app.ts",
@@ -280,8 +280,8 @@
       "group": "finite-accesses",
       "request": {
         "family": "tsfg.module-callable-facts-request-candidate",
-        "version": 1,
-        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "version": 2,
+        "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
         "input": {
           "sourceRoot": "/src",
           "rootFile": "/src/app.ts",
@@ -693,8 +693,8 @@
       "group": "fixed-stability",
       "request": {
         "family": "tsfg.module-callable-facts-request-candidate",
-        "version": 1,
-        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "version": 2,
+        "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
         "input": {
           "sourceRoot": "/src",
           "rootFile": "/src/app.ts",
@@ -1158,8 +1158,8 @@
       "group": "fixed-stability",
       "request": {
         "family": "tsfg.module-callable-facts-request-candidate",
-        "version": 1,
-        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "version": 2,
+        "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
         "input": {
           "sourceRoot": "/src",
           "rootFile": "/src/app.ts",
@@ -1601,8 +1601,8 @@
       "group": "fixed-stability",
       "request": {
         "family": "tsfg.module-callable-facts-request-candidate",
-        "version": 1,
-        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "version": 2,
+        "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
         "input": {
           "sourceRoot": "/src",
           "rootFile": "/src/app.ts",
@@ -2044,8 +2044,8 @@
       "group": "recursive-targets",
       "request": {
         "family": "tsfg.module-callable-facts-request-candidate",
-        "version": 1,
-        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "version": 2,
+        "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
         "input": {
           "sourceRoot": "/src",
           "rootFile": "/src/app.ts",
@@ -2392,8 +2392,8 @@
       "group": "unknown-callback",
       "request": {
         "family": "tsfg.module-callable-facts-request-candidate",
-        "version": 1,
-        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "version": 2,
+        "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
         "input": {
           "sourceRoot": "/src",
           "rootFile": "/src/app.ts",
@@ -2772,8 +2772,8 @@
       "group": "candidate-capability",
       "request": {
         "family": "tsfg.module-callable-facts-request-candidate",
-        "version": 1,
-        "schemaHash": "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990",
+        "version": 2,
+        "schemaHash": "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e",
         "input": {
           "sourceRoot": "/src",
           "rootFile": "/src/app.ts",

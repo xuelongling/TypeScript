@@ -223,7 +223,7 @@ func TestModuleCallable23dIndependentCorpusOracle(t *testing.T) {
 	if len(corpus.Cases) != 8 {
 		t.Fatal("complete frozen six-group/eight-input corpus required")
 	}
-	if mcHash23d(moduleCallableSchema23d) != "sha256:881f96d715d41882739253749f25949d5d9aef5b4c4cd5329e352b3d6ffc1990" {
+	if mcHash23d(moduleCallableSchema23d) != "sha256:8d66ba7464ea05c317fc413cf61dbc906c34c1ef38f4c7fcc916038e7dbe388e" {
 		t.Fatal("frozen candidate descriptor differs")
 	}
 	for _, tc := range corpus.Cases {
@@ -309,9 +309,9 @@ func mcGenerateIndependent23d(t *testing.T, tc mcCase23d) {
 		content := contents[path]
 		manifest = append(manifest, mcObject23d{"path": path, "digest": mcHash23d([]byte(content)), "byteLength": len([]byte(content)), "length": len(utf16.Encode([]rune(content))), "positionUnit": "utf16"})
 	}
-	payload := mcObject23d{"inputIdentity": mcDomain23d(t, "tsfg.module-callable-facts.input.v1", requestObject["input"]), "files": manifest, "facts": facts, "annotations": o.annotations, "exports": exports}
-	packet := mcObject23d{"family": "tsfg.module-callable-facts-package-candidate", "version": 1, "schemaHash": mcHash23d(moduleCallableSchema23d), "requestId": mcDomain23d(t, "tsfg.module-callable-facts.request.v1", requestObject), "payload": payload}
-	packet["packageId"] = mcDomain23d(t, "tsfg.module-callable-facts.package.v1", packet)
+	payload := mcObject23d{"inputIdentity": mcDomain23d(t, "tsfg.module-callable-facts.input.v2", requestObject["input"]), "files": manifest, "facts": facts, "annotations": o.annotations, "exports": exports}
+	packet := mcObject23d{"family": "tsfg.module-callable-facts-package-candidate", "version": 2, "schemaHash": mcHash23d(moduleCallableSchema23d), "requestId": mcDomain23d(t, "tsfg.module-callable-facts.request.v2", requestObject), "payload": payload}
+	packet["packageId"] = mcDomain23d(t, "tsfg.module-callable-facts.package.v2", packet)
 	bytes := append(mcCanonical23d(t, packet), '\n')
 	t.Logf("TSFG_MODULE_CALLABLE_23D_INDEPENDENT_PACKET name=%s bytes=%d digest=%s base64=%s", tc.Name, len(bytes), mcHash23d(bytes), base64.StdEncoding.EncodeToString(bytes))
 	t.Logf("TSFG_MODULE_CALLABLE_23D_INDEPENDENT_OFFICIAL_PASS name=%s diagnostics=0 functions=%d symbols=%d modules=%d", tc.Name, len(functions), len(o.symbols), len(modules))

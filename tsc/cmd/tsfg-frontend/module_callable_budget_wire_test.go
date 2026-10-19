@@ -15,7 +15,7 @@ func mcWireBoundaryReject23d(t *testing.T, input []byte, kind string) {
 	t.Helper()
 	before := bytes.Clone(input)
 	output := &mcPublicWriter23d{}
-	err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v1"}, bytes.NewReader(input), output)
+	err := runFrontendCommand(t.Context(), []string{"--module-callable-facts-io-v2"}, bytes.NewReader(input), output)
 	message := map[string]string{"input": "invalid module callable candidate", "limit": "module callable candidate budget exceeded"}[kind]
 	if err == nil || err.Error() != "r03-module-callable-"+kind+": "+message || output.writes != 0 || output.Len() != 0 {
 		t.Fatalf("public wire boundary expected %s and no output: err=%v writes=%d bytes=%d", kind, err, output.writes, output.Len())

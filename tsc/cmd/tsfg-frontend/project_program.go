@@ -266,8 +266,11 @@ func analyzeWithProjection(ctx context.Context, r request, finish ownedProjectio
 		return result
 	}
 	if r.CompilationClosure != nil {
+		var callableAliases map[*ast.Symbol]moduleCallableAliasProof
 		if r.moduleCallable {
-			if failure := moduleCallableProfile(program, check); failure.Status != "" {
+			var failure response
+			callableAliases, failure = moduleCallableProfile(program, check)
+			if failure.Status != "" {
 				return failure
 			}
 			for _, source := range program.GetSourceFiles() {
@@ -279,7 +282,7 @@ func analyzeWithProjection(ctx context.Context, r request, finish ownedProjectio
 				}
 			}
 		}
-		return projectModules(r, program, check, result, conversions, finish)
+		return projectModules(r, program, check, result, conversions, callableAliases, finish)
 	}
 	nodes, closures := closureDeclarations(file)
 	functions := map[*ast.Symbol]functionInfo{}
