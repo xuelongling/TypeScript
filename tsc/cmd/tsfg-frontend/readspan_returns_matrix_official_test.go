@@ -27,10 +27,10 @@ type rs26cFrozenFixturePin struct {
 }
 
 var rs26cFrozenFixturePins = []rs26cFrozenFixturePin{
-	{"events100101-expected-facts.json", "976bf2b227ee2a948ae502ed1f1d71ed5e456d913f70ea0d03435716a6795958", 175189, []string{"events100", "events101"}},
-	{"family-uses5051-expected-facts.json", "0aabb9007f8b1d925a2b56d1edd72a2573c340acfb765c9b1a60348b4a50e562", 164882, []string{"familyUses50", "familyUses51"}},
-	{"adjacent-part1-expected-facts.json", "47c34990d6998ce6fa4d0789f99882197ab384d647730ab30accc21d428ec291", 123338, []string{"const-alias-return", "tail-forward-return", "bound-forward-return", "discarded-return-call", "mixed-original-slots", "local-fresh-return-escape", "array-parameter-return-capability"}},
-	{"adjacent-part2-expected-facts.json", "6c798a858f4e23e38ecdcb297997cb4b231981fc2a05e27191a747dab7f823f9", 85078, []string{"same-owner-distinct-family-before", "same-owner-distinct-family-after", "initializer-array-density-forgets-old-exact"}},
+	{"events100101-expected-facts.json", "500073d2184dfd8536a3b64353c24be20c362d9b29b7a898ad43ad2dd3e868ef", 175189, []string{"events100", "events101"}},
+	{"family-uses5051-expected-facts.json", "40a0e94e33d31574cce0545f65f095a45f8c7ed370746a6afd2fe720123b0b24", 164882, []string{"familyUses50", "familyUses51"}},
+	{"adjacent-part1-expected-facts.json", "8a9c21683ee4787069fd28f0585070839dd11184e0c668d6c979491e330e66f3", 123338, []string{"const-alias-return", "tail-forward-return", "bound-forward-return", "discarded-return-call", "mixed-original-slots", "local-fresh-return-escape", "array-parameter-return-capability"}},
+	{"adjacent-part2-expected-facts.json", "1c674a51506251cb137e8611170a99144c8e140a714121ec66e2e06286488a17", 85078, []string{"same-owner-distinct-family-before", "same-owner-distinct-family-after", "initializer-array-density-forgets-old-exact"}},
 }
 
 func rs26cReadFrozenFixture(t *testing.T, pin rs26cFrozenFixturePin) rs26cFrozenFixture {
@@ -49,7 +49,7 @@ func rs26cReadFrozenFixture(t *testing.T, pin rs26cFrozenFixturePin) rs26cFrozen
 	if err := json.Unmarshal(raw, &fixture); err != nil {
 		t.Fatal(err)
 	}
-	ao23Want(t, fixture.FactsSchemaHash == "sha256:3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617" && len(fixture.Cases) == len(pin.cases), "complete frozen private7 case family")
+	ao23Want(t, fixture.FactsSchemaHash == "sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2" && len(fixture.Cases) == len(pin.cases), "complete frozen private7 case family")
 	for i, c := range fixture.Cases {
 		ao23Want(t, c.Name == pin.cases[i] && len(c.Source) == c.SourceBytes && ao23Hash([]byte(c.Source)) == c.SourceSHA256, "exact independent original source order/text")
 		ao23Want(t, len(c.RequestText) > 0 && len(c.ExpectedText) == c.ExpectedBytes && ao23Hash([]byte(c.ExpectedText)) == c.ExpectedSHA256, "complete fixed request and literal packet")
@@ -103,7 +103,7 @@ func rs26cOfficialFixtureWitness(t *testing.T, item rs26cFrozenFixtureCase) ao23
 	requestText := append(ao23JCS(t, request), '\n')
 	ao23Want(t, bytes.Equal(requestText, []byte(item.RequestText)), "official-only complete request equals independent literal")
 	payload := ao23Map{"sourceRoot": in.SourceRoot, "rootFile": item.SourcePath, "positionUnit": "utf16", "config": config, "declarations": declarations, "files": owned, "types": types, "arrayLength": arrayLength, "readSpanLength": viewLength, "readSpanIntrinsic": intrinsic, "functions": functions, "exports": exports, "diagnostics": []any{}}
-	schema := "sha256:3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617"
+	schema := "sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2"
 	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v7\x00"), requestText...))
 	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v7\x00"+schema+"\x00"), ao23JCS(t, payload)...))
 	packet := ao23Map{"family": "tsfg.array-facts-package-candidate", "version": 7, "schemaHash": schema, "requestId": requestID, "packageId": packageID, "payload": payload}

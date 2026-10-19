@@ -14,8 +14,8 @@ import (
 	tsjson "github.com/microsoft/typescript-go/internal/json"
 )
 
-const arrayFirstOracleSHA25 = "42098ede9d787de34ce4702313a001db799f93f110a9c6b891866e7deb316e45"
-const arrayFirstSchemaSHA25 = "3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617"
+const arrayFirstOracleSHA25 = "024d54652160f6be6cc8e6c81664b55c3eca8063be09216dfc13b40b25114b21"
+const arrayFirstSchemaSHA25 = "d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2"
 const arrayFirstDtsSHA25 = "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415"
 
 type arrayFirstRange25 struct {

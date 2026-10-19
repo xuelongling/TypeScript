@@ -28,7 +28,7 @@ func scc23fReadWhole(t *testing.T) scc23fWholeFixture {
 	t.Helper()
 	const file = "testdata/array-owner-scc-v7/independent-whole-facts.json"
 	raw, err := os.ReadFile(file)
-	ao23Want(t, err == nil && len(raw) == 2081344 && ao23Hash(raw) == "1612a4836a783bea5e4fa3ac5fd6a6ddedde51597a779be9133f8776f800296d", "complete independent SCC whole fixture")
+	ao23Want(t, err == nil && len(raw) == 2081344 && ao23Hash(raw) == "97ed4e309b3fa44626581e231bf506788b922d4c7e745c1db72d53cfdcdf4e6c", "complete independent SCC whole fixture")
 	before := bytes.Clone(raw)
 	t.Cleanup(func() {
 		after, err := os.ReadFile(file)
@@ -40,7 +40,7 @@ func scc23fReadWhole(t *testing.T) scc23fWholeFixture {
 	if err := json.Unmarshal(raw, &fixture); err != nil {
 		t.Fatal(err)
 	}
-	ao23Want(t, fixture.FactsSchemaHash == "sha256:3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617" && len(fixture.Cases) == 9, "complete private7 independent family")
+	ao23Want(t, fixture.FactsSchemaHash == "sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2" && len(fixture.Cases) == 9, "complete private7 independent family")
 	names := []string{"spin-wide-S", "spin-narrow-S", "spin-body-shrink", "owner16384", "owner16385", "raw480-ring16", "raw481-ring16", "dependencies16-each", "rotation-three-pop"}
 	for i, item := range fixture.Cases {
 		ao23Want(t, item.Name == names[i] && len(item.Source) == item.SourceBytes && ao23Hash([]byte(item.Source)) == item.SourceSHA256, "exact independent source order and original bytes")
@@ -154,7 +154,7 @@ func scc23fOfficialWholeWitness(t *testing.T, item scc23fWholeCase) ao23Map {
 	requestText := append(ao23JCS(t, request), '\n')
 	ao23Want(t, bytes.Equal(requestText, []byte(item.RequestText)), "entire official-only request matches literal")
 	payload := ao23Map{"sourceRoot": in.SourceRoot, "rootFile": item.SourcePath, "positionUnit": "utf16", "config": config, "declarations": declarations, "files": owned, "types": types, "arrayLength": arrayLength, "readSpanLength": viewLength, "readSpanIntrinsic": intrinsic, "functions": functions, "exports": exports, "diagnostics": []any{}}
-	schema := "sha256:3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617"
+	schema := "sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2"
 	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v7\x00"), requestText...))
 	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v7\x00"+schema+"\x00"), ao23JCS(t, payload)...))
 	packet := ao23Map{"family": "tsfg.array-facts-package-candidate", "version": 7, "schemaHash": schema, "requestId": requestID, "packageId": packageID, "payload": payload}

@@ -15,7 +15,7 @@ import (
 )
 
 const arrayFactsMaxBytes = 2097152
-const arrayFactsSchema = "sha256:3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617"
+const arrayFactsSchema = "sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2"
 const arrayFactsDtsSHA = "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415"
 
 //go:embed testdata/array-facts-v7/schema.json

@@ -103,7 +103,7 @@ func (w *arrayOwnerDepth16Writer23e) Write(data []byte) (int, error) {
 
 func TestArrayParameterOwner23ePublicDepth16Whole(t *testing.T) {
 	frozen, err := os.ReadFile("testdata/array-facts-v7/depth16-expected.json")
-	if err != nil || len(frozen) != 18327 || arrayFirstHash25(frozen) != "b8a6f6380bec7906cfb3b813556f2b67dfc90c9636715f7abf768e302e9c430d" {
+	if err != nil || len(frozen) != 18327 || arrayFirstHash25(frozen) != "36f284965cebf621b9ba3b9019f9e02a31806f061325296d59968b8bc5c976fc" {
 		t.Fatalf("independently frozen v7 depth16 bytes: %v", err)
 	}
 	var item arrayOwnerDepth16Bundle23e

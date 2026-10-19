@@ -33,7 +33,7 @@ func TestReadSpan26bV7AdjacentPublicWholeFrozen(t *testing.T) {
 		return raw
 	}
 	inputRaw := read("adjacent-inputs.json", 62723, "c6b239b78aceb1aa770336bbbe98ab0ad93fca2ac478582ad12b31f0e650e757")
-	expectedRaw := read("adjacent-expected-facts.json", 154720, "a46885f7d475fb8bc8180d1ff6155332416494ac62eab0cffab406223704c7d6")
+	expectedRaw := read("adjacent-expected-facts.json", 154720, "b0b00b6ae0a2adcdeae9ffba08df1451ae3e136d7e7d1a5c3f26093fea831702")
 	var input struct {
 		Cases []struct {
 			ID             string `json:"id"`

@@ -16,7 +16,7 @@ func TestReadSpan26bV7FormalArgumentBudgetPublic(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(raw) != 500807 || readSpanParameterPublicHash26b(raw) != "05c79a1e935215266ac14fc5f7a68584b94fce63473adc543fc762a4d1563bff" {
+	if len(raw) != 500807 || readSpanParameterPublicHash26b(raw) != "d1588529b073eb15d8fe8efd9711e65eb9eda6553bb1bcbc15b8ae8a272bf110" {
 		t.Fatal("independent formal/argument budget fixture changed")
 	}
 	frozen := bytes.Clone(raw)

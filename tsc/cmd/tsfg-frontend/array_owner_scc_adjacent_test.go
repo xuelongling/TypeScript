@@ -17,7 +17,7 @@ func scc23fReadAdjacentWhole(t *testing.T) scc23fWholeFixture {
 	t.Helper()
 	const file = "testdata/array-owner-scc-v7/adjacent-whole-facts.json"
 	raw, err := os.ReadFile(file)
-	ao23Want(t, err == nil && len(raw) == 67793 && ao23Hash(raw) == "71d5772e4644dd303499e5cee81c17ef97d0b5b27f8e372a8474b51de41f00be", "complete independent adjacent SCC fixture")
+	ao23Want(t, err == nil && len(raw) == 67793 && ao23Hash(raw) == "bb984cb8e5c6b7c3ac085c2b299be431bb2dedb8bd2fd55c22d96560693aef81", "complete independent adjacent SCC fixture")
 	before := bytes.Clone(raw)
 	t.Cleanup(func() {
 		after, err := os.ReadFile(file)
@@ -30,7 +30,7 @@ func scc23fReadAdjacentWhole(t *testing.T) scc23fWholeFixture {
 		t.Fatal(err)
 	}
 	names := []string{"missing-fixed-scalar-self", "missing-fixed-array-self", "mutual-fullslots-duplicate-incoming-fresh", "outgoing-transitive-fresh-capability", "outgoing-transitive-local-view-capability", "direct-fresh-capability", "direct-local-view-capability"}
-	ao23Want(t, fixture.FactsSchemaHash == "sha256:3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617" && len(fixture.Cases) == len(names), "entire seven-source adjacent family")
+	ao23Want(t, fixture.FactsSchemaHash == "sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2" && len(fixture.Cases) == len(names), "entire seven-source adjacent family")
 	for i, item := range fixture.Cases {
 		ao23Want(t, item.Name == names[i] && item.SourceShouldPublish && len(item.Source) == item.SourceBytes && ao23Hash([]byte(item.Source)) == item.SourceSHA256, "exact original adjacent sources")
 		ao23Want(t, len(item.ExpectedText) == item.ExpectedBytes && ao23Hash([]byte(item.ExpectedText)) == item.ExpectedSHA256, "whole independently authored adjacent packet")
@@ -143,7 +143,7 @@ func scc23fAdjacentWholeWitness(t *testing.T, item scc23fWholeCase) ao23Map {
 	requestText := append(ao23JCS(t, request), '\n')
 	ao23Want(t, bytes.Equal(requestText, []byte(item.RequestText)), "entire official-only request matches literal")
 	payload := ao23Map{"sourceRoot": in.SourceRoot, "rootFile": item.SourcePath, "positionUnit": "utf16", "config": config, "declarations": declarations, "files": owned, "types": types, "arrayLength": arrayLength, "readSpanLength": viewLength, "readSpanIntrinsic": intrinsic, "functions": functions, "exports": exports, "diagnostics": []any{}}
-	schema := "sha256:3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617"
+	schema := "sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2"
 	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v7\x00"), requestText...))
 	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v7\x00"+schema+"\x00"), ao23JCS(t, payload)...))
 	packet := ao23Map{"family": "tsfg.array-facts-package-candidate", "version": 7, "schemaHash": schema, "requestId": requestID, "packageId": packageID, "payload": payload}

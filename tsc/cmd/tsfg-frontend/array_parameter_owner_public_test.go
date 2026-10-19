@@ -21,7 +21,7 @@ type arrayOwnerFrozenCase23e struct {
 func arrayOwnerFrozenBundles23e(t *testing.T) []arrayOwnerFrozenCase23e {
 	t.Helper()
 	data, err := os.ReadFile("testdata/array-facts-v7/owner10-official-packages.json")
-	if err != nil || len(data) != 1067092 || arrayFirstHash25(data) != "84c04dac411d0837ca55dfac09abcb9188f7426365d8c78c4cb7ee68182d614e" {
+	if err != nil || len(data) != 1067092 || arrayFirstHash25(data) != "fa5809a9f0f88c6d327b360278b9a73c649a01cec03d5c59a9f91b17c1e98f74" {
 		t.Fatalf("independent whole Source bundle bytes: %v", err)
 	}
 	var bundle struct{ Cases []arrayOwnerFrozenCase23e }

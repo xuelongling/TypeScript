@@ -9,7 +9,7 @@ import (
 
 var rs26cReturnGlobalWorkPin = rs26cFrozenFixturePin{
 	"global1024-1025-expected-facts.json",
-	"6d3e2f51446e40f08ceff81676f8995d0a2fc741806305261e90ff316563908d",
+	"5b37a5009347bd364f0451cbc7af2371af09cbe1eaa594c56d04f52e47b19a94",
 	1989039,
 	[]string{"return-global-1024", "return-global-1025"},
 }

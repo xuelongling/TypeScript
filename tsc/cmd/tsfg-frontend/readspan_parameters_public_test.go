@@ -44,7 +44,7 @@ func TestReadSpan26bV7PublicWholeFrozenPair(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(raw) != 43793 || readSpanParameterPublicHash26b(raw) != "189db5e75e093a7ebf5ea3060349c82b2b52807343ec07419f3b44217d53bee1" {
+	if len(raw) != 43793 || readSpanParameterPublicHash26b(raw) != "5f1b551dc036dc4e92b44d1366df763c1d165d3d956e7ee9fae3ce0f1f9888a6" {
 		t.Fatal("complete independent pre-production facts7 fixture changed")
 	}
 	fixtureBefore := bytes.Clone(raw)
@@ -68,8 +68,8 @@ func TestReadSpan26bV7PublicWholeFrozenPair(t *testing.T) {
 		t.Fatal("frozen before/after cases must be complete")
 	}
 	for i, pin := range []struct{ name, requestHash, packageHash string }{
-		{"before", "c0c1aa58883505e16970af999a8526fa64902ff81714cdefe37087a128e242f0", "b71a26490f8acad19df16387fe26a67fad6d93f2ac7e1ab5482f6a4cbc0c8b30"},
-		{"after", "4d3fb574608ea85c6e2ed344553d7a384c9a4d6977f5a9e9d875e5467b72d53c", "889bba7f9815c5f0f48755b2a6e8f95091301e75451545fc1c1789cbe68afbb2"},
+		{"before", "c0c1aa58883505e16970af999a8526fa64902ff81714cdefe37087a128e242f0", "0d725fba5b268bc2006fa94cfcc7fe0838983eec45d3ed29abe8079fd973866a"},
+		{"after", "4d3fb574608ea85c6e2ed344553d7a384c9a4d6977f5a9e9d875e5467b72d53c", "371ffed9fa4baac26d54aa04b001e3120f048cb6085659e10fc232c02d683526"},
 	} {
 		t.Run(pin.name, func(t *testing.T) {
 			item := fixture.Cases[i]

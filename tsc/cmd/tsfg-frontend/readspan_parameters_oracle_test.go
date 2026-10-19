@@ -10,9 +10,9 @@ import (
 )
 
 const rs26bContractPin = "e9887966e68cd5dcbb042095f344f4a63d41b6070835ba37ccd5057758358e4d"
-const rs26bSchema = "sha256:3067c8bb8296ab6687ee6549dd44522cae17f4b87b0a3996616ba7b373952617"
+const rs26bSchema = "sha256:d2ee930b76b8fd5c2270ad69579c9c61377831a97034d3a8890d8aa770ebabc2"
 const rs26bInputPin = "5c079481047a2b7437886994a940694e84e86592577fa256fd2b660526de07d7"
-const rs26bExpectedPin = "189db5e75e093a7ebf5ea3060349c82b2b52807343ec07419f3b44217d53bee1"
+const rs26bExpectedPin = "5f1b551dc036dc4e92b44d1366df763c1d165d3d956e7ee9fae3ce0f1f9888a6"
 
 func rs26bPacket(t *testing.T, name, source, dts string) []byte {
 	s, release := rs26bProgram(t, source, dts)
@@ -72,7 +72,7 @@ func TestReadSpan26bIndependentFirstOfficial(t *testing.T) {
 	}
 	input := read("first-source-texts.json", 1019, rs26bInputPin)
 	dts := read("minimal-arrays-v3.d.ts", 484, "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415")
-	read("schema.json", 39596, rs26bSchema[7:])
+	read("schema.json", 39966, rs26bSchema[7:])
 	expected := read("first-expected-facts.json", 43793, rs26bExpectedPin)
 	var first struct {
 		SourceRoot, SourcePath, DeclarationPath string

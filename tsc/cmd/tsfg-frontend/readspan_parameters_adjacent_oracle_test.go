@@ -10,7 +10,7 @@ import (
 )
 
 const rs26bAdjacentInputPin = "c6b239b78aceb1aa770336bbbe98ab0ad93fca2ac478582ad12b31f0e650e757"
-const rs26bAdjacentLiteralPin = "a46885f7d475fb8bc8180d1ff6155332416494ac62eab0cffab406223704c7d6"
+const rs26bAdjacentLiteralPin = "b0b00b6ae0a2adcdeae9ffba08df1451ae3e136d7e7d1a5c3f26093fea831702"
 
 func rs26bAdjacentBundle(t *testing.T, item rs26bAdjacentCase, dts string) []byte {
 	ao23Want(t, len(item.Text) == item.Bytes && ao23Units(item.Text) == item.UTF16Length && ao23Hash([]byte(item.Text)) == item.SHA256 && item.Bytes <= 261 && item.SourcePath == item.SourceRoot+"/app.ts" && item.DeclarationPath == item.SourceRoot+"/minimal-arrays-v3.d.ts", "exact complete original small adjacent source identity")
@@ -64,7 +64,7 @@ func TestReadSpan26bAdjacentIndependentOfficial(t *testing.T) {
 	raw := read("adjacent-inputs.json", 62723, rs26bAdjacentInputPin)
 	literal := read("adjacent-expected-facts.json", 154720, rs26bAdjacentLiteralPin)
 	dts := read("minimal-arrays-v3.d.ts", 484, "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415")
-	read("schema.json", 39596, rs26bSchema[7:])
+	read("schema.json", 39966, rs26bSchema[7:])
 	var corpus struct{ Cases []rs26bAdjacentCase }
 	var expected struct {
 		ContractSHA256, FactsSchemaHash string

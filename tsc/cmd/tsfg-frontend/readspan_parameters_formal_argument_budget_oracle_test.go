@@ -9,8 +9,8 @@ import (
 	"testing"
 )
 
-const rs26bBudgetInputPin = "4dd264aa26f33e954bc4f38d58006c7c589494ef877d14888f0641c6f2870404"
-const rs26bBudgetLiteralPin = "05c79a1e935215266ac14fc5f7a68584b94fce63473adc543fc762a4d1563bff"
+const rs26bBudgetInputPin = "7dd11175c18f9e573701e717e0d8994bf0e6dee04f5c3382403d238360c782ae"
+const rs26bBudgetLiteralPin = "d1588529b073eb15d8fe8efd9711e65eb9eda6553bb1bcbc15b8ae8a272bf110"
 
 type rs26bBudgetCase struct {
 	ID, Text, SourceRoot, SourcePath, DeclarationPath, SHA256 string
@@ -62,7 +62,7 @@ func TestReadSpan26bFormalArgumentBudgetIndependentOfficial(t *testing.T) {
 	input := read("formal-argument-budget-inputs.json", 16768, rs26bBudgetInputPin)
 	literal := read("formal-argument-budget-expected-facts.json", 500807, rs26bBudgetLiteralPin)
 	dts := read("minimal-arrays-v3.d.ts", 484, "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415")
-	read("schema.json", 39596, rs26bSchema[7:])
+	read("schema.json", 39966, rs26bSchema[7:])
 	var corpus struct {
 		ContractSHA256, FactsSchemaHash string
 		Cases                           []rs26bBudgetCase

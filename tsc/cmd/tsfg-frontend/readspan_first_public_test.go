@@ -26,8 +26,8 @@ func readSpanFirstPublicHash26(data []byte) string {
 }
 func TestReadSpan26aV7PublicWholeFrozenPair(t *testing.T) {
 	for _, item := range []struct{ name, requestHash, packageHash string }{
-		{"before", "056ff43750d102a9608900a2be4a0c7739311ca95bb7754fe2005b1fc92b407f", "3abbc1e37f88b34674d8803fad3388bdfaf7973b0fe65b9bc6ee975caeffc1eb"},
-		{"after", "1e70bf783699f9e8ca09e9a55da35eec4e6f73f806a8b0f3b82c09b5ce423b43", "0db823683784e22aa487989c1bb442dc06c6778bd2d73497fcd1d14a3166c092"},
+		{"before", "056ff43750d102a9608900a2be4a0c7739311ca95bb7754fe2005b1fc92b407f", "f85099631271442ffcf5c5d60a229754874e938cb9dcdec23dac36186bbc29e4"},
+		{"after", "1e70bf783699f9e8ca09e9a55da35eec4e6f73f806a8b0f3b82c09b5ce423b43", "cc478742a1c530fa2a561dc69348810455caae33ead096def231459baa296208"},
 	} {
 		t.Run(item.name, func(t *testing.T) {
 			prefix := "testdata/readspan-last-use-v7/" + item.name
