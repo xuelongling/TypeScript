@@ -65,12 +65,12 @@ func TestOwnedGenericConditionalSignatureRejectsOldAndMixedPackageClaims(t *test
 		_, err = decodeGenericPackage(bad)
 		requireGenericPackageFailureKind(t, err, "package-schema")
 	})
-	for _, domain := range []string{"tsfg-owned-generic-package/v2\n", "tsfg-owned-generic-package/v5\n"} {
+	for _, domain := range []string{"tsfg-owned-generic-package/v2\n", "tsfg-owned-generic-package/v6\n"} {
 		t.Run("identity-"+strings.TrimSpace(domain), func(t *testing.T) {
 			t.Parallel()
 			wire := genericPackageWireForTest(t, data)
 			wire.PackageID = "sha256:" + genericPackageIdentity(domain, wire.Payload)
-			if strings.Contains(domain, "/v5") {
+			if strings.Contains(domain, "/v6") {
 				wire.PackageID = "sha256:" + strings.Repeat("0", 64)
 			}
 			bad, err := genericPackageCanonical(wire)

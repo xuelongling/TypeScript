@@ -56,13 +56,13 @@ func TestOwnedGenericPackageNumberAddColdInstances(t *testing.T) {
 		t.Fatalf("number-add package changed on cold canonical roundtrip: %v", err)
 	}
 	wire := genericPackageWireForTest(t, data)
-	if wire.Family != "tsfg-owned-generic-package" || wire.Version != 5 ||
-		wire.Payload.SemanticProfile != "tsfg-owned-scalar-generics-host-v5" ||
-		wire.SchemaHash != "da7eb72ae306eb88863a44c945df77d572a96443a005fefbd787267fe90658bf" ||
-		!reflect.DeepEqual(wire.Payload.Capabilities, []string{"conditional-generic-call", "conditional-signature", "explicit-type-arguments", "mapped-indexed-signature", "number-add", "scalar-generics", "single-module"}) {
+	if wire.Family != "tsfg-owned-generic-package" || wire.Version != 6 ||
+		wire.Payload.SemanticProfile != "tsfg-owned-scalar-generics-host-v6" ||
+		wire.SchemaHash != "c6b6baa76be25f6ac4f619867273208c9adb595030f12e7c54a200ed8c677789" ||
+		!reflect.DeepEqual(wire.Payload.Capabilities, []string{"conditional-generic-call", "conditional-signature", "explicit-type-arguments", "mapped-indexed-generic-call", "mapped-indexed-signature", "number-add", "scalar-generics", "single-module"}) {
 		t.Fatal("new number body was mixed into the old candidate package contract")
 	}
-	if g.Package != "package:number-add" || g.Semantics != "tsfg-owned-scalar-generics-host-v5" ||
+	if g.Package != "package:number-add" || g.Semantics != "tsfg-owned-scalar-generics-host-v6" ||
 		g.Source.Path != "/original/main.ts" || g.Source.Digest != genericTextDigest(genericNumberAddSource) ||
 		g.Source.PositionUnit != "utf16" || g.Source.Length != 90 ||
 		g.Source.Length != len(utf16.Encode([]rune(genericNumberAddSource))) ||
@@ -109,7 +109,7 @@ func TestOwnedGenericPackageNumberAddColdInstances(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if facts.PackageID != wire.PackageID || facts.SemanticProfile != "tsfg-owned-scalar-generics-host-v5" ||
+	if facts.PackageID != wire.PackageID || facts.SemanticProfile != "tsfg-owned-scalar-generics-host-v6" ||
 		len(facts.Roots) != 2 || len(facts.Instances) != 2 || facts.Roots[0] == facts.Roots[1] {
 		t.Fatal("cold phantom requests lost full type arguments or merged distinct instances")
 	}
@@ -160,13 +160,13 @@ func TestOwnedGenericPackageNumberAddColdInstances(t *testing.T) {
 	}
 	// All records follow every check. No product file is written or host numeric
 	// result calculated; neither SourceEXE nor a VM is executed.
-	t.Logf("TSFG_GENERIC_NUMBER_ADD_PACKAGE_V5 %s", base64.StdEncoding.EncodeToString(data))
-	t.Logf("TSFG_GENERIC_NUMBER_ADD_INSTANCE_V5 %s", base64.StdEncoding.EncodeToString(fixture))
+	t.Logf("TSFG_GENERIC_NUMBER_ADD_PACKAGE_V6 %s", base64.StdEncoding.EncodeToString(data))
+	t.Logf("TSFG_GENERIC_NUMBER_ADD_INSTANCE_V6 %s", base64.StdEncoding.EncodeToString(fixture))
 	for _, original := range originals {
 		record, err := genericPackageCanonical(original)
 		if err != nil {
 			t.Fatal(err)
 		}
-		t.Logf("TSFG_GENERIC_NUMBER_ADD_ORIGINAL_V5 %s", base64.StdEncoding.EncodeToString(record))
+		t.Logf("TSFG_GENERIC_NUMBER_ADD_ORIGINAL_V6 %s", base64.StdEncoding.EncodeToString(record))
 	}
 }

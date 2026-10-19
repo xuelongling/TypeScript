@@ -56,7 +56,7 @@ func TestOwnedGenericPackageCanonicalIdentityAndOrdering(t *testing.T) {
 	if err := budget.walk(reflect.ValueOf(g), 0); err != nil || budget.bytes != len(payload) {
 		t.Fatalf("domain and DTO canonical budget disagree: counted=%d actual=%d error=%v", budget.bytes, len(payload), err)
 	}
-	sum := sha256.Sum256(append([]byte("tsfg-owned-generic-package/v5\n"), payload...))
+	sum := sha256.Sum256(append([]byte("tsfg-owned-generic-package/v6\n"), payload...))
 	if wire.PackageID != "sha256:"+hex.EncodeToString(sum[:]) {
 		t.Fatal("package preimage/domain includes wrong bytes or self identity")
 	}
@@ -94,9 +94,9 @@ func TestOwnedGenericPackageCanonicalStringsAndStrictShape(t *testing.T) {
 		"null array":             bytes.Replace(data, []byte("\"arguments\":[]"), []byte("\"arguments\":null"), 1),
 		"duplicate key":          bytes.Replace(data, []byte("{\"family\":"), []byte("{\"family\":\"tsfg-owned-generic-package\",\"family\":"), 1),
 		"escaped duplicate key":  bytes.Replace(data, []byte("{\"family\":"), []byte("{\"\\u0066amily\":\"tsfg-owned-generic-package\",\"family\":"), 1),
-		"exponent":               bytes.Replace(data, []byte("\"version\":5"), []byte("\"version\":5e0"), 1),
+		"exponent":               bytes.Replace(data, []byte("\"version\":6"), []byte("\"version\":6e0"), 1),
 		"negative zero":          bytes.Replace(data, []byte("\"parameter\":0"), []byte("\"parameter\":-0"), 1),
-		"unsafe integer":         bytes.Replace(data, []byte("\"version\":5"), []byte("\"version\":9007199254740992"), 1),
+		"unsafe integer":         bytes.Replace(data, []byte("\"version\":6"), []byte("\"version\":9007199254740992"), 1),
 		"alternate escape":       bytes.Replace(data, []byte("package:wire-candidate"), []byte("package:wire-candid\\u0061te"), 1),
 	}
 	for name, bad := range cases {

@@ -76,7 +76,7 @@ func TestOwnedGenericMappedSignatureRejectsMalformedColdTypes(t *testing.T) {
 			d.Parameters = append(d.Parameters, p)
 		}},
 		{"body-parameter1", "unsupported", func(d *genericPackageDefinitionDTO) { d.Body.Parameter = 1 }},
-		{"body-call", "unsupported", func(d *genericPackageDefinitionDTO) { d.Body.Kind = "call"; d.Body.Definition = d.Key }},
+		{"body-call", "package-reference", func(d *genericPackageDefinitionDTO) { d.Body.Kind = "call"; d.Body.Definition = d.Key }},
 		{"body-add", "unsupported", func(d *genericPackageDefinitionDTO) { d.Body.Kind = "number-add" }},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -86,6 +86,13 @@ func TestOwnedGenericMappedSignatureRejectsMalformedColdTypes(t *testing.T) {
 			bad := genericPackageSignedBytesForTest(t, wire)
 			graph, err := decodeGenericPackage(bad)
 			requireGenericPackageFailureKind(t, err, test.kind)
+			// Calls are admitted by private6; the unchanged zero-arity target is still rejected.
+			if test.name == "body-call" {
+				var failure *genericFailure
+				if !errors.As(err, &failure) || failure.Code != 0 || failure.Detail != "dangling definition or call arity" {
+					t.Fatalf("invalid mapped call lost its precise reference rejection: %v", err)
+				}
+			}
 			if test.name == "shadow-outer-binder" {
 				var failure *genericFailure
 				if !errors.As(err, &failure) || failure.Detail != "mapped binder shadows outer type parameter" {

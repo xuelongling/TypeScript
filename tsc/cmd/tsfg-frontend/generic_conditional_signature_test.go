@@ -62,22 +62,22 @@ func TestOwnedGenericPackageConditionalSignatureColdInstances(t *testing.T) {
 		t.Fatalf("conditional-signature package changed on cold canonical roundtrip: %v", err)
 	}
 	wire := genericPackageWireForTest(t, data)
-	if wire.Family != "tsfg-owned-generic-package" || wire.Version != 5 ||
-		wire.Payload.SemanticProfile != "tsfg-owned-scalar-generics-host-v5" ||
-		wire.SchemaHash != "da7eb72ae306eb88863a44c945df77d572a96443a005fefbd787267fe90658bf" {
+	if wire.Family != "tsfg-owned-generic-package" || wire.Version != 6 ||
+		wire.Payload.SemanticProfile != "tsfg-owned-scalar-generics-host-v6" ||
+		wire.SchemaHash != "c6b6baa76be25f6ac4f619867273208c9adb595030f12e7c54a200ed8c677789" {
 		t.Fatal("conditional signature was mixed into the predecessor package contract")
 	}
 	payload, err := genericPackageCanonical(wire.Payload)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if wire.PackageID != "sha256:"+genericTextDigest("tsfg-owned-generic-package/v5\n"+string(payload)) ||
+	if wire.PackageID != "sha256:"+genericTextDigest("tsfg-owned-generic-package/v6\n"+string(payload)) ||
 		wire.PackageID != "sha256:"+g.Digest || g.Package != "package:conditional-signature" ||
-		g.Semantics != "tsfg-owned-scalar-generics-host-v5" || g.Source.Path != "/original/main.ts" ||
+		g.Semantics != "tsfg-owned-scalar-generics-host-v6" || g.Source.Path != "/original/main.ts" ||
 		g.Source.Digest != genericTextDigest(genericConditionalSignatureSource) || g.Source.PositionUnit != "utf16" ||
 		g.Source.Length != 132 || g.Source.Length != len(utf16.Encode([]rune(genericConditionalSignatureSource))) ||
 		!reflect.DeepEqual(g.Source.SurrogateStarts, []int{3}) || len(g.Definitions) != 1 {
-		t.Fatal("conditional-signature package lost source, scope, v5 domain or complete identity")
+		t.Fatal("conditional-signature package lost source, scope, v6 domain or complete identity")
 	}
 	if g.Environment.Profile != "minimal-scalars-v2" || len(g.Environment.Files) != 1 {
 		t.Fatal("conditional-signature declaration environment differs")
@@ -116,7 +116,7 @@ func TestOwnedGenericPackageConditionalSignatureColdInstances(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if facts.PackageID != wire.PackageID || facts.SemanticProfile != "tsfg-owned-scalar-generics-host-v5" ||
+	if facts.PackageID != wire.PackageID || facts.SemanticProfile != "tsfg-owned-scalar-generics-host-v6" ||
 		len(facts.Roots) != 2 || len(facts.Instances) != 2 || facts.Roots[0] == facts.Roots[1] ||
 		facts.Instances[0].Key >= facts.Instances[1].Key {
 		t.Fatal("cold conditional requests lost full type arguments, distinct identity or sorted closure")
@@ -164,13 +164,13 @@ func TestOwnedGenericPackageConditionalSignatureColdInstances(t *testing.T) {
 	}
 	// Records describe actual checked bytes and facts only after every assertion.
 	// No SourceEXE, VM or host-calculated runtime result is involved.
-	t.Logf("TSFG_GENERIC_CONDITIONAL_SIGNATURE_PACKAGE_V5 %s", base64.StdEncoding.EncodeToString(data))
-	t.Logf("TSFG_GENERIC_CONDITIONAL_SIGNATURE_INSTANCE_V5 %s", base64.StdEncoding.EncodeToString(fixture))
+	t.Logf("TSFG_GENERIC_CONDITIONAL_SIGNATURE_PACKAGE_V6 %s", base64.StdEncoding.EncodeToString(data))
+	t.Logf("TSFG_GENERIC_CONDITIONAL_SIGNATURE_INSTANCE_V6 %s", base64.StdEncoding.EncodeToString(fixture))
 	for _, original := range originals {
 		record, err := genericPackageCanonical(original)
 		if err != nil {
 			t.Fatal(err)
 		}
-		t.Logf("TSFG_GENERIC_CONDITIONAL_SIGNATURE_ORIGINAL_V5 %s", base64.StdEncoding.EncodeToString(record))
+		t.Logf("TSFG_GENERIC_CONDITIONAL_SIGNATURE_ORIGINAL_V6 %s", base64.StdEncoding.EncodeToString(record))
 	}
 }

@@ -54,10 +54,10 @@ func TestOwnedGenericConditionalCallRejectsOldAndMixedContracts(t *testing.T) {
 	t.Parallel()
 	data := genericConditionalCallColdBytes(t)
 	wire := genericPackageWireForTest(t, data)
-	wantCaps := []string{"conditional-generic-call", "conditional-signature", "explicit-type-arguments", "mapped-indexed-signature", "number-add", "scalar-generics", "single-module"}
-	if wire.Version != 5 || wire.SchemaHash != "da7eb72ae306eb88863a44c945df77d572a96443a005fefbd787267fe90658bf" ||
-		wire.Payload.SemanticProfile != "tsfg-owned-scalar-generics-host-v5" || !reflect.DeepEqual(wire.Payload.Capabilities, wantCaps) {
-		t.Fatal("actual conditional-call package differs from the independently pinned private5 descriptor")
+	wantCaps := []string{"conditional-generic-call", "conditional-signature", "explicit-type-arguments", "mapped-indexed-generic-call", "mapped-indexed-signature", "number-add", "scalar-generics", "single-module"}
+	if wire.Version != 6 || wire.SchemaHash != "c6b6baa76be25f6ac4f619867273208c9adb595030f12e7c54a200ed8c677789" ||
+		wire.Payload.SemanticProfile != "tsfg-owned-scalar-generics-host-v6" || !reflect.DeepEqual(wire.Payload.Capabilities, wantCaps) {
+		t.Fatal("actual conditional-call package differs from the independently pinned private6 descriptor")
 	}
 	_, route := genericConditionalCallDefinitionsForTest(t, &wire)
 	requests := []genericPackageRoot{{Definition: route.Key, TypeArguments: []genericPackageTypeDTO{{Kind: "boolean"}}}}
@@ -70,7 +70,9 @@ func TestOwnedGenericConditionalCallRejectsOldAndMixedContracts(t *testing.T) {
 			w.SchemaHash = "ec05631c15f280f54279ba9353fd8fc3ff779349a1f56f7cdb00eba22c767e20"
 		}},
 		{"old-profile4", func(w *genericPackageDTO) { w.Payload.SemanticProfile = "tsfg-owned-scalar-generics-host-v4" }},
-		{"old-capabilities4", func(w *genericPackageDTO) { w.Payload.Capabilities = append([]string{}, wantCaps[1:]...) }},
+		{"old-capabilities4", func(w *genericPackageDTO) {
+			w.Payload.Capabilities = []string{"conditional-signature", "explicit-type-arguments", "mapped-indexed-signature", "number-add", "scalar-generics", "single-module"}
+		}},
 		{"duplicate-capability", func(w *genericPackageDTO) { w.Payload.Capabilities[1] = w.Payload.Capabilities[0] }},
 		{"reordered-capability", func(w *genericPackageDTO) {
 			w.Payload.Capabilities[0], w.Payload.Capabilities[1] = w.Payload.Capabilities[1], w.Payload.Capabilities[0]
@@ -175,6 +177,8 @@ func TestOwnedGenericConditionalCallRejectsMalformedColdBodies(t *testing.T) {
 
 func TestOwnedGenericConditionalCallRejectsUnsupportedOfficialBodies(t *testing.T) {
 	t.Parallel()
+	// Private6 admits this exact one-hop source, retained as a new positive.
+	// The negative below now has a call-bodied callee and remains outside one hop.
 	mapped := "// 😀\nexport function leaf<U>(value: { [K in 'value']: U }['value']): { [K in 'value']: U }['value'] { return value; }\n" +
 		"export function route<T>(value: { [K in 'value']: T }['value']): { [K in 'value']: T }['value'] { return leaf<T>(value); }"
 	for _, test := range []struct {
@@ -183,7 +187,7 @@ func TestOwnedGenericConditionalCallRejectsUnsupportedOfficialBodies(t *testing.
 		{"self", strings.Replace(genericConditionalCallSource, "return leaf<T>(value);", "return route<T>(value);", 1), "route"},
 		{"mutual-chain", strings.Replace(genericConditionalCallSource, "return value;", "return route<U>(value);", 1), "leaf"},
 		{"nested-argument", strings.Replace(genericConditionalCallSource, "return leaf<T>(value);", "return leaf<T>(leaf<T>(value));", 1), "route"},
-		{"mapped-call", mapped, "route"},
+		{"mapped-call-chain", strings.Replace(mapped, "return value;", "return bottom<U>(value);", 1) + "\n" + strings.Replace(strings.Split(mapped, "\n")[1], "leaf<U>", "bottom<U>", 1), "route"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()

@@ -105,7 +105,7 @@ func genericIOProducedPackageForTest(t *testing.T) ([]byte, []byte, []byte) {
 	request := genericIOCanonicalForTest(t, genericIOExportInputForTest())
 	response := genericIOInvokeForTest(t, request, "ok")
 	packageBytes := bytes.Clone(genericIOFieldsForTest(t, response)["value"])
-	if genericTextDigest(string(packageBytes)) != "30b0c9f5063de2fd2e12662e6ad0d9d96718edab5185f563a4fcd34695a7190d" {
+	if genericTextDigest(string(packageBytes)) != "9014c7e3bc545136d6e913d8c7e672291035557db65c12c1759184f049b0b68e" {
 		t.Fatal("production factory changed the real package source/environment")
 	}
 	return request, response, packageBytes
@@ -181,7 +181,7 @@ func TestGenericPackageIORealProducerConsumerFixture(t *testing.T) {
 	fixture := genericIOCanonicalForTest(t, struct {
 		Cases []fixtureCase `json:"cases"`
 	}{Cases: cases})
-	t.Log("TSFG_GENERIC_IO_FIXTURE_V5=" + base64.StdEncoding.EncodeToString(fixture))
+	t.Log("TSFG_GENERIC_IO_FIXTURE_V6=" + base64.StdEncoding.EncodeToString(fixture))
 }
 
 func TestGenericPackageIOPreservesSourceAndEnvironment(t *testing.T) {
