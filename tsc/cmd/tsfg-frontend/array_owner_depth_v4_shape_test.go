@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Selected v5 shape leaves the historical independent v3 depth oracle unchanged.
+// Selected v6 shape leaves the historical independent v3 depth oracle unchanged.
 package main
 
 import (
@@ -10,7 +10,7 @@ import (
 	"unicode/utf16"
 )
 
-func arrayOwnerDepth16V5Shape26(t *testing.T, item arrayOwnerDepth16Bundle23e) {
+func arrayOwnerDepth16V6Shape26(t *testing.T, item arrayOwnerDepth16Bundle23e) {
 	t.Helper()
 	ao23Want(t, item.Name == "forward-chain16" && item.ContractSHA256 == "0b0cbffa7efc0d44589ba45bc71f5380d7cc7a089a6303dc2f224e9cc7505081", "independently frozen depth16 name/contract")
 	var requestValue, packetValue ao23Map
@@ -21,11 +21,11 @@ func arrayOwnerDepth16V5Shape26(t *testing.T, item arrayOwnerDepth16Bundle23e) {
 		t.Fatal(err)
 	}
 	ao23Want(t, bytes.Equal([]byte(item.RequestText), append(ao23JCS(t, requestValue), '\n')) && bytes.Equal([]byte(item.PackageText), append(ao23JCS(t, packetValue), '\n')), "whole independent request/package JCS+LF")
-	ao23Want(t, requestValue["family"] == "tsfg.array-facts-request-candidate" && requestValue["version"] == float64(5) && packetValue["family"] == "tsfg.array-facts-package-candidate" && packetValue["version"] == float64(5) && packetValue["schemaHash"] == ("sha256:"+arrayFirstSchemaSHA25), "exact v5 depth16 whole frame")
+	ao23Want(t, requestValue["family"] == "tsfg.array-facts-request-candidate" && requestValue["version"] == float64(6) && packetValue["family"] == "tsfg.array-facts-package-candidate" && packetValue["version"] == float64(6) && packetValue["schemaHash"] == ("sha256:"+arrayFirstSchemaSHA25), "exact v6 depth16 whole frame")
 	payload := packetValue["payload"].(map[string]any)
-	arrayOwnerDepth16V5Origins26(t, requestValue, payload)
-	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v5\x00"), []byte(item.RequestText)...))
-	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v5\x00"+("sha256:"+arrayFirstSchemaSHA25)+"\x00"), ao23JCS(t, payload)...))
+	arrayOwnerDepth16V6Origins26(t, requestValue, payload)
+	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v6\x00"), []byte(item.RequestText)...))
+	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v6\x00"+("sha256:"+arrayFirstSchemaSHA25)+"\x00"), ao23JCS(t, payload)...))
 	ao23Want(t, packetValue["requestId"] == requestID && packetValue["packageId"] == packageID, "independent complete wire identities")
 	inputs := requestValue["input"].(map[string]any)
 	files := inputs["files"].([]any)
@@ -52,7 +52,7 @@ func arrayOwnerDepth16V5Shape26(t *testing.T, item arrayOwnerDepth16Bundle23e) {
 	ao23Want(t, edges == 15 && len(exports) == 1 && exports[0].(map[string]any)["name"] == "f0" && exports[0].(map[string]any)["functionId"] == functions[0].(map[string]any)["id"], "exactly15 forward edges, path16 and sole original f0 export")
 }
 
-func arrayOwnerDepth16V5Origins26(t *testing.T, requestValue, payload map[string]any) {
+func arrayOwnerDepth16V6Origins26(t *testing.T, requestValue, payload map[string]any) {
 	t.Helper()
 	input := requestValue["input"].(map[string]any)
 	declarations := input["declarations"].(map[string]any)

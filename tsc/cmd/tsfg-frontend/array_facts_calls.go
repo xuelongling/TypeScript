@@ -7,6 +7,17 @@ import (
 	"github.com/microsoft/typescript-go/internal/checker"
 )
 
+// Header and call results share the same pinned nominal result check.
+func (p *arrayFactsProjection) resultType(typ *checker.Type, kind string) bool {
+	switch kind {
+	case "f64":
+		return typ == p.check.GetNumberType()
+	case "readspan.f64":
+		return p.viewType(typ, p.check.GetNumberType())
+	}
+	return false
+}
+
 func (p *arrayFactsProjection) call(node *ast.Node, state *arrayFactsFunctionState) (*arrayFactsValue, error) {
 	if node == nil || node.Kind != ast.KindCallExpression {
 		return nil, arrayFactsCapability(p.file, node, "direct ordinary call required")
@@ -18,7 +29,7 @@ func (p *arrayFactsProjection) call(node *ast.Node, state *arrayFactsFunctionSta
 	header := p.headers[p.check.GetSymbolAtLocation(call.Expression)]
 	resolved := p.check.GetResolvedSignature(node)
 	signatures := p.check.GetSignaturesOfType(p.check.GetTypeAtLocation(call.Expression), checker.SignatureKindCall)
-	if header == nil || resolved == nil || len(signatures) != 1 || signatures[0].Declaration() != header.node || resolved.Declaration() != header.node || p.check.GetTypeAtLocation(node) != p.check.GetNumberType() || p.check.GetReturnTypeOfSignature(resolved) != p.check.GetNumberType() || len(resolved.Parameters()) != len(header.function.Parameters) || resolved.MinArgumentCount() != len(header.function.Parameters) || len(resolved.TypeParameters()) != 0 || resolved.ThisParameter() != nil || resolved.HasRestParameter() {
+	if header == nil || resolved == nil || len(signatures) != 1 || signatures[0].Declaration() != header.node || resolved.Declaration() != header.node || !p.resultType(p.check.GetTypeAtLocation(node), header.function.ReturnType) || !p.resultType(p.check.GetReturnTypeOfSignature(resolved), header.function.ReturnType) || len(resolved.Parameters()) != len(header.function.Parameters) || resolved.MinArgumentCount() != len(header.function.Parameters) || len(resolved.TypeParameters()) != 0 || resolved.ThisParameter() != nil || resolved.HasRestParameter() {
 		return nil, arrayFactsCapability(p.file, node, "actual complete same-module required call signature required")
 	}
 	var arguments []*ast.Node
@@ -66,7 +77,7 @@ func (p *arrayFactsProjection) call(node *ast.Node, state *arrayFactsFunctionSta
 	}
 	state.calls = append(state.calls, node)
 	calleeRange := expressionOffset(p.file, call.Expression)
-	return &arrayFactsValue{Kind: "directCall", Type: "f64", Range: expressionOffset(p.file, node), Callee: header.function.ID, CalleeRange: &calleeRange, Arguments: &values}, nil
+	return &arrayFactsValue{Kind: "directCall", Type: header.function.ReturnType, Range: expressionOffset(p.file, node), Callee: header.function.ID, CalleeRange: &calleeRange, Arguments: &values}, nil
 }
 
 func (p *arrayFactsProjection) acyclic(headers []*arrayFactsHeader) error {

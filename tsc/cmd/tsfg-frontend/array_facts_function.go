@@ -160,26 +160,39 @@ func (p *arrayFactsProjection) functionHeader(node *ast.Node) (*arrayFactsHeader
 		return bad(node, "only named ordinary functions with optional export")
 	}
 	decl := node.AsFunctionDeclaration()
-	if decl.TypeParameters != nil || decl.AsteriskToken != nil || decl.FullSignature != nil || decl.Parameters == nil || decl.Body == nil || decl.Body.Kind != ast.KindBlock || !p.f64Annotation(decl.Type) {
-		return bad(node, "explicit f64 ordinary function required")
+	if decl.TypeParameters != nil || decl.AsteriskToken != nil || decl.FullSignature != nil || decl.Parameters == nil || decl.Body == nil || decl.Body.Kind != ast.KindBlock {
+		return bad(node, "explicit f64 or non-exported ReadSpan ordinary function required")
+	}
+	returnKind := "f64"
+	var returnElement *ast.Node
+	if !p.f64Annotation(decl.Type) {
+		returnElement = p.viewAnnotation(decl.Type)
+		if returnElement == nil || node.ModifierFlags() != 0 {
+			return bad(node, "explicit f64 or non-exported nominal ReadSpan<f64> return required")
+		}
+		returnKind = "readspan.f64"
 	}
 	actual := p.check.GetSymbolAtLocation(node.Name())
 	if actual == nil || len(actual.Declarations) != 1 || actual.Declarations[0] != node {
 		return bad(node, "unique actual function binding required")
 	}
 	sigs := p.check.GetSignaturesOfType(p.check.GetTypeOfSymbol(actual), checker.SignatureKindCall)
-	if len(sigs) != 1 || sigs[0].Declaration() != node || len(sigs[0].Parameters()) != len(decl.Parameters.Nodes) || len(sigs[0].TypeParameters()) != 0 || sigs[0].ThisParameter() != nil || sigs[0].HasRestParameter() || sigs[0].MinArgumentCount() != len(decl.Parameters.Nodes) || p.check.GetReturnTypeOfSignature(sigs[0]) != p.check.GetNumberType() {
-		return bad(node, "official required parameters and f64 return signature required")
+	if len(sigs) != 1 || sigs[0].Declaration() != node || len(sigs[0].Parameters()) != len(decl.Parameters.Nodes) || len(sigs[0].TypeParameters()) != 0 || sigs[0].ThisParameter() != nil || sigs[0].HasRestParameter() || sigs[0].MinArgumentCount() != len(decl.Parameters.Nodes) || !p.resultType(p.check.GetReturnTypeOfSignature(sigs[0]), returnKind) {
+		return bad(node, "official required parameters and pinned return signature required")
 	}
 	body := decl.Body.AsBlock().Statements.Nodes
 	if len(body) < 1 || body[len(body)-1].Kind != ast.KindReturnStatement {
-		return bad(decl.Body, "flat Array/call body with one final f64 return required")
+		return bad(decl.Body, "flat Array/call body with one final return required")
 	}
 	id, err := p.bindingID(node.Name())
 	if err != nil {
 		return nil, nil, err
 	}
-	fn := arrayFactsFunction{ID: id, Name: strings.Clone(node.Name().Text()), SourcePath: p.file.FileName(), DeclarationRange: expressionOffset(p.file, node), NameRange: expressionOffset(p.file, node.Name()), ReturnType: "f64", ReturnAnnotationRange: expressionOffset(p.file, decl.Type), Bindings: []arrayFactsBinding{}, Body: []arrayFactsStatement{}}
+	fn := arrayFactsFunction{ID: id, Name: strings.Clone(node.Name().Text()), SourcePath: p.file.FileName(), DeclarationRange: expressionOffset(p.file, node), NameRange: expressionOffset(p.file, node.Name()), ReturnType: returnKind, ReturnAnnotationRange: expressionOffset(p.file, decl.Type), Bindings: []arrayFactsBinding{}, Body: []arrayFactsStatement{}}
+	if returnElement != nil {
+		element := expressionOffset(p.file, returnElement)
+		fn.ReturnElementAnnotationRange = &element
+	}
 	state := &arrayFactsFunctionState{bindings: map[*ast.Symbol]arrayFactsBinding{}, parameters: map[*ast.Symbol]arrayFactsParameter{}, names: map[string]bool{}, owners: map[string]*arrayFactsLengthState{}}
 	fn.Parameters, err = p.parameters(decl.Parameters.Nodes, sigs[0], state)
 	if err != nil {
@@ -235,11 +248,19 @@ func (p *arrayFactsProjection) function(header *arrayFactsHeader) (arrayFactsFun
 	var err error
 	if expression != nil && expression.Kind == ast.KindCallExpression {
 		value, err = p.call(expression, state)
+		if err == nil && value.Type != fn.ReturnType {
+			err = arrayFactsCapability(p.file, expression, "ordinary call result must match the original return type")
+		}
+	} else if fn.ReturnType == "readspan.f64" {
+		value, err = p.viewReference(expression, state)
 	} else {
 		value, err = p.rhs(expression, state)
 	}
 	if err != nil {
 		return empty, err
+	}
+	if fn.ReturnType == "readspan.f64" && !p.check.IsTypeAssignableTo(p.check.GetTypeAtLocation(expression), p.check.GetReturnTypeOfSignature(header.signature)) {
+		return empty, arrayFactsCapability(p.file, expression, "official readonly view return assignment required")
 	}
 	fn.Body = append(fn.Body, arrayFactsStatement{Kind: "return", Range: expressionOffset(p.file, tail), Value: value})
 	if err := p.density(fn.Body, body, state); err != nil {

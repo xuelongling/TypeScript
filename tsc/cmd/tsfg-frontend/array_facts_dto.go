@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Private ArrayFacts v5 owns its complete wire values; no legacy DTO changes.
+// Private ArrayFacts v6 owns its complete wire values; no legacy DTO changes.
 package main
 
 import (
@@ -15,13 +15,13 @@ import (
 )
 
 const arrayFactsMaxBytes = 2097152
-const arrayFactsSchema = "sha256:28909daecb794e9d1969a8e97758a2cf6de5c2d6f309266339777a87f9f69a5a"
+const arrayFactsSchema = "sha256:fc9b976b96070df07f5b9cdae27c58f327f9b67b74945f25ee874087ce55a279"
 const arrayFactsDtsSHA = "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415"
 
-//go:embed testdata/array-facts-v5/schema.json
+//go:embed testdata/array-facts-v6/schema.json
 var arrayFactsSchemaBytes []byte
 
-//go:embed testdata/array-facts-v5/minimal-arrays-v3.d.ts
+//go:embed testdata/array-facts-v6/minimal-arrays-v3.d.ts
 var arrayFactsDtsBytes []byte
 
 type arrayFactsConfig struct {
@@ -174,16 +174,17 @@ type arrayFactsStatement struct {
 	Value           *arrayFactsValue  `json:"value,omitempty"`
 }
 type arrayFactsFunction struct {
-	ID                    string                `json:"id"`
-	Name                  string                `json:"name"`
-	SourcePath            string                `json:"sourcePath"`
-	DeclarationRange      span                  `json:"declarationRange"`
-	NameRange             span                  `json:"nameRange"`
-	ReturnType            string                `json:"returnType"`
-	ReturnAnnotationRange span                  `json:"returnAnnotationRange"`
-	Parameters            []arrayFactsParameter `json:"parameters"`
-	Bindings              []arrayFactsBinding   `json:"bindings"`
-	Body                  []arrayFactsStatement `json:"body"`
+	ReturnElementAnnotationRange *span                 `json:"returnElementAnnotationRange,omitempty"`
+	ID                           string                `json:"id"`
+	Name                         string                `json:"name"`
+	SourcePath                   string                `json:"sourcePath"`
+	DeclarationRange             span                  `json:"declarationRange"`
+	NameRange                    span                  `json:"nameRange"`
+	ReturnType                   string                `json:"returnType"`
+	ReturnAnnotationRange        span                  `json:"returnAnnotationRange"`
+	Parameters                   []arrayFactsParameter `json:"parameters"`
+	Bindings                     []arrayFactsBinding   `json:"bindings"`
+	Body                         []arrayFactsStatement `json:"body"`
 }
 type arrayFactsExport struct {
 	Name       string `json:"name"`
@@ -282,7 +283,7 @@ func decodeArrayFactsRequest(data []byte) (arrayFactsRequest, error) {
 	if err != nil {
 		return r, err
 	}
-	if !bytes.Equal(encoded, raw) || r.Family != "tsfg.array-facts-request-candidate" || r.Version != 5 || "sha256:"+arrayFactsSHA(arrayFactsSchemaBytes) != arrayFactsSchema {
+	if !bytes.Equal(encoded, raw) || r.Family != "tsfg.array-facts-request-candidate" || r.Version != 6 || "sha256:"+arrayFactsSHA(arrayFactsSchemaBytes) != arrayFactsSchema {
 		return r, arrayFactsError("schema", "exact fields/types/family/version/embedded schema", nil)
 	}
 	return r, nil

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Actual v5 Source packets must equal frozen official-only whole packets, not summaries.
+// Actual v6 Source packets must equal frozen official-only whole packets, not summaries.
 package main
 
 import (
@@ -19,8 +19,8 @@ func (w *readSpanAdjacentPublicWriter26) Write(data []byte) (int, error) {
 	w.writes++
 	return w.Buffer.Write(data)
 }
-func TestReadSpan26aAdjacentV5PublicWholeFrozenPackets(t *testing.T) {
-	raw, err := os.ReadFile("testdata/readspan-last-use-v5/adjacent-official-packages.json")
+func TestReadSpan26aAdjacentV6PublicWholeFrozenPackets(t *testing.T) {
+	raw, err := os.ReadFile("testdata/readspan-last-use-v6/adjacent-official-packages.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestReadSpan26aAdjacentV5PublicWholeFrozenPackets(t *testing.T) {
 	if err := json.Unmarshal(raw, &corpus); err != nil {
 		t.Fatal(err)
 	}
-	if corpus.Family != "tsfg.readspan-adjacent-source-independent-oracle" || corpus.Version != 5 || corpus.ContractSHA256 != "0b0cbffa7efc0d44589ba45bc71f5380d7cc7a089a6303dc2f224e9cc7505081" || len(corpus.Cases) != 18 {
+	if corpus.Family != "tsfg.readspan-adjacent-source-independent-oracle" || corpus.Version != 6 || corpus.ContractSHA256 != "0b0cbffa7efc0d44589ba45bc71f5380d7cc7a089a6303dc2f224e9cc7505081" || len(corpus.Cases) != 18 {
 		t.Fatal("complete pre-production independent adjacent Source corpus")
 	}
 	legal, refusal := 0, 0
@@ -52,7 +52,7 @@ func TestReadSpan26aAdjacentV5PublicWholeFrozenPackets(t *testing.T) {
 			if len(request) == 0 || item.ExpectedSourceError == nil && len(item.PackageText) == 0 {
 				t.Fatal("complete frozen request and expected packet required")
 			}
-			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v5"}, bytes.NewReader(request), &output)
+			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v6"}, bytes.NewReader(request), &output)
 			t.Logf("TSFG_READSPAN_26A_ADJACENT_PUBLIC_REQUEST name=%s bytes=%d sha256=%s base64=%s", item.Name, len(request), ao23Hash(request), base64.StdEncoding.EncodeToString(request))
 			t.Logf("TSFG_READSPAN_26A_ADJACENT_PUBLIC_ACTUAL name=%s bytes=%d sha256=%s writes=%d base64=%s", item.Name, output.Len(), ao23Hash(output.Bytes()), output.writes, base64.StdEncoding.EncodeToString(output.Bytes()))
 			if !bytes.Equal(request, before) {
@@ -74,7 +74,7 @@ func TestReadSpan26aAdjacentV5PublicWholeFrozenPackets(t *testing.T) {
 				if output.Len() != 0 || output.writes != 0 {
 					t.Fatal("failed publication wrote partial packet")
 				}
-				t.Fatalf("official-valid bounded Source must publish complete v5 facts: %v", err)
+				t.Fatalf("official-valid bounded Source must publish complete v6 facts: %v", err)
 			}
 			if output.writes != 1 || !bytes.Equal(output.Bytes(), []byte(item.PackageText)) {
 				t.Fatalf("whole pre-production independent packet differs or publication not atomic: writes=%d", output.writes)

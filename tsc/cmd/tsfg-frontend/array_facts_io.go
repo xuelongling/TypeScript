@@ -129,7 +129,7 @@ func runArrayFactsCandidate(ctx context.Context, input io.Reader, output io.Writ
 		return arrayFactsError("canceled", "after checking", err)
 	}
 	// Check the entire future packet before either canonicalization or identity hashing.
-	packet := arrayFactsPackage{Family: "tsfg.array-facts-package-candidate", Version: 5, SchemaHash: arrayFactsSchema, RequestID: "sha256:" + strings.Repeat("0", 64), PackageID: "sha256:" + strings.Repeat("0", 64), Payload: payload}
+	packet := arrayFactsPackage{Family: "tsfg.array-facts-package-candidate", Version: 6, SchemaHash: arrayFactsSchema, RequestID: "sha256:" + strings.Repeat("0", 64), PackageID: "sha256:" + strings.Repeat("0", 64), Payload: payload}
 	if err := arrayFactsOutputBudget(packet); err != nil {
 		return err
 	}
@@ -137,8 +137,8 @@ func runArrayFactsCandidate(ctx context.Context, input io.Reader, output io.Writ
 	if err != nil {
 		return err
 	}
-	packet.RequestID = "sha256:" + arrayFactsSHA(append([]byte("tsfg.array-facts.request.v5\x00"), data...))
-	packet.PackageID = "sha256:" + arrayFactsSHA(append([]byte("tsfg.array-facts.package.v5\x00"+arrayFactsSchema+"\x00"), payloadBytes...))
+	packet.RequestID = "sha256:" + arrayFactsSHA(append([]byte("tsfg.array-facts.request.v6\x00"), data...))
+	packet.PackageID = "sha256:" + arrayFactsSHA(append([]byte("tsfg.array-facts.package.v6\x00"+arrayFactsSchema+"\x00"), payloadBytes...))
 	encoded, err := arrayFactsCanonical(packet)
 	if err != nil {
 		return err

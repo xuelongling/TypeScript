@@ -9,8 +9,8 @@ import (
 	"testing"
 )
 
-const rs26bBudgetInputPin = "567fc12d2d0cf0644175aaac090112cec58b2e3d553369e6e630679f7c5debf9"
-const rs26bBudgetLiteralPin = "4a5b1e0a2fd448bcd3d77af47ca696f180da2bc8033e1472e01a66716c8a6b6b"
+const rs26bBudgetInputPin = "fc3746c9b29bb79dee77254673dbc79ba3fbfc24d6ccb87613e508211229f988"
+const rs26bBudgetLiteralPin = "09c8cd7e3db0c7e7a9fb67be3323056092b895521057dd22f3c23b9a996d80c3"
 
 type rs26bBudgetCase struct {
 	ID, Text, SourceRoot, SourcePath, DeclarationPath, SHA256 string
@@ -39,30 +39,30 @@ func rs26bBudgetOfficialBundle(t *testing.T, item rs26bBudgetCase, dts string) [
 	}
 	config := ao23Map{"strict": true, "noEmit": true, "allowJs": false}
 	declarations := ao23Map{"version": "minimal-arrays-v3", "paths": []string{item.DeclarationPath}}
-	request := ao23Map{"family": "tsfg.array-facts-request-candidate", "version": 5, "input": ao23Map{"sourceRoot": item.SourceRoot, "rootFile": item.SourcePath, "files": files, "config": config, "declarations": declarations}}
+	request := ao23Map{"family": "tsfg.array-facts-request-candidate", "version": 6, "input": ao23Map{"sourceRoot": item.SourceRoot, "rootFile": item.SourcePath, "files": files, "config": config, "declarations": declarations}}
 	requestBytes := append(ao23JCS(t, request), '\n')
 	payload := ao23Map{"sourceRoot": item.SourceRoot, "rootFile": item.SourcePath, "positionUnit": "utf16", "config": config, "declarations": declarations, "files": owned, "types": types, "arrayLength": arrayLength, "readSpanLength": viewLength, "readSpanIntrinsic": intrinsic, "functions": functions, "exports": s.actualExports(headers), "diagnostics": []any{}}
-	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v5\x00"), requestBytes...))
-	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v5\x00"+rs26bSchema+"\x00"), ao23JCS(t, payload)...))
-	packet := ao23Map{"family": "tsfg.array-facts-package-candidate", "version": 5, "schemaHash": rs26bSchema, "requestId": requestID, "packageId": packageID, "payload": payload}
+	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v6\x00"), requestBytes...))
+	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v6\x00"+rs26bSchema+"\x00"), ao23JCS(t, payload)...))
+	packet := ao23Map{"family": "tsfg.array-facts-package-candidate", "version": 6, "schemaHash": rs26bSchema, "requestId": requestID, "packageId": packageID, "payload": payload}
 	s.proof["counters"] = s.counts
-	s.proof["checks"] = []string{"fresh complete4diagnostics0 and exact original two-file closure", "complete original AST/Symbol declarations/14DTS/readonly/scoped generic origins", "all14 actual required formal Symbols at original full slots", "all128 actual resolved calls with complete original signatures and assignability", "every1010 or1011 nominal descriptor reference retained, repeated full slots never compacted", "whole source/body/direct DAG/UTF16 roles", "original function/body/local/expression/raw-call limits", "whole independently frozen request/facts5/JSON metrics and counters comparison", "no Source producer, Product module or Product fee consumer invoked"}
+	s.proof["checks"] = []string{"fresh complete4diagnostics0 and exact original two-file closure", "complete original AST/Symbol declarations/14DTS/readonly/scoped generic origins", "all14 actual required formal Symbols at original full slots", "all128 actual resolved calls with complete original signatures and assignability", "every1010 or1011 nominal descriptor reference retained, repeated full slots never compacted", "whole source/body/direct DAG/UTF16 roles", "original function/body/local/expression/raw-call limits", "whole independently frozen request/facts6/JSON metrics and counters comparison", "no Source producer, Product module or Product fee consumer invoked"}
 	return ao23JCS(t, ao23Map{"name": item.ID, "contractSHA256": rs26bContractPin, "factsSchemaHash": rs26bSchema, "inputSHA256": rs26bBudgetInputPin, "literalSHA256": rs26bBudgetLiteralPin, "requestText": string(requestBytes), "packageText": string(append(ao23JCS(t, packet), '\n')), "official": s.proof, "metrics": ao23Map{"request": ao23Metrics(t, request), "package": ao23Metrics(t, packet)}})
 }
 
 func TestReadSpan26bFormalArgumentBudgetIndependentOfficial(t *testing.T) {
 	read := func(name string, bytes int, pin string) []byte {
-		raw, err := os.ReadFile("testdata/readspan-parameters-v5/" + name)
+		raw, err := os.ReadFile("testdata/readspan-parameters-v6/" + name)
 		if err != nil {
 			t.Fatal(err)
 		}
 		ao23Want(t, len(raw) == bytes && ao23Hash(raw) == pin, "exact preproduction formal/argument budget fixture "+name)
 		return raw
 	}
-	input := read("formal-argument-budget-inputs.json", 16768, rs26bBudgetInputPin)
-	literal := read("formal-argument-budget-expected-facts.json", 499330, rs26bBudgetLiteralPin)
+	input := read("formal-argument-budget-inputs.json", 24466, rs26bBudgetInputPin)
+	literal := read("formal-argument-budget-expected-facts.json", 503470, rs26bBudgetLiteralPin)
 	dts := read("minimal-arrays-v3.d.ts", 484, "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415")
-	read("schema.json", 35522, rs26bSchema[7:])
+	read("schema.json", 38816, rs26bSchema[7:])
 	var corpus struct {
 		ContractSHA256, FactsSchemaHash string
 		Cases                           []rs26bBudgetCase
@@ -82,7 +82,7 @@ func TestReadSpan26bFormalArgumentBudgetIndependentOfficial(t *testing.T) {
 	if err := json.Unmarshal(literal, &expected); err != nil {
 		t.Fatal(err)
 	}
-	ao23Want(t, len(corpus.Cases) == 2 && len(expected.Cases) == 2 && corpus.ContractSHA256 == rs26bContractPin && expected.ContractSHA256 == rs26bContractPin && corpus.FactsSchemaHash == rs26bSchema && expected.FactsSchemaHash == rs26bSchema && rs26bContractPin == "0b0cbffa7efc0d44589ba45bc71f5380d7cc7a089a6303dc2f224e9cc7505081", "exact two new budget cases with full R2 inner identities")
+	ao23Want(t, len(corpus.Cases) == 2 && len(expected.Cases) == 2 && corpus.ContractSHA256 == rs26bContractPin && expected.ContractSHA256 == rs26bContractPin && corpus.FactsSchemaHash == rs26bSchema && expected.FactsSchemaHash == rs26bSchema && rs26bContractPin == "e9887966e68cd5dcbb042095f344f4a63d41b6070835ba37ccd5057758358e4d", "exact two new budget cases with full R2 inner identities")
 	for i, item := range corpus.Cases {
 		want := expected.Cases[i]
 		ao23Want(t, want.Name == item.ID && item.ID == []string{"work1024", "work1025"}[i] && item.Bytes == []int{4700, 4712}[i], "frozen same-root witness order and source extent")

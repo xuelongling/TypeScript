@@ -10,7 +10,7 @@ import (
 )
 
 const rs26bAdjacentInputPin = "4ce5bddf8bede5e800798733876ce3d38ef9479e1b794b3ec027045dc9a66883"
-const rs26bAdjacentLiteralPin = "3931979872d7a69742632d4b61265bb872857fb581b35ba93efc5189aa8a291e"
+const rs26bAdjacentLiteralPin = "54d5a043b0e1ac9f26d3abd852179da969bf382f92dd9adc3d208eab79213c5e"
 
 func rs26bAdjacentBundle(t *testing.T, item rs26bAdjacentCase, dts string) []byte {
 	ao23Want(t, len(item.Text) == item.Bytes && ao23Units(item.Text) == item.UTF16Length && ao23Hash([]byte(item.Text)) == item.SHA256 && item.Bytes <= 261 && item.SourcePath == item.SourceRoot+"/app.ts" && item.DeclarationPath == item.SourceRoot+"/minimal-arrays-v3.d.ts", "exact complete original small adjacent source identity")
@@ -28,7 +28,7 @@ func rs26bAdjacentBundle(t *testing.T, item rs26bAdjacentCase, dts string) []byt
 	}
 	config := ao23Map{"strict": true, "noEmit": true, "allowJs": false}
 	declarations := ao23Map{"version": "minimal-arrays-v3", "paths": []string{item.DeclarationPath}}
-	request := ao23Map{"family": "tsfg.array-facts-request-candidate", "version": 5, "input": ao23Map{"sourceRoot": item.SourceRoot, "rootFile": item.SourcePath, "files": files, "config": config, "declarations": declarations}}
+	request := ao23Map{"family": "tsfg.array-facts-request-candidate", "version": 6, "input": ao23Map{"sourceRoot": item.SourceRoot, "rootFile": item.SourcePath, "files": files, "config": config, "declarations": declarations}}
 	requestBytes := append(ao23JCS(t, request), '\n')
 	bundle := ao23Map{"name": item.ID, "contractSHA256": rs26bContractPin, "factsSchemaHash": rs26bSchema, "inputSHA256": rs26bAdjacentInputPin, "literalSHA256": rs26bAdjacentLiteralPin, "requestText": string(requestBytes), "sourceExpectation": item.SourceExpected.Outcome, "official": s.proof, "metrics": ao23Map{"request": ao23Metrics(t, request)}}
 	if item.SourceExpected.Outcome == "capability" {
@@ -42,19 +42,19 @@ func rs26bAdjacentBundle(t *testing.T, item rs26bAdjacentCase, dts string) []byt
 	functions := s.rs26bAdjacentFunctions(headers)
 	ao23Want(t, len(functions) > 0 && len(functions) <= 16, "whole bounded original function table")
 	payload := ao23Map{"sourceRoot": item.SourceRoot, "rootFile": item.SourcePath, "positionUnit": "utf16", "config": config, "declarations": declarations, "files": owned, "types": types, "arrayLength": arrayLength, "readSpanLength": viewLength, "readSpanIntrinsic": intrinsic, "functions": functions, "exports": s.actualExports(headers), "diagnostics": []any{}}
-	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v5\x00"), requestBytes...))
-	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v5\x00"+rs26bSchema+"\x00"), ao23JCS(t, payload)...))
-	packet := ao23Map{"family": "tsfg.array-facts-package-candidate", "version": 5, "schemaHash": rs26bSchema, "requestId": requestID, "packageId": packageID, "payload": payload}
+	requestID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.request.v6\x00"), requestBytes...))
+	packageID := "sha256:" + ao23Hash(append([]byte("tsfg.array-facts.package.v6\x00"+rs26bSchema+"\x00"), ao23JCS(t, payload)...))
+	packet := ao23Map{"family": "tsfg.array-facts-package-candidate", "version": 6, "schemaHash": rs26bSchema, "requestId": requestID, "packageId": packageID, "payload": payload}
 	bundle["packageText"] = string(append(ao23JCS(t, packet), '\n'))
 	bundle["metrics"].(ao23Map)["package"] = ao23Metrics(t, packet)
 	s.proof["counters"] = s.counts
-	s.proof["checks"] = []string{"fresh complete4diagnostics0", "complete original closure/AST/Symbol declarations/14DTS/readonly/generic origins", "actual nominal view parameter full slots and every reference", "real resolved direct calls/required arity/ordered arguments/assignability", "whole body and complete direct DAG", "alias/read/length/checked roles and independent UTF16 anchors", "whole literal expected request/facts5/JSON metrics/counters comparison", "no Source/Product producer invoked"}
+	s.proof["checks"] = []string{"fresh complete4diagnostics0", "complete original closure/AST/Symbol declarations/14DTS/readonly/generic origins", "actual nominal view parameter full slots and every reference", "real resolved direct calls/required arity/ordered arguments/assignability", "whole body and complete direct DAG", "alias/read/length/checked roles and independent UTF16 anchors", "whole literal expected request/facts6/JSON metrics/counters comparison", "no Source/Product producer invoked"}
 	return ao23JCS(t, bundle)
 }
 
 func TestReadSpan26bAdjacentIndependentOfficial(t *testing.T) {
 	read := func(name string, bytes int, pin string) []byte {
-		raw, err := os.ReadFile("testdata/readspan-parameters-v5/" + name)
+		raw, err := os.ReadFile("testdata/readspan-parameters-v6/" + name)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -62,9 +62,9 @@ func TestReadSpan26bAdjacentIndependentOfficial(t *testing.T) {
 		return raw
 	}
 	raw := read("adjacent-inputs.json", 92072, rs26bAdjacentInputPin)
-	literal := read("adjacent-expected-facts.json", 153273, rs26bAdjacentLiteralPin)
+	literal := read("adjacent-expected-facts.json", 159931, rs26bAdjacentLiteralPin)
 	dts := read("minimal-arrays-v3.d.ts", 484, "282b335a6e0e0493fa74a3c1dd56f234f8c679079acdaf0600cefb8306c26415")
-	read("schema.json", 35522, rs26bSchema[7:])
+	read("schema.json", 38816, rs26bSchema[7:])
 	var corpus struct{ Cases []rs26bAdjacentCase }
 	var expected struct {
 		ContractSHA256, FactsSchemaHash string
@@ -80,7 +80,7 @@ func TestReadSpan26bAdjacentIndependentOfficial(t *testing.T) {
 	if err := json.Unmarshal(literal, &expected); err != nil {
 		t.Fatal(err)
 	}
-	ao23Want(t, len(corpus.Cases) == 16 && len(expected.Cases) == 16 && expected.ContractSHA256 == rs26bContractPin && expected.FactsSchemaHash == rs26bSchema, "complete16 frozen R2 adjacent cases and exact inner facts5 pin")
+	ao23Want(t, len(corpus.Cases) == 16 && len(expected.Cases) == 16 && expected.ContractSHA256 == rs26bContractPin && expected.FactsSchemaHash == rs26bSchema, "complete16 frozen R2 adjacent cases and exact inner facts6 pin")
 	positive, negative, total := 0, 0, 0
 	for i, item := range corpus.Cases {
 		want := expected.Cases[i]

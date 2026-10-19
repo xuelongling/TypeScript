@@ -84,9 +84,13 @@ func (p *arrayFactsProjection) density(facts []arrayFactsStatement, nodes []*ast
 		if err := p.ctx.Err(); err != nil {
 			return arrayFactsError("canceled", "dense source proof", err)
 		}
-		if fact.Value != nil && fact.Value.Kind == "directCall" {
-			// Arguments are atomic and ordered; only passed local roots lose exact length.
-			for _, argument := range *fact.Value.Arguments {
+		call := fact.Value
+		if call == nil {
+			call = fact.Initializer
+		}
+		if call != nil && call.Kind == "directCall" {
+			// Statement, initializer and tail calls forget only actual Array lengths.
+			for _, argument := range *call.Arguments {
 				if argument.FlowType == "array.f64" {
 					owner := state.owners[argument.Binding]
 					if owner == nil {

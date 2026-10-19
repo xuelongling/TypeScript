@@ -20,8 +20,8 @@ type arrayOwnerFrozenCase23e struct {
 
 func arrayOwnerFrozenBundles23e(t *testing.T) []arrayOwnerFrozenCase23e {
 	t.Helper()
-	data, err := os.ReadFile("testdata/array-facts-v5/owner10-official-packages.json")
-	if err != nil || len(data) != 1066549 || arrayFirstHash25(data) != "df84d28bf771ef5f846c9398a4170d490ad61784c893a7f484b99236a20d95e1" {
+	data, err := os.ReadFile("testdata/array-facts-v6/owner10-official-packages.json")
+	if err != nil || len(data) != 1073962 || arrayFirstHash25(data) != "771e0363f1f45f6b050711be919b07a459dcbe99006cd75e679809f7eeba776d" {
 		t.Fatalf("independent whole Source bundle bytes: %v", err)
 	}
 	var bundle struct{ Cases []arrayOwnerFrozenCase23e }
@@ -41,7 +41,7 @@ func TestArrayParameterOwner23ePublicWholeFrozenPackets(t *testing.T) {
 			input := []byte(item.RequestText)
 			before := bytes.Clone(input)
 			var output bytes.Buffer
-			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v5"}, bytes.NewReader(input), &output)
+			err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v6"}, bytes.NewReader(input), &output)
 			if !bytes.Equal(before, input) {
 				t.Fatal("caller input mutated")
 			}
@@ -49,7 +49,7 @@ func TestArrayParameterOwner23ePublicWholeFrozenPackets(t *testing.T) {
 				if output.Len() != 0 {
 					t.Fatal("failed publication produced partial packet")
 				}
-				t.Fatalf("ordinary complete source must publish v5 facts: %v", err)
+				t.Fatalf("ordinary complete source must publish v6 facts: %v", err)
 			}
 			if !bytes.Equal(output.Bytes(), []byte(item.PackageText)) {
 				t.Logf("TSFG_ARRAY_OWNER_23E_MISMATCH name=%s actual=%s", item.Name, base64.StdEncoding.EncodeToString(output.Bytes()))
@@ -65,7 +65,7 @@ func TestArrayParameterOwner23eRetiredV2Rejected(t *testing.T) {
 		t.Fatalf("unchanged historical FIRST input: %v", err)
 	}
 	var output bytes.Buffer
-	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v5"}, bytes.NewReader(input), &output)
+	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v6"}, bytes.NewReader(input), &output)
 	failure := arrayBoundaryFailure25(t, err)
 	if failure.Code != "r03-array-facts-schema" || failure.Phase != "input" || output.Len() != 0 {
 		t.Fatalf("retired v2 envelope must be rejected, not adapted: %+v", failure)
@@ -128,7 +128,7 @@ func TestArrayParameterOwner23eRetiredV3Rejected(t *testing.T) {
 		t.Fatalf("unchanged historical v3 request: %v", err)
 	}
 	var output arrayBoundaryWriter25
-	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v5"}, bytes.NewReader(input), &output)
+	err = runFrontendCommand(t.Context(), []string{"--array-facts-io-v6"}, bytes.NewReader(input), &output)
 	failure := arrayBoundaryFailure25(t, err)
 	if failure.Code != "r03-array-facts-schema" || failure.Phase != "input" || output.Len() != 0 || output.calls != 0 {
 		t.Fatalf("retired v3 envelope must fail before publication: %+v", failure)

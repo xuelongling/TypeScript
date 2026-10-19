@@ -100,7 +100,15 @@ func (p *arrayFactsProjection) viewLocal(statement, node *ast.Node, symbol *ast.
 	}
 	var value *arrayFactsValue
 	if local.Initializer.Kind == ast.KindCallExpression {
-		value, err = p.viewCreate(local.Initializer, state)
+		call := local.Initializer.AsCallExpression()
+		if call.Expression != nil && call.Expression.Kind == ast.KindIdentifier && p.check.GetSymbolAtLocation(call.Expression) == p.view.intrinsicSymbol {
+			value, err = p.viewCreate(local.Initializer, state)
+		} else {
+			value, err = p.call(local.Initializer, state)
+			if err == nil && value.Type != "readspan.f64" {
+				err = arrayFactsCapability(p.file, local.Initializer, "ordinary initializer call must return a nominal ReadSpan")
+			}
+		}
 	} else {
 		value, err = p.viewReference(local.Initializer, state)
 	}
