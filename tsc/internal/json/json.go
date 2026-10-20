@@ -11,6 +11,21 @@ import (
 
 var allowInvalid []json.Options = slices.Clip([]json.Options{jsontext.AllowInvalidUTF8(true)})
 
+// JoinOptions combines options using the official JSON implementation.
+func JoinOptions(opts ...json.Options) json.Options {
+	return json.JoinOptions(opts...)
+}
+
+// MarshalToFunc delegates type-specific streaming marshaling to the official API.
+func MarshalToFunc[T any](fn func(*Encoder, T) error) *Marshalers {
+	return json.MarshalToFunc(fn)
+}
+
+// WithMarshalers applies the official type-specific marshaler option.
+func WithMarshalers(value *Marshalers) json.Options {
+	return json.WithMarshalers(value)
+}
+
 func Marshal(in any, opts ...json.Options) (out []byte, err error) {
 	if len(opts) == 0 {
 		opts = allowInvalid
@@ -66,6 +81,11 @@ func UnmarshalRead(in io.Reader, out any, opts ...json.Options) (err error) {
 	return json.UnmarshalRead(in, out, opts...)
 }
 
+// AllowInvalidUTF8 applies the official UTF-8 encoding and decoding policy.
+func AllowInvalidUTF8(allow bool) json.Options {
+	return jsontext.AllowInvalidUTF8(allow)
+}
+
 func AllowDuplicateNames(allow bool) json.Options {
 	return jsontext.AllowDuplicateNames(allow)
 }
@@ -86,6 +106,7 @@ type (
 	Value           = jsontext.Value
 	Kind            = jsontext.Kind
 	UnmarshalerFrom = json.UnmarshalerFrom
+	Marshalers      = json.Marshalers
 	MarshalerTo     = json.MarshalerTo
 	Decoder         = jsontext.Decoder
 	Encoder         = jsontext.Encoder

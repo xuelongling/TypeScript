@@ -5,6 +5,8 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/go-json-experiment/json/jsontext"
+
 	"github.com/microsoft/typescript-go/internal/collections"
 	"github.com/microsoft/typescript-go/internal/json"
 	"gotest.tools/v3/assert"
@@ -184,4 +186,43 @@ func testOrderedMapUnmarshalJSON(t *testing.T, unmarshal func([]byte, any) error
 	var invalidMap collections.OrderedMap[int, any]
 	err = unmarshal([]byte(`{"a": 1, "b": "two"}`), &invalidMap)
 	assert.ErrorContains(t, err, "unmarshal")
+}
+
+func TestOrderedMapMarshalJSONPreservesEncoderUTF8Policy(t *testing.T) {
+	t.Parallel()
+	invalid := string([]byte{0xff})
+	for _, test := range []struct {
+		name, key, value, wantKey, wantValue string
+		strict, reject                       bool
+	}{
+		{"default-invalid-key", "alias" + invalid, "./module", "alias\ufffd", "./module", false, false},
+		{"default-invalid-value", "alias", "./" + invalid, "alias", "./\ufffd", false, false},
+		{"strict-invalid-key", "alias" + invalid, "./module", "", "", true, true},
+		{"strict-invalid-value", "alias", "./" + invalid, "", "", true, true},
+		{"strict-ASCII", "alias", "./module", "alias", "./module", true, false},
+		{"strict-replacement", "alias\ufffd", "./\ufffd", "alias\ufffd", "./\ufffd", true, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			var m collections.OrderedMap[string, []string]
+			m.Set(test.key, []string{test.value, "nested-ASCII", "\ufffd"})
+			var data []byte
+			var err error
+			if test.strict {
+				data, err = json.Marshal(&m, jsontext.AllowInvalidUTF8(false))
+			} else {
+				data, err = json.Marshal(&m)
+			}
+			if test.reject {
+				assert.Assert(t, err != nil, "strict UTF8 must reject the actual invalid key/value")
+				return
+			}
+			assert.NilError(t, err)
+			var decoded map[string][]string
+			assert.NilError(t, json.Unmarshal(data, &decoded))
+			assert.DeepEqual(t, decoded, map[string][]string{
+				test.wantKey: {test.wantValue, "nested-ASCII", "\ufffd"},
+			})
+		})
+	}
 }

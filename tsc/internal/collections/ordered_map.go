@@ -215,6 +215,9 @@ func (m *OrderedMap[K, V]) clone() OrderedMap[K, V] {
 var _ json.MarshalerTo = (*OrderedMap[string, string])(nil)
 
 func (m *OrderedMap[K, V]) MarshalJSONTo(enc *json.Encoder) error {
+	// Options aliases active encoder state. Snapshot it before the wrapper can
+	// apply its default; nested keys and values must retain the caller's checks.
+	options := json.JoinOptions(enc.Options())
 	if err := enc.WriteToken(json.BeginObject); err != nil {
 		return err
 	}
@@ -226,11 +229,11 @@ func (m *OrderedMap[K, V]) MarshalJSONTo(enc *json.Encoder) error {
 			return err
 		}
 
-		if err := json.MarshalEncode(enc, keyString); err != nil {
+		if err := json.MarshalEncode(enc, keyString, options); err != nil {
 			return err
 		}
 
-		if err := json.MarshalEncode(enc, m.mp[k]); err != nil {
+		if err := json.MarshalEncode(enc, m.mp[k], options); err != nil {
 			return err
 		}
 	}
