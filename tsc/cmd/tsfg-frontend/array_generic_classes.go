@@ -209,9 +209,9 @@ func (p *arrayGenericProjection) classBodies(nodes []*ast.Node) error {
 			if member.Kind != ast.KindConstructor {
 				continue
 			}
-			header, err := p.header(member, id)
-			if err != nil {
-				return err
+			header := p.constructors[id]
+			if header == nil || header.node != member {
+				return p.fail(member, "original constructor header differs")
 			}
 			fn, err := p.function(header)
 			if err != nil {

@@ -4,6 +4,7 @@ package main
 
 import (
 	"github.com/microsoft/typescript-go/internal/ast"
+	"github.com/microsoft/typescript-go/internal/checker"
 )
 
 func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, depth int) (*arrayGenericExpression, error) {
@@ -26,6 +27,9 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 	}
 	var receiver *arrayGenericExpression
 	receiverExpected := ""
+	if callee.Kind == ast.KindSuperKeyword {
+		return p.superConstruct(node, state, depth)
+	}
 	if callee.Kind != ast.KindIdentifier && callee.Kind != ast.KindPropertyAccessExpression {
 		return nil, p.fail(callee, "callee requires actual ordinary function/class binding")
 	}
@@ -44,6 +48,7 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 	decl := resolved.Declaration()
 	parameters := []string{}
 	result, calleeID := "", ""
+	var selected *arrayGenericSignature
 	var projectedOwner *arrayGenericExpression
 	if kind == "new" {
 		result = p.classes[symbol]
@@ -51,19 +56,12 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 			return nil, p.fail(node, "new must target a closed original nominal class")
 		}
 		calleeID = result
-		if decl == nil {
-			decl = symbol.Declarations[0]
+		signature, err := p.constructorSignature(result, resolved, p.check.GetTypeAtLocation(callee), node)
+		if err != nil {
+			return nil, err
 		}
-		for _, param := range resolved.Parameters() {
-			if len(param.Declarations) != 1 || param.Declarations[0].Kind != ast.KindParameter {
-				return nil, p.fail(node, "constructor signature parameter source")
-			}
-			typ, err := p.annotation(param.Declarations[0].AsParameterDeclaration().Type)
-			if err != nil {
-				return nil, err
-			}
-			parameters = append(parameters, typ)
-		}
+		selected = &signature
+		parameters = signature.Parameters
 	} else if decl == p.intrinsicNode {
 		if len(args) != 3 {
 			return nil, p.fail(node, "readSpan requires three original arguments")
@@ -112,33 +110,21 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 			return nil, err
 		}
 	}
-	values := []arrayGenericExpression{}
-	for i, arg := range args {
-		if !p.check.IsTypeAssignableTo(p.check.GetTypeAtLocation(arg), p.check.GetTypeOfSymbol(resolved.Parameters()[i])) {
-			return nil, p.fail(arg, "actual resolved signature argument assignability")
-		}
-		var value *arrayGenericExpression
-		var err error
-		if i == 0 && projectedOwner != nil {
-			value = projectedOwner
-		} else if decl == p.intrinsicNode && i > 0 {
-			value, err = p.index(arg, true, state, depth+1)
-		} else {
-			value, err = p.expression(arg, parameters[i], state, depth+1)
-		}
-		if err != nil {
-			return nil, err
-		}
-		values = append(values, *value)
+	values, err := p.argumentValues(args, resolved, parameters, state, depth, projectedOwner)
+	if err != nil {
+		return nil, err
 	}
 	if !p.check.IsTypeAssignableTo(p.check.GetReturnTypeOfSignature(resolved), p.actual[result]) {
 		return nil, p.fail(node, "actual resolved call result identity")
 	}
-	signatureID, err := genericNodeID("tsfg.array-facts.signature.v8\x00", decl)
-	if err != nil {
-		return nil, err
+	if selected == nil {
+		signatureID, err := genericNodeID("tsfg.array-facts.signature.v8\x00", decl)
+		if err != nil {
+			return nil, err
+		}
+		selected = &arrayGenericSignature{ID: signatureID, SourcePath: ast.GetSourceFileOfNode(decl).FileName(), DeclarationRange: *genericSpan(decl), Parameters: parameters, ReturnType: result}
 	}
-	v := &arrayGenericExpression{Kind: kind, Type: result, FlowType: result, Range: *genericSpan(node), Callee: calleeID, CalleeRange: genericSpan(callee), Signature: &arrayGenericSignature{ID: signatureID, SourcePath: ast.GetSourceFileOfNode(decl).FileName(), DeclarationRange: *genericSpan(decl), Parameters: parameters, ReturnType: result}, Arguments: &values}
+	v := &arrayGenericExpression{Kind: kind, Type: result, FlowType: result, Range: *genericSpan(node), Callee: calleeID, CalleeRange: genericSpan(callee), Signature: selected, Arguments: &values}
 	v.Receiver = receiver
 	if kind == "new" {
 		v.AllocationSite, err = genericNodeID("tsfg.array-facts.allocation.v8\x00", node)
@@ -149,11 +135,38 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 	// A call can mutate any aliased owner. Loss of a static length only adds a
 	// runtime check; it must never become a proof that a gap or read is safe.
 	if decl != p.intrinsicNode {
-		for _, length := range state.lengths {
-			length.known = false
-		}
+		state.invalidateLengths()
 	}
 	return v, nil
+}
+
+func (p *arrayGenericProjection) argumentValues(args []*ast.Node, resolved *checker.Signature, parameters []string, state *arrayGenericState, depth int, projectedOwner *arrayGenericExpression) ([]arrayGenericExpression, error) {
+	if len(args) != len(parameters) || len(args) != len(resolved.Parameters()) {
+		return nil, arrayFactsError("identity", "original argument/parameter arity differs", nil)
+	}
+	values := []arrayGenericExpression{}
+	for i, arg := range args {
+		if err := p.annotationWork(); err != nil {
+			return nil, err
+		}
+		if !p.check.IsTypeAssignableTo(p.check.GetTypeAtLocation(arg), p.check.GetTypeOfSymbolAtLocation(resolved.Parameters()[i], arg)) {
+			return nil, p.fail(arg, "actual resolved signature argument assignability")
+		}
+		var value *arrayGenericExpression
+		var err error
+		if i == 0 && projectedOwner != nil {
+			value = projectedOwner
+		} else if projectedOwner != nil {
+			value, err = p.index(arg, true, state, depth+1)
+		} else {
+			value, err = p.expression(arg, parameters[i], state, depth+1)
+		}
+		if err != nil {
+			return nil, err
+		}
+		values = append(values, *value)
+	}
+	return values, nil
 }
 
 func (p *arrayGenericProjection) property(node *ast.Node, state *arrayGenericState, depth int) (*arrayGenericExpression, error) {

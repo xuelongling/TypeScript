@@ -235,7 +235,7 @@ func (p *arrayGenericProjection) statements(nodes []*ast.Node, state *arrayGener
 					return nil, err
 				}
 				v.Value = value
-			} else if fn.ReturnType != "void" {
+			} else if fn.ReturnType != "void" && (state.header == nil || state.header.node.Kind != ast.KindConstructor) {
 				return nil, p.fail(node, "value return required by original signature")
 			}
 		case ast.KindExpressionStatement:

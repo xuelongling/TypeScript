@@ -12,6 +12,34 @@ func (p *arrayGenericProjection) referenceCompatibility(source, target string, n
 }
 
 func (p *arrayGenericProjection) referenceCompatibilitySources(sources []string, target string, node *ast.Node) ([]arrayGenericCompatibilityDependency, error) {
+	relation, err := p.classViews()
+	if err != nil {
+		return nil, err
+	}
+	selected := map[arrayGenericCompatibilityDependency]bool{}
+	for _, source := range sources {
+		if err := relation.requireLogical(selected, source, target, node); err != nil {
+			return nil, p.logicalRelationError(node, err)
+		}
+	}
+	roots, err := relation.dependencyList(selected)
+	if err != nil {
+		return nil, p.logicalRelationError(node, err)
+	}
+	for _, root := range roots {
+		proof, ok := relation.proofs[[2]string{root.SourceType, root.TargetType}]
+		if !ok {
+			return nil, arrayFactsError("identity", "selected expression root has no actual class proof", nil)
+		}
+		if err := relation.publishWitnesses(&proof.Compatibility); err != nil {
+			return nil, err
+		}
+	}
+	return roots, nil
+}
+
+// Shared actual member ownership feeds ordinary views and inherited parameters.
+func (p *arrayGenericProjection) classViews() (*arrayGenericViews, error) {
 	view := &classProjection{ctx: p.ctx, check: p.check, types: map[*checker.Type]string{}, bindings: map[*ast.Symbol]string{}, scalarKinds: map[string]string{}, resources: p.resources}
 	fields, methods := map[string]string{}, map[string]arrayGenericFunction{}
 	for symbol, id := range p.classes {
@@ -35,25 +63,5 @@ func (p *arrayGenericProjection) referenceCompatibilitySources(sources []string,
 		view.bindings[symbol] = method.function.ID
 		methods[method.function.ID] = method.function
 	}
-	relation := arrayGenericViews{p: p, official: view, fields: fields, methods: methods, seen: map[[2]string]bool{}, proofs: map[[2]string]arrayGenericCompatibilityWitness{}}
-	selected := map[arrayGenericCompatibilityDependency]bool{}
-	for _, source := range sources {
-		if err := relation.requireLogical(selected, source, target, node); err != nil {
-			return nil, p.logicalRelationError(node, err)
-		}
-	}
-	roots, err := relation.dependencyList(selected)
-	if err != nil {
-		return nil, p.logicalRelationError(node, err)
-	}
-	for _, root := range roots {
-		proof, ok := relation.proofs[[2]string{root.SourceType, root.TargetType}]
-		if !ok {
-			return nil, arrayFactsError("identity", "selected expression root has no actual class proof", nil)
-		}
-		if err := relation.publishWitnesses(&proof.Compatibility); err != nil {
-			return nil, err
-		}
-	}
-	return roots, nil
+	return &arrayGenericViews{p: p, official: view, fields: fields, methods: methods, seen: map[[2]string]bool{}, proofs: map[[2]string]arrayGenericCompatibilityWitness{}}, nil
 }

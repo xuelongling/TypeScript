@@ -11,22 +11,34 @@ var arrayGenericSchema []byte
 var arrayGenericDeclarations []byte
 
 type arrayGenericType struct {
-	ID                  string                `json:"id"`
-	Kind                string                `json:"kind"`
-	Name                string                `json:"name,omitempty"`
-	ElementType         string                `json:"elementType,omitempty"`
-	Members             []string              `json:"members,omitempty"`
-	SourcePath          string                `json:"sourcePath,omitempty"`
-	DeclarationRange    *span                 `json:"declarationRange,omitempty"`
-	NameRange           *span                 `json:"nameRange,omitempty"`
-	IndexSignatureRange *span                 `json:"indexSignatureRange,omitempty"`
-	NominalKey          *nominalKey           `json:"nominalKey,omitempty"`
-	MarkerOrigin        *markerOrigin         `json:"markerOrigin,omitempty"`
-	RuntimeKey          string                `json:"runtimeKey,omitempty"`
-	Base                string                `json:"base,omitempty"`
-	Methods             []string              `json:"methods,omitempty"`
-	Fields              *[]arrayGenericField  `json:"fields,omitzero"`
-	Constructor         *arrayGenericFunction `json:"constructor"`
+	ID                  string                    `json:"id"`
+	Kind                string                    `json:"kind"`
+	Name                string                    `json:"name,omitempty"`
+	ElementType         string                    `json:"elementType,omitempty"`
+	Members             []string                  `json:"members,omitempty"`
+	SourcePath          string                    `json:"sourcePath,omitempty"`
+	DeclarationRange    *span                     `json:"declarationRange,omitempty"`
+	NameRange           *span                     `json:"nameRange,omitempty"`
+	IndexSignatureRange *span                     `json:"indexSignatureRange,omitempty"`
+	NominalKey          *nominalKey               `json:"nominalKey,omitempty"`
+	MarkerOrigin        *markerOrigin             `json:"markerOrigin,omitempty"`
+	RuntimeKey          string                    `json:"runtimeKey,omitempty"`
+	Base                string                    `json:"base,omitempty"`
+	Methods             []string                  `json:"methods,omitempty"`
+	Fields              *[]arrayGenericField      `json:"fields,omitzero"`
+	Constructor         *arrayGenericFunction     `json:"constructor"`
+	Construction        *arrayGenericConstruction `json:"construction,omitempty"`
+}
+type arrayGenericConstruction struct {
+	ID                   string                `json:"id"`
+	Kind                 string                `json:"kind"`
+	Access               string                `json:"access"`
+	Signature            arrayGenericSignature `json:"signature"`
+	Parameters           []classParameter      `json:"parameters"`
+	ImplicitForward      *classImplicitForward `json:"implicitForward"`
+	InitializationPhase  string                `json:"initializationPhase"`
+	InitializationFields []string              `json:"initializationFields"`
+	Origin               classAnchor           `json:"origin"`
 }
 type arrayGenericField struct {
 	ParameterBinding string                  `json:"parameterBinding,omitempty"`

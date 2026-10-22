@@ -5,6 +5,7 @@ import (
 	"context"
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/checker"
+	"github.com/microsoft/typescript-go/internal/core"
 	"slices"
 	"strings"
 )
@@ -20,6 +21,8 @@ type arrayGenericProjection struct {
 	actual                             map[string]*checker.Type
 	payload                            arrayGenericPayload
 	headers                            map[*ast.Symbol]*arrayGenericHeader
+	classNodes                         map[string]*ast.Node
+	constructors                       map[string]*arrayGenericHeader
 	fields                             map[*ast.Symbol]arrayGenericField
 	stringUnits                        int
 	resources                          *classResources
@@ -35,6 +38,12 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) 
 	program, _, consumed, failure := newOwnedProgram(r)
 	if failure != nil {
 		return empty, arrayFactsDiagnostics("input", "official v8 source boundary", failure.Diagnostics)
+	}
+	// Construction ordering is bound to the actual fixed owned options, not to
+	// a downlevel emitter branch or an unrecorded caller option.
+	options := program.Options()
+	if options.Target != core.ScriptTargetESNext || !options.GetUseDefineForClassFields() || !options.GetEmitStandardClassFields() {
+		return empty, arrayFactsError("identity", "v8 construction requires its pinned native ESNext field options", nil)
 	}
 	if err := arrayFactsOfficialDiagnostics(ctx, program, r.RootFile); err != nil {
 		return empty, err
@@ -97,6 +106,9 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) 
 	}
 	p.resources = &classResources{ctx: ctx, maxNodes: 100000, maxDepth: 64, nodes: count}
 	if err := p.classHeaders(nodes); err != nil {
+		return empty, err
+	}
+	if err := p.constructorHeaders(nodes); err != nil {
 		return empty, err
 	}
 	ordered := []*arrayGenericHeader{}
