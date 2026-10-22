@@ -207,9 +207,33 @@ func (p *arrayGenericProjection) binary(node *ast.Node, expected string, state *
 			}
 		}
 	}
+	var skippedLengths map[string]arrayFactsLengthState
+	if op == ast.KindAmpersandAmpersandToken || op == ast.KindBarBarToken || op == ast.KindQuestionQuestionToken {
+		skippedLengths = make(map[string]arrayFactsLengthState, len(state.lengths))
+		for id, length := range state.lengths {
+			if err := p.ctx.Err(); err != nil {
+				return nil, err
+			}
+			skippedLengths[id] = *length
+		}
+	}
 	right, err := p.expression(b.Right, context, state, depth+1)
 	if err != nil {
 		return nil, err
+	}
+	// The RHS remains explicit source facts, but its effects are conditional.
+	// Keep only equal must lengths across the skipped and evaluated paths;
+	// unrelated roots and equal-length writes retain their existing proofs.
+	if skippedLengths != nil {
+		for id, length := range state.lengths {
+			if err := p.ctx.Err(); err != nil {
+				return nil, err
+			}
+			before, ok := skippedLengths[id]
+			if !ok || !before.known || !length.known || before.length != length.length {
+				length.known = false
+			}
+		}
 	}
 	typ, kind := left.FlowType, "binary"
 	actual := p.check.GetTypeAtLocation(node)

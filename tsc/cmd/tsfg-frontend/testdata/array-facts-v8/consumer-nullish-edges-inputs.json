@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "name": "view-short-nullish",
+      "source": "export function read(a:i32[],b:i32[],i:u32,flag:boolean|undefined):i32{let s:ReadSpan<i32>=readSpan(a,0,1);const t:ReadSpan<i32>=readSpan(b,0,1);flag??((s=t).length===1);a.length=0;return s[i];}"
+    },
+    {
+      "name": "density-short-nullish",
+      "source": "export function read(flag:boolean|undefined):i32{const a:i32[]=[1];flag??((a.length=0)===0);a[1]=2;return a[0];}"
+    }
+  ]
+}

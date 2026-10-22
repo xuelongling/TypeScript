@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "name": "view-short-rebind",
+      "source": "export function read(a:i32[],b:i32[],i:u32,flag:boolean):i32{let s:ReadSpan<i32>=readSpan(a,0,1);const t:ReadSpan<i32>=readSpan(b,0,1);flag&&((s=t).length===1);a.length=0;return s[i];}"
+    },
+    {
+      "name": "density-short-shrink",
+      "source": "export function read(flag:boolean):i32{const a:i32[]=[1];flag&&((a.length=0)===0);a[1]=2;return a[0];}"
+    },
+    {
+      "name": "override-active-view",
+      "source": "class Base{m(a:i32[]):void{}}class Derived extends Base{override m(a:i32[]):void{a.length=0;}}export function read(b:Base,a:i32[],i:u32):i32{const s:ReadSpan<i32>=readSpan(a,0,1);b.m(a);return s[i];}"
+    }
+  ]
+}
