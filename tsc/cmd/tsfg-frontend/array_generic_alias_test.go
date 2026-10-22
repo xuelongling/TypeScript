@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package main
 
-import "testing"
+import (
+	"bytes"
+	"errors"
+	"testing"
+)
 
 func TestArrayGenericV8WritableCovariantAlias25f(t *testing.T) {
 	prefix := "class Base{n:i32=1;} class Derived extends Base{extra:i32=2;} "
@@ -81,4 +85,55 @@ func TestArrayGenericV8WritableCovariantAlias25f(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestArrayGenericV8ReadonlyWritableAlias25f(t *testing.T) {
+	prefix := "class Frozen{readonly n:i32=1;} class Writable{n:i32=1;} "
+	t.Run("static-writable-view", func(t *testing.T) {
+		p := genericArrayPublic25f(t, prefix+"export function f(a:Frozen):i32{const b:Writable=a;b.n=7;return a.n;}")
+		types := genericConstructionTypes25f(t, p)
+		frozen, writable := types["Frozen"], types["Writable"]
+		from, to := (*frozen.Fields)[0], (*writable.Fields)[0]
+		if !from.Readonly || to.Readonly || from.Type != "i32" || to.Type != "i32" || from.ID == to.ID {
+			t.Fatal("original field identities/types/readonly flags changed")
+		}
+		fn := genericFindFunction25f(t, p, "f")
+		parameter := fn["parameters"].([]any)[0].(map[string]any)
+		binding := fn["bindings"].([]any)[0].(map[string]any)
+		body := fn["body"].([]any)
+		alias := body[0].(map[string]any)["initializer"].(map[string]any)
+		if parameter["declaredType"] != frozen.ID || binding["declaredType"] != writable.ID || alias["binding"] != parameter["id"] || alias["flowType"] != frozen.ID {
+			t.Fatal("writable static view must retain its actual readonly source alias")
+		}
+		proof := genericRootProof25f(t, p, alias)
+		members := proof["members"].([]any)
+		if proof["sourceType"] != frozen.ID || proof["targetType"] != writable.ID || len(members) != 1 || members[0].(map[string]any)["source"] != from.ID || members[0].(map[string]any)["target"] != to.ID {
+			t.Fatal("actual readonly-to-mutable M12 member projection lost")
+		}
+		store := body[1].(map[string]any)["value"].(map[string]any)
+		target := store["target"].(map[string]any)
+		receiver := target["receiver"].(map[string]any)
+		if store["kind"] != "fieldAssignment" || target["kind"] != "fieldTarget" || target["property"] != to.ID || receiver["binding"] != binding["id"] || receiver["flowType"] != writable.ID || store["value"].(map[string]any)["decimal"] != "7" {
+			t.Fatal("field write must retain the permitted mutable static view")
+		}
+		read := genericReturn25f(t, p, "f")
+		if read["kind"] != "fieldAccess" || read["property"] != from.ID || read["receiver"].(map[string]any)["binding"] != parameter["id"] {
+			t.Fatal("read through the original readonly alias changed")
+		}
+	})
+	t.Run("official-direct-readonly-write", func(t *testing.T) {
+		var out bytes.Buffer
+		err := runFrontendCommand(t.Context(), []string{"--array-facts-io-v8"}, bytes.NewReader(genericArrayRequest25f(t, prefix+"export function f(a:Frozen):i32{a.n=7;return a.n;}")), &out)
+		var failure *arrayFactsFailure
+		if !errors.As(err, &failure) || out.Len() != 0 {
+			t.Fatalf("direct readonly write must fail before facts output: %v", err)
+		}
+		for _, diagnostic := range failure.Diagnostics {
+			if diagnostic.UpstreamCode == 2540 {
+				t.Logf("official readonly diagnostic code=%d file=%s range=%+v", diagnostic.UpstreamCode, diagnostic.File, diagnostic.Range)
+				return
+			}
+		}
+		t.Fatalf("original official readonly diagnostic missing: %v", failure.Diagnostics)
+	})
 }
