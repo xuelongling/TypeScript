@@ -21,10 +21,6 @@ type arrayFactsJSONBudget struct {
 	fields        map[reflect.Type][]arrayFactsJSONField
 }
 
-func arrayFactsOutputBudget(packet arrayFactsPackage) error {
-	// Framing affects bytes, but a single LF is not a JSON token or container.
-	return arrayFactsDTOBudget(packet, 1)
-}
 func arrayFactsDTOBudget(value any, framing int) error {
 	if framing != 0 && framing != 1 {
 		return arrayFactsError("json", "invalid DTO framing", nil)

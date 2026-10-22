@@ -12,6 +12,22 @@ type arrayGenericHeader struct {
 	signature *checker.Signature
 	function  arrayGenericFunction
 }
+
+// Owners are source proofs, never physical runtime handles. Aliases share a
+// pointer so later declarations observe the current state of their original root.
+type arrayFactsLengthState struct {
+	parameter bool
+	known     bool
+	length    uint64
+}
+
+func arrayFactsBindingID(path string, name span) (string, error) {
+	return arrayFactsID("tsfg.array-facts.binding.v1\x00", struct {
+		SourcePath string `json:"sourcePath"`
+		NameRange  span   `json:"nameRange"`
+	}{path, name})
+}
+
 type arrayGenericState struct {
 	ownerType string
 	header    *arrayGenericHeader

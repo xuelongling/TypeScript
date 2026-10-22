@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"reflect"
 	"strings"
 	"testing"
@@ -38,8 +39,8 @@ func arrayBudgetOfficialWire26(t *testing.T, value any) ([]byte, genericJSONStat
 	}
 	return canonical, stats
 }
-func TestArrayFactsBudget26aMatchesOfficialWire(t *testing.T) {
-	emptyValues := []arrayFactsValue{}
+func TestArrayBoundaryBudget25fMatchesOfficialWire(t *testing.T) {
+	emptyValues := []arrayGenericExpression{}
 	emptyInts := []int{}
 	var nilInts []int
 	value := struct {
@@ -58,11 +59,11 @@ func TestArrayFactsBudget26aMatchesOfficialWire(t *testing.T) {
 		value any
 	}{
 		{"json-v2-empty-shapes", value},
-		{"empty-arguments", arrayFactsValue{Kind: "directCall", Arguments: &emptyValues}},
-		{"empty-elements", arrayFactsValue{Kind: "arrayLiteral", Elements: &emptyValues}},
-		{"omitted-readonly", arrayFactsType{ID: "f64", Kind: "scalar"}},
-		{"readonly", arrayFactsType{ID: "readspan.f64", Kind: "readSpan", Readonly: true}},
-		{"pointer", &arrayFactsValue{Kind: "numericLiteral", Type: "f64", Range: span{Start: 0, End: 1}, Token: "0", Bits: "0000000000000000"}},
+		{"empty-arguments", arrayGenericExpression{Kind: "call", Arguments: &emptyValues}},
+		{"empty-elements", arrayGenericExpression{Kind: "arrayLiteral", Elements: &emptyValues}},
+		{"omitted-methods", arrayGenericType{ID: "f64", Kind: "scalar"}},
+		{"readonly-length", arrayFactsReadSpanLength{Readonly: true}},
+		{"pointer", &arrayGenericExpression{Kind: "numericLiteral", Type: "f64", Range: span{Start: 0, End: 1}, Token: "0", Bits: "0000000000000000"}},
 	} {
 		t.Run(item.name, func(t *testing.T) {
 			expected, stats := arrayBudgetOfficialWire26(t, item.value)
@@ -85,13 +86,13 @@ func TestArrayFactsBudget26aMatchesOfficialWire(t *testing.T) {
 			if item.name == "empty-elements" && !bytes.Contains(actual, []byte("\"elements\":[]")) {
 				t.Fatal("empty required elements dropped")
 			}
-			if item.name == "omitted-readonly" && bytes.Contains(actual, []byte("readonly")) {
-				t.Fatal("zero readonly was charged/encoded")
+			if item.name == "omitted-methods" && bytes.Contains(actual, []byte("methods")) {
+				t.Fatal("omitted methods were charged/encoded")
 			}
 		})
 	}
 }
-func TestArrayFactsBudget26aInclusiveWireBoundaries(t *testing.T) {
+func TestArrayBoundaryBudget25fInclusiveWireBoundaries(t *testing.T) {
 	value := struct {
 		Data []string `json:"data"`
 	}{Data: []string{"\x00é😀"}}
@@ -121,7 +122,7 @@ func TestArrayFactsBudget26aInclusiveWireBoundaries(t *testing.T) {
 					}
 					return
 				}
-				failure := arrayBoundaryFailure25(t, err)
+				failure := arrayBudgetFailure26(t, err)
 				if failure.Code != "r03-array-facts-limit" {
 					t.Fatalf("wire bound lost limit classification: %+v", failure)
 				}
@@ -135,7 +136,7 @@ type arrayBudgetNode26 struct {
 	Next  *arrayBudgetNode26 `json:"next,omitempty"`
 }
 
-func TestArrayFactsBudget26aDepthAndCycles(t *testing.T) {
+func TestArrayBoundaryBudget25fDepthAndCycles(t *testing.T) {
 	root := &arrayBudgetNode26{Value: "x"}
 	tail := root
 	for i := 1; i < 64; i++ {
@@ -148,11 +149,11 @@ func TestArrayFactsBudget26aDepthAndCycles(t *testing.T) {
 		t.Fatalf("64 actual JSON objects through pointers: %v", err)
 	}
 	tail.Next = &arrayBudgetNode26{Value: "x"}
-	if _, err := arrayFactsCanonical(root); arrayBoundaryFailure25(t, err).Code != "r03-array-facts-limit" {
+	if _, err := arrayFactsCanonical(root); arrayBudgetFailure26(t, err).Code != "r03-array-facts-limit" {
 		t.Fatal("65 objects passed JSON depth")
 	}
 	root.Next = root
-	if _, err := arrayFactsCanonical(root); arrayBoundaryFailure25(t, err).Detail != "JSON depth" {
+	if _, err := arrayFactsCanonical(root); arrayBudgetFailure26(t, err).Detail != "JSON depth" {
 		t.Fatal("cycle did not fail at bounded JSON depth")
 	}
 }
@@ -169,7 +170,7 @@ func (arrayBudgetCustomJSON26) MarshalJSON() ([]byte, error) {
 	arrayBudgetMethodCalls26++
 	return []byte("null"), nil
 }
-func TestArrayFactsBudget26aRejectsUnsafeTypesAndUnicode(t *testing.T) {
+func TestArrayBoundaryBudget25fRejectsUnsafeTypesAndUnicode(t *testing.T) {
 	arrayBudgetMethodCalls26 = 0
 	for _, value := range []any{
 		arrayBudgetCustomZero26(0), &arrayBudgetCustomJSON26{},
@@ -184,7 +185,7 @@ func TestArrayFactsBudget26aRejectsUnsafeTypesAndUnicode(t *testing.T) {
 		}{},
 	} {
 		encoded, err := arrayFactsCanonical(value)
-		failure := arrayBoundaryFailure25(t, err)
+		failure := arrayBudgetFailure26(t, err)
 		if failure.Code != "r03-array-facts-json" || encoded != nil || arrayBudgetMethodCalls26 != 0 {
 			t.Fatalf("unsafe/custom type reached encoding: %T %v calls=%d", value, err, arrayBudgetMethodCalls26)
 		}
@@ -195,9 +196,18 @@ func TestArrayFactsBudget26aRejectsUnsafeTypesAndUnicode(t *testing.T) {
 		{Data: string([]byte{0xff})}, {Data: strings.Repeat("a", 1048577)},
 	} {
 		encoded, err := arrayFactsCanonical(value)
-		failure := arrayBoundaryFailure25(t, err)
+		failure := arrayBudgetFailure26(t, err)
 		if encoded != nil || failure.Code != "r03-array-facts-unicode" && failure.Code != "r03-array-facts-limit" {
 			t.Fatalf("invalid UTF8/string limit reached writer: %v", err)
 		}
 	}
+}
+
+func arrayBudgetFailure26(t *testing.T, err error) *arrayFactsFailure {
+	t.Helper()
+	var failure *arrayFactsFailure
+	if !errors.As(err, &failure) {
+		t.Fatalf("expected owned Array boundary failure: %v", err)
+	}
+	return failure
 }

@@ -1,0 +1,20 @@
+{
+  "cases": [
+    {
+      "name": "nullish-array-i32",
+      "source": "export function run(x:i32|undefined):i32{const a:i32[]=[1];x??(a[0]=2);return a[0];}"
+    },
+    {
+      "name": "nullish-field-i32",
+      "source": "class B{n:i32=1;}export function run(x:i32|undefined,b:B):i32{b.n=1;x??(b.n=2);return b.n;}"
+    },
+    {
+      "name": "nullish-array-nonnullable",
+      "source": "export function run(x:i32):i32{const a:i32[]=[1];x??(a[0]=2);return a[0];}"
+    },
+    {
+      "name": "nullish-array-string",
+      "source": "export function run(x:string|undefined,s:string):i32|string{const a:(i32|string)[]=[1];x??(a[0]=s);return a[0];}"
+    }
+  ]
+}
