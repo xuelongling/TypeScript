@@ -179,15 +179,31 @@ func (p *arrayGenericProjection) classHeaders(nodes []*ast.Node) error {
 		p.types[id] = typ
 	}
 	for _, header := range p.headers {
+		if err := p.ctx.Err(); err != nil {
+			return err
+		}
 		if header.function.OwnerType == "" {
 			continue
 		}
 		base := p.types[header.function.OwnerType].Base
 		if base != "" {
 			symbol := p.check.GetPropertyOfType(p.actual[base], header.function.Name)
-			if original := p.headers[symbol]; original != nil {
-				header.function.OverrideTarget = original.function.ID
+			if symbol == nil {
+				continue
 			}
+			// A base member may have an instantiated this-type symbol. As in
+			// M12, its original declaration must join the owned method header.
+			original := p.headers[symbol]
+			if original == nil {
+				roots := p.check.GetRootSymbols(symbol)
+				if len(roots) == 1 {
+					original = p.headers[roots[0]]
+				}
+			}
+			if original == nil || original.node != symbol.ValueDeclaration {
+				return p.fail(header.node, "official overridden method must join its owned original declaration")
+			}
+			header.function.OverrideTarget = original.function.ID
 		}
 	}
 	return nil
