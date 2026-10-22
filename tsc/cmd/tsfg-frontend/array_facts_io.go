@@ -15,6 +15,10 @@ import (
 
 // Count legal request arrays before the decoder allocates typed file/path slices.
 func arrayFactsRequestArrays(data []byte) error {
+	return arrayFactsRequestArrayLimit(data, 2)
+}
+
+func arrayFactsRequestArrayLimit(data []byte, maximum int) error {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	containers := []int{}
 	for {
@@ -28,7 +32,7 @@ func arrayFactsRequestArrays(data []byte) error {
 		kind, last := token.Kind(), len(containers)-1
 		if kind != '}' && kind != ']' && last >= 0 && containers[last] >= 0 {
 			containers[last]++
-			if containers[last] > 2 {
+			if containers[last] > maximum {
 				return arrayFactsError("limit", "closed request array cardinality", nil)
 			}
 		}
