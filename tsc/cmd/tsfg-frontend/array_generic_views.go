@@ -65,16 +65,19 @@ func (r *arrayGenericViews) reference(source, target string, node *ast.Node) (*c
 	return &witness, nil
 }
 
-// A single witness can describe one actual class view through presence and
-// homogeneous containers. Multiple distinct nominal sources require multiple
-// witnesses, which this DTO intentionally does not fabricate from one proof.
-func (p *arrayGenericProjection) assertionClassView(source, target string, node *ast.Node) (*classCompatibility, error) {
+// Identity assertions select existing variants without changing their payload.
+// Structural views still require the actual selected M12 member proof roots.
+func (p *arrayGenericProjection) assertionClassView(source, target string, node *ast.Node) ([]arrayGenericCompatibilityDependency, error) {
 	if source == target {
 		return nil, nil
 	}
 	from, to := p.types[source], p.types[target]
 	if to.Kind == "undefined" || to.Kind == "null" || to.Kind == "void" {
 		return nil, nil
+	}
+	identity, err := p.assertionIdentityView(source, target)
+	if err != nil || identity {
+		return nil, err
 	}
 	if from.Kind == "union" {
 		members := []string{}

@@ -15,7 +15,7 @@ func TestArrayGenericV8CompatibilityOrigins25f(t *testing.T) {
 	}
 	counts := map[float64]int{}
 	for _, name := range []string{"f", "g"} {
-		proof := genericReturn25f(t, p, name)["compatibility"].(map[string]any)
+		proof := genericRootProof25f(t, p, genericReturn25f(t, p, name))
 		counts[proof["origin"].(map[string]any)["start"].(float64)] = 0
 	}
 	previous := float64(-1)

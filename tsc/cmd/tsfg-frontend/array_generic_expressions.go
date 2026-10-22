@@ -185,7 +185,7 @@ func (p *arrayGenericProjection) expression(node *ast.Node, expected string, sta
 		if failure := p.assertionRepresentation(node, inner.FlowType, typ); failure != nil {
 			return nil, failure
 		}
-		v.Compatibility, failure = p.assertionClassView(inner.FlowType, typ, node)
+		v.CompatibilityRoots, failure = p.assertionClassView(inner.FlowType, typ, node)
 		if failure != nil {
 			return nil, failure
 		}
@@ -244,14 +244,14 @@ func (p *arrayGenericProjection) expression(node *ast.Node, expected string, sta
 		v.FlowType = v.Type
 	}
 	if !p.fits(v.FlowType, expected) || p.referenceViewRequired(v.FlowType, expected) {
-		if v.Compatibility != nil {
-			return nil, p.fail(node, "assertion and contextual reference views require distinct member witnesses")
-		}
-		witness, failure := p.referenceCompatibility(v.FlowType, expected, node)
+		roots, failure := p.referenceCompatibility(v.FlowType, expected, node)
 		if failure != nil {
 			return nil, failure
 		}
-		v.Compatibility = witness
+		v.CompatibilityRoots, failure = p.mergeCompatibilityRoots(v.CompatibilityRoots, roots)
+		if failure != nil {
+			return nil, failure
+		}
 	}
 	if expected != "" && !p.check.IsTypeAssignableTo(actual, p.actual[expected]) {
 		return nil, p.fail(node, "original checker assignment relation rejected expression")
@@ -260,6 +260,14 @@ func (p *arrayGenericProjection) expression(node *ast.Node, expected string, sta
 }
 
 func (p *arrayGenericProjection) referenceViewRequired(source, target string) bool {
+	if p.types[source].Kind == "union" {
+		for _, id := range p.types[source].Members {
+			if p.referenceViewRequired(id, target) {
+				return true
+			}
+		}
+		return false
+	}
 	if p.types[source].Kind != "reference" || source == target {
 		return false
 	}

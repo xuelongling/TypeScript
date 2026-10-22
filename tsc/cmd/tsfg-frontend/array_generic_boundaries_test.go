@@ -30,12 +30,12 @@ func TestArrayGenericV8StructuralReferenceWitnessPublic25f(t *testing.T) {
 	p := genericArrayPublic25f(t, "class Base { n:i32=1; } class Other { n:i32=2; extra:i32=3; } function pass(b:Base):Base { return b; } export function read(o:Other,i:u32):Base { const a:Base[]=[o]; a[i]=o; return pass(a[i]); }")
 	body := genericFindFunction25f(t, p, "read")["body"].([]any)
 	init := body[0].(map[string]any)["initializer"].(map[string]any)["elements"].([]any)[0].(map[string]any)
-	witness := init["compatibility"].(map[string]any)
+	witness := genericRootProof25f(t, p, init)
 	if witness["assignable"] != true || witness["sourceType"] == witness["targetType"] || len(witness["members"].([]any)) != 1 || witness["origin"] == nil {
 		t.Fatalf("actual M12 structural witness missing: %v", witness)
 	}
 	store := body[1].(map[string]any)["value"].(map[string]any)["value"].(map[string]any)
-	if store["compatibility"] == nil {
+	if store["compatibilityRoots"] == nil {
 		t.Fatal("element store lost the target contextual reference view")
 	}
 }
@@ -68,7 +68,7 @@ func TestArrayGenericV8ExactIndexAndInheritancePublic25f(t *testing.T) {
 	}
 	p := genericArrayPublic25f(t, "class Base { n:i32=1; } class Derived extends Base { extra:i32=2; } export function read(v:Derived,i:u32):Base { const a:Base[]=[v]; return a[i]; }")
 	init := genericFindFunction25f(t, p, "read")["body"].([]any)[0].(map[string]any)["initializer"].(map[string]any)["elements"].([]any)[0].(map[string]any)
-	if init["compatibility"] == nil {
+	if init["compatibilityRoots"] == nil {
 		t.Fatal("inheritance erased original reference view witness")
 	}
 }

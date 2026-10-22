@@ -55,8 +55,8 @@ func TestArrayGenericV8ReviewClassAssertionMembers25f(t *testing.T) {
 	} {
 		p := genericArrayPublic25f(t, source)
 		cast := genericReturn25f(t, p, "f")["receiver"].(map[string]any)["expression"].(map[string]any)
-		proof, ok := cast["compatibility"].(map[string]any)
-		if !ok || cast["kind"] != "as" || cast["expression"].(map[string]any)["kind"] != "checkedElementAccess" || proof["assignable"] != true {
+		proof := genericRootProof25f(t, p, cast)
+		if cast["kind"] != "as" || cast["expression"].(map[string]any)["kind"] != "checkedElementAccess" || proof["assignable"] != true {
 			t.Fatalf("structural assertion lost original checked receiver or M12 proof: %v", cast)
 		}
 		members := proof["members"].([]any)

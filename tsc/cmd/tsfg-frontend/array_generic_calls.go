@@ -25,13 +25,7 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 		kind = "new"
 	}
 	var receiver *arrayGenericExpression
-	if callee.Kind == ast.KindPropertyAccessExpression {
-		var err error
-		receiver, err = p.expression(callee.AsPropertyAccessExpression().Expression, "", state, depth+1)
-		if err != nil {
-			return nil, err
-		}
-	}
+	receiverExpected := ""
 	if callee.Kind != ast.KindIdentifier && callee.Kind != ast.KindPropertyAccessExpression {
 		return nil, p.fail(callee, "callee requires actual ordinary function/class binding")
 	}
@@ -103,12 +97,20 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 			return nil, p.fail(node, "call signature must join its owned function declaration")
 		}
 		calleeID, result = header.function.ID, header.function.ReturnType
+		receiverExpected = header.function.OwnerType
 		for _, param := range header.function.Parameters {
 			parameters = append(parameters, param.DeclaredType)
 		}
 	}
 	if len(parameters) != len(args) || len(resolved.Parameters()) != len(args) {
 		return nil, p.fail(node, "all original call parameters required")
+	}
+	if callee.Kind == ast.KindPropertyAccessExpression {
+		var err error
+		receiver, err = p.expression(callee.AsPropertyAccessExpression().Expression, receiverExpected, state, depth+1)
+		if err != nil {
+			return nil, err
+		}
 	}
 	values := []arrayGenericExpression{}
 	for i, arg := range args {

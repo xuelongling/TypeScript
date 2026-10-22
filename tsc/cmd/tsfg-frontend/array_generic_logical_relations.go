@@ -26,36 +26,6 @@ func (p *arrayGenericProjection) logicalRelationError(node *ast.Node, err error)
 	return p.fail(node, mismatch.detail)
 }
 
-func (r *arrayGenericViews) referenceTarget(source, target string, node *ast.Node) (*classCompatibility, error) {
-	targets := []string{target}
-	if r.p.types[target].Kind == "union" {
-		targets = r.p.types[target].Members
-	}
-	var rejected error
-	for _, id := range targets {
-		if err := r.p.annotationWork(); err != nil {
-			return nil, err
-		}
-		if r.p.types[id].Kind != "reference" || !r.p.check.IsTypeAssignableTo(r.p.actual[source], r.p.actual[id]) {
-			continue
-		}
-		mark := r.beginProofCandidate()
-		witness, err := r.reference(source, id, node)
-		r.finishProofCandidate(mark, err == nil)
-		var mismatch *arrayGenericRelationMismatch
-		if !errors.As(err, &mismatch) {
-			return witness, err
-		}
-		if rejected == nil || mismatch.numeric {
-			rejected = err
-		}
-	}
-	if rejected == nil {
-		rejected = &arrayGenericRelationMismatch{detail: "reference slot has no representation-preserving member view"}
-	}
-	return nil, rejected
-}
-
 func (r *arrayGenericViews) logical(source, target string, node *ast.Node) ([]arrayGenericCompatibilityDependency, error) {
 	if err := r.p.annotationWork(); err != nil {
 		return nil, err

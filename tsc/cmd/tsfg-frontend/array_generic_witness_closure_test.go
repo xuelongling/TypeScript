@@ -34,7 +34,7 @@ func genericWitnessClosure25f(t *testing.T, p map[string]any, expected map[strin
 			names[typ["id"].(string)] = name
 		}
 	}
-	root := genericReturn25f(t, p, "f")["compatibility"].(map[string]any)
+	root := genericRootProof25f(t, p, genericReturn25f(t, p, "f"))
 	origin := root["origin"].(map[string]any)
 	seen, previous := map[string]bool{}, ""
 	for _, raw := range records {
