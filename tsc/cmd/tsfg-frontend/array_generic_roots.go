@@ -2,6 +2,27 @@
 // Expression roots share one occurrence; identity selection needs no class map.
 package main
 
+func (p *arrayGenericProjection) assertionContainsNominal(id string) (bool, error) {
+	if err := p.annotationWork(); err != nil {
+		return false, err
+	}
+	typ := p.types[id]
+	switch typ.Kind {
+	case "reference", "value":
+		return true, nil
+	case "array", "readSpan":
+		return p.assertionContainsNominal(typ.ElementType)
+	case "union":
+		for _, member := range typ.Members {
+			found, err := p.assertionContainsNominal(member)
+			if err != nil || found {
+				return found, err
+			}
+		}
+	}
+	return false, nil
+}
+
 func (p *arrayGenericProjection) mergeCompatibilityRoots(a, b []arrayGenericCompatibilityDependency) ([]arrayGenericCompatibilityDependency, error) {
 	selected := map[arrayGenericCompatibilityDependency]bool{}
 	for _, roots := range [][]arrayGenericCompatibilityDependency{a, b} {

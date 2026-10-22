@@ -82,6 +82,9 @@ func (p *arrayGenericProjection) assertionClassView(source, target string, node 
 	if from.Kind == "union" {
 		members := []string{}
 		for _, id := range from.Members {
+			if err := p.annotationWork(); err != nil {
+				return nil, err
+			}
 			if id != "undefined" && id != "null" {
 				members = append(members, id)
 			}
@@ -90,8 +93,12 @@ func (p *arrayGenericProjection) assertionClassView(source, target string, node 
 			return p.assertionClassView(members[0], target, node)
 		}
 		for _, id := range members {
-			if p.types[id].Kind == "reference" {
-				return nil, p.fail(node, "multiple nominal assertion sources require distinct member view witnesses")
+			nominal, err := p.assertionContainsNominal(id)
+			if err != nil {
+				return nil, err
+			}
+			if nominal {
+				return p.referenceCompatibilitySources(members, target, node)
 			}
 		}
 	}
@@ -110,8 +117,12 @@ func (p *arrayGenericProjection) assertionClassView(source, target string, node 
 		if len(members) == 1 {
 			return p.assertionClassView(source, members[0], node)
 		}
-		if from.Kind == "reference" {
-			return nil, p.fail(node, "multiple nominal assertion targets require distinct member view witnesses")
+		nominal, err := p.assertionContainsNominal(source)
+		if err != nil {
+			return nil, err
+		}
+		if nominal {
+			return p.referenceCompatibility(source, target, node)
 		}
 	}
 	if (from.Kind == "array" || from.Kind == "readSpan") && (to.Kind == "array" || to.Kind == "readSpan") {

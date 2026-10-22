@@ -8,6 +8,10 @@ import (
 )
 
 func (p *arrayGenericProjection) referenceCompatibility(source, target string, node *ast.Node) ([]arrayGenericCompatibilityDependency, error) {
+	return p.referenceCompatibilitySources([]string{source}, target, node)
+}
+
+func (p *arrayGenericProjection) referenceCompatibilitySources(sources []string, target string, node *ast.Node) ([]arrayGenericCompatibilityDependency, error) {
 	view := &classProjection{ctx: p.ctx, check: p.check, types: map[*checker.Type]string{}, bindings: map[*ast.Symbol]string{}, scalarKinds: map[string]string{}, resources: p.resources}
 	fields, methods := map[string]string{}, map[string]arrayGenericFunction{}
 	for symbol, id := range p.classes {
@@ -32,7 +36,13 @@ func (p *arrayGenericProjection) referenceCompatibility(source, target string, n
 		methods[method.function.ID] = method.function
 	}
 	relation := arrayGenericViews{p: p, official: view, fields: fields, methods: methods, seen: map[[2]string]bool{}, proofs: map[[2]string]arrayGenericCompatibilityWitness{}}
-	roots, err := relation.logical(source, target, node)
+	selected := map[arrayGenericCompatibilityDependency]bool{}
+	for _, source := range sources {
+		if err := relation.requireLogical(selected, source, target, node); err != nil {
+			return nil, p.logicalRelationError(node, err)
+		}
+	}
+	roots, err := relation.dependencyList(selected)
 	if err != nil {
 		return nil, p.logicalRelationError(node, err)
 	}
