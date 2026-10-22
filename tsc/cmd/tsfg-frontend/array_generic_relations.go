@@ -25,7 +25,13 @@ func (p *arrayGenericProjection) referenceCompatibility(source, target string, n
 		view.bindings[symbol] = method.function.ID
 		methods[method.function.ID] = method.function
 	}
-	relation := arrayGenericViews{p: p, official: view, fields: fields, methods: methods, seen: map[[2]string]bool{}}
+	relation := arrayGenericViews{p: p, official: view, fields: fields, methods: methods, seen: map[[2]string]bool{}, proofs: map[[2]string]arrayGenericCompatibilityWitness{}}
 	witness, err := relation.referenceTarget(source, target, node)
-	return witness, p.logicalRelationError(node, err)
+	if err != nil {
+		return nil, p.logicalRelationError(node, err)
+	}
+	if err := relation.publishWitnesses(witness); err != nil {
+		return nil, err
+	}
+	return witness, nil
 }

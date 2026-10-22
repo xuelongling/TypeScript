@@ -27,6 +27,7 @@ type arrayGenericProjection struct {
 	annotationMemo                     map[*ast.Node]string
 	annotationAliases                  map[*ast.Symbol]bool
 	typeKeyBytes                       int
+	witnesses                          map[arrayGenericWitnessIdentity]arrayGenericCompatibilityWitness
 }
 
 func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) (arrayGenericPayload, error) {
@@ -51,6 +52,7 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) 
 	defer release()
 	p := &arrayGenericProjection{ctx: ctx, check: check, dts: program.GetSourceFile(input.Declarations.Paths[0]), scalars: map[*ast.Symbol]*ast.Node{}, classes: map[*ast.Symbol]string{}, types: map[string]arrayGenericType{}, actual: map[string]*checker.Type{}, headers: map[*ast.Symbol]*arrayGenericHeader{}, fields: map[*ast.Symbol]arrayGenericField{}}
 	p.payload = arrayGenericPayload{SourceRoot: input.SourceRoot, RootFile: input.RootFile, PositionUnit: "utf16", Config: input.Config, Declarations: input.Declarations, Files: []arrayFactsOwnedFile{}, Types: []arrayGenericType{}, Functions: []arrayGenericFunction{}, Exports: []arrayFactsExport{}, Diagnostics: []diagnostic{}}
+	p.payload.CompatibilityWitnesses = []arrayGenericCompatibilityWitness{}
 	files := []*ast.SourceFile{}
 	nodes := []*ast.Node{}
 	count := 0
@@ -143,5 +145,8 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) 
 		p.payload.Types = append(p.payload.Types, typ)
 	}
 	slices.SortFunc(p.payload.Types, func(a, b arrayGenericType) int { return strings.Compare(a.ID, b.ID) })
+	if err := p.finishWitnesses(); err != nil {
+		return empty, err
+	}
 	return p.payload, nil
 }

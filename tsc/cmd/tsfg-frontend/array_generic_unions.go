@@ -65,23 +65,28 @@ func (p *arrayGenericProjection) union(members []string, actual *checker.Type) (
 // A bounded merge checks cancellation/work on every copied sorting edge;
 // temporary storage is proportional only to already unique catalog members.
 func (p *arrayGenericProjection) sortUnion(ids []string) error {
-	temporary := make([]string, len(ids))
-	for width := 1; width < len(ids); width *= 2 {
-		for start := 0; start < len(ids); start += width * 2 {
-			middle, end := min(start+width, len(ids)), min(start+width*2, len(ids))
+	return sortArrayGeneric(ids, p.annotationWork, func(a, b string) bool { return a < b })
+}
+
+// Union IDs and witness graph records both need bounded, cancelable ordering.
+func sortArrayGeneric[T any](values []T, work func() error, less func(T, T) bool) error {
+	temporary := make([]T, len(values))
+	for width := 1; width < len(values); width *= 2 {
+		for start := 0; start < len(values); start += width * 2 {
+			middle, end := min(start+width, len(values)), min(start+width*2, len(values))
 			left, right := start, middle
 			for i := start; i < end; i++ {
-				if err := p.annotationWork(); err != nil {
+				if err := work(); err != nil {
 					return err
 				}
-				if left < middle && (right == end || ids[left] < ids[right]) {
-					temporary[i], left = ids[left], left+1
+				if left < middle && (right == end || less(values[left], values[right])) {
+					temporary[i], left = values[left], left+1
 				} else {
-					temporary[i], right = ids[right], right+1
+					temporary[i], right = values[right], right+1
 				}
 			}
 		}
-		copy(ids, temporary)
+		copy(values, temporary)
 	}
 	return nil
 }

@@ -5,11 +5,14 @@ package main
 import "github.com/microsoft/typescript-go/internal/ast"
 
 type arrayGenericViews struct {
-	p        *arrayGenericProjection
-	official *classProjection
-	fields   map[string]string
-	methods  map[string]arrayGenericFunction
-	seen     map[[2]string]bool
+	p           *arrayGenericProjection
+	official    *classProjection
+	fields      map[string]string
+	methods     map[string]arrayGenericFunction
+	seen        map[[2]string]bool
+	proofs      map[[2]string]arrayGenericCompatibilityWitness
+	proofUndo   []arrayGenericProofChange
+	proofScopes int
 }
 
 func (r *arrayGenericViews) reference(source, target string, node *ast.Node) (*classCompatibility, error) {
@@ -23,13 +26,14 @@ func (r *arrayGenericViews) reference(source, target string, node *ast.Node) (*c
 	if err != nil {
 		return nil, err
 	}
+	dependencies := map[arrayGenericCompatibilityDependency]bool{}
 	for _, member := range witness.Members {
 		if err := r.p.annotationWork(); err != nil {
 			return nil, err
 		}
 		from, to := r.fields[member.Source], r.fields[member.Target]
 		if from != "" && to != "" {
-			if err := r.logical(from, to, node); err != nil {
+			if err := r.requireLogical(dependencies, from, to, node); err != nil {
 				return nil, err
 			}
 			continue
@@ -41,15 +45,22 @@ func (r *arrayGenericViews) reference(source, target string, node *ast.Node) (*c
 		// A void method view discards its result, as in the official signature
 		// relation; no numeric value is reinterpreted at that boundary.
 		if toMethod.ReturnType != "void" {
-			if err := r.logical(fromMethod.ReturnType, toMethod.ReturnType, node); err != nil {
+			if err := r.requireLogical(dependencies, fromMethod.ReturnType, toMethod.ReturnType, node); err != nil {
 				return nil, err
 			}
 		}
 		for i := 0; i < min(len(fromMethod.Parameters), len(toMethod.Parameters)); i++ {
-			if err := r.logical(toMethod.Parameters[i].DeclaredType, fromMethod.Parameters[i].DeclaredType, node); err != nil {
+			if err := r.requireLogical(dependencies, toMethod.Parameters[i].DeclaredType, fromMethod.Parameters[i].DeclaredType, node); err != nil {
 				return nil, err
 			}
 		}
+	}
+	deps, err := r.dependencyList(dependencies)
+	if err != nil {
+		return nil, err
+	}
+	if err := r.storeProof(pair, arrayGenericCompatibilityWitness{Compatibility: witness, Dependencies: deps}); err != nil {
+		return nil, err
 	}
 	return &witness, nil
 }
