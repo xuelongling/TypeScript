@@ -27,7 +27,7 @@ func TestArrayGenericV8ContainerTargetUnionAssertions25f(t *testing.T) {
 			target := types[cast["flowType"].(string)]
 			members := target["members"].([]any)
 			first := types[members[0].(string)]
-			if cast["kind"] != "as" || operand["kind"] != "bindingReference" || proof["sourceType"] != source["elementType"] || proof["targetType"] != first["elementType"] || proof["assignable"] != true || len(proof["members"].([]any)) != 1 || len(p["compatibilityWitnesses"].([]any)) != 1 {
+			if cast["kind"] != "as" || operand["kind"] != "bindingReference" || proof["sourceType"] != source["elementType"] || proof["targetType"] != first["elementType"] || proof["assignable"] != true || len(proof["members"].([]any)) != 1 || len(genericExpressionWitnesses25f(p)) != 1 {
 				t.Fatal("container target-union lost the actual first representation-preserving member proof or original operand")
 			}
 			if first["kind"] != test.name && !(test.name == "readspan" && first["kind"] == "readSpan") {

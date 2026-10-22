@@ -62,6 +62,7 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) 
 	p := &arrayGenericProjection{ctx: ctx, check: check, dts: program.GetSourceFile(input.Declarations.Paths[0]), scalars: map[*ast.Symbol]*ast.Node{}, classes: map[*ast.Symbol]string{}, types: map[string]arrayGenericType{}, actual: map[string]*checker.Type{}, headers: map[*ast.Symbol]*arrayGenericHeader{}, fields: map[*ast.Symbol]arrayGenericField{}}
 	p.payload = arrayGenericPayload{SourceRoot: input.SourceRoot, RootFile: input.RootFile, PositionUnit: "utf16", Config: input.Config, Declarations: input.Declarations, Files: []arrayFactsOwnedFile{}, Types: []arrayGenericType{}, Functions: []arrayGenericFunction{}, Exports: []arrayFactsExport{}, Diagnostics: []diagnostic{}}
 	p.payload.CompatibilityWitnesses = []arrayGenericCompatibilityWitness{}
+	p.payload.EntryCompatibilityRoots = []arrayGenericEntryCompatibilityRoots{}
 	files := []*ast.SourceFile{}
 	nodes := []*ast.Node{}
 	count := 0
@@ -153,6 +154,9 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) 
 		return empty, p.fail(file.AsNode(), "at least one owned function export required")
 	}
 	slices.SortFunc(p.payload.Exports, func(a, b arrayFactsExport) int { return strings.Compare(a.Name, b.Name) })
+	if err := p.entryCompatibilityRoots(); err != nil {
+		return empty, err
+	}
 	for _, typ := range p.types {
 		p.payload.Types = append(p.payload.Types, typ)
 	}

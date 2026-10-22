@@ -36,11 +36,11 @@ func TestArrayGenericV8MultipleRoots25f(t *testing.T) {
 				}
 				if test.name == "parentheses-slot" {
 					inner := element["expression"].(map[string]any)
-					if len(inner["compatibilityRoots"].([]any)) != 2 || len(p["compatibilityWitnesses"].([]any)) != 4 {
+					if len(inner["compatibilityRoots"].([]any)) != 2 || len(genericExpressionWitnesses25f(p)) != 4 {
 						t.Fatal("parentheses inner and outer require independent actual occurrence roots")
 					}
 				}
-			} else if len(p["compatibilityWitnesses"].([]any)) != 0 {
+			} else if len(genericExpressionWitnesses25f(p)) != 0 {
 				t.Fatal("identity selection invented structural proofs")
 			}
 		})
@@ -61,7 +61,7 @@ func TestArrayGenericV8RootContexts25f(t *testing.T) {
 		p := genericArrayPublic25f(t, source)
 		if strings.Contains(source, "return a[i] as B;") {
 			cast := genericReturn25f(t, p, "f")
-			if len(cast["compatibilityRoots"].([]any)) != 2 || len(p["compatibilityWitnesses"].([]any)) != 2 {
+			if len(cast["compatibilityRoots"].([]any)) != 2 || len(genericExpressionWitnesses25f(p)) != 2 {
 				t.Fatal("as and contextual views must both be explicit at their actual node")
 			}
 		}

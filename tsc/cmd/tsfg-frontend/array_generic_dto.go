@@ -64,6 +64,13 @@ type arrayGenericCompatibilityWitness struct {
 	Compatibility classCompatibility                    `json:"compatibility"`
 	Dependencies  []arrayGenericCompatibilityDependency `json:"dependencies"`
 }
+type arrayGenericEntryCompatibilityRoots struct {
+	FunctionID       string                                `json:"functionId"`
+	ParameterBinding string                                `json:"parameterBinding"`
+	ViewType         string                                `json:"viewType"`
+	Origin           classAnchor                           `json:"origin"`
+	Roots            []arrayGenericCompatibilityDependency `json:"roots"`
+}
 type arrayGenericTarget struct {
 	Kind      string                  `json:"kind"`
 	Type      string                  `json:"type"`
@@ -131,20 +138,21 @@ type arrayGenericFunction struct {
 	Body                  []arrayGenericStatement `json:"body"`
 }
 type arrayGenericPayload struct {
-	CompatibilityWitnesses []arrayGenericCompatibilityWitness `json:"compatibilityWitnesses"`
-	SourceRoot             string                             `json:"sourceRoot"`
-	RootFile               string                             `json:"rootFile"`
-	PositionUnit           string                             `json:"positionUnit"`
-	Config                 arrayFactsConfig                   `json:"config"`
-	Declarations           arrayFactsDeclarations             `json:"declarations"`
-	Files                  []arrayFactsOwnedFile              `json:"files"`
-	Types                  []arrayGenericType                 `json:"types"`
-	ArrayLength            arrayFactsLengthProperty           `json:"arrayLength"`
-	ReadSpanLength         arrayFactsReadSpanLength           `json:"readSpanLength"`
-	ReadSpanIntrinsic      arrayFactsIntrinsic                `json:"readSpanIntrinsic"`
-	Functions              []arrayGenericFunction             `json:"functions"`
-	Exports                []arrayFactsExport                 `json:"exports"`
-	Diagnostics            []diagnostic                       `json:"diagnostics"`
+	CompatibilityWitnesses  []arrayGenericCompatibilityWitness    `json:"compatibilityWitnesses"`
+	EntryCompatibilityRoots []arrayGenericEntryCompatibilityRoots `json:"entryCompatibilityRoots"`
+	SourceRoot              string                                `json:"sourceRoot"`
+	RootFile                string                                `json:"rootFile"`
+	PositionUnit            string                                `json:"positionUnit"`
+	Config                  arrayFactsConfig                      `json:"config"`
+	Declarations            arrayFactsDeclarations                `json:"declarations"`
+	Files                   []arrayFactsOwnedFile                 `json:"files"`
+	Types                   []arrayGenericType                    `json:"types"`
+	ArrayLength             arrayFactsLengthProperty              `json:"arrayLength"`
+	ReadSpanLength          arrayFactsReadSpanLength              `json:"readSpanLength"`
+	ReadSpanIntrinsic       arrayFactsIntrinsic                   `json:"readSpanIntrinsic"`
+	Functions               []arrayGenericFunction                `json:"functions"`
+	Exports                 []arrayFactsExport                    `json:"exports"`
+	Diagnostics             []diagnostic                          `json:"diagnostics"`
 }
 type arrayGenericPackage struct {
 	Family     string              `json:"family"`

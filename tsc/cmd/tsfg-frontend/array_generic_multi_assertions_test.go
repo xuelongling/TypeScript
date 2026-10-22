@@ -43,7 +43,7 @@ func TestArrayGenericV8MultiReferenceAssertions25f(t *testing.T) {
 				return nil
 			}
 			cast := find(genericFindFunction25f(t, p, "f"))
-			if cast == nil || len(cast["compatibilityRoots"].([]any)) != 2 || len(p["compatibilityWitnesses"].([]any)) != 2 {
+			if cast == nil || len(cast["compatibilityRoots"].([]any)) != 2 || len(genericExpressionWitnesses25f(p)) != 2 {
 				t.Fatal("multi-reference structural assertion lost selected authoritative roots")
 			}
 		})

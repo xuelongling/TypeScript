@@ -9,7 +9,7 @@ import (
 
 func TestArrayGenericV8CompatibilityOrigins25f(t *testing.T) {
 	p := genericArrayPublic25f(t, "class X{n:i32=1;} class Y{n:i32=2;} class A{child:X=new X();} class B{child:Y=new Y();} export function f(a:A):B{return a;} export function g(a:A):B{return a;}")
-	records := p["compatibilityWitnesses"].([]any)
+	records := genericExpressionWitnesses25f(p)
 	if len(records) != 4 {
 		t.Fatalf("two actual occurrences require separate root/nested proofs: %v", records)
 	}

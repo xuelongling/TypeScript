@@ -23,8 +23,8 @@ func TestArrayGenericV8CompatibilityClosure25f(t *testing.T) {
 
 func genericWitnessClosure25f(t *testing.T, p map[string]any, expected map[string][]string) {
 	t.Helper()
-	records, ok := p["compatibilityWitnesses"].([]any)
-	if !ok || len(records) != len(expected) {
+	records := genericExpressionWitnesses25f(p)
+	if len(records) != len(expected) {
 		t.Fatalf("actual exported facts lack the closed nested witness directory: got=%v expectedPairs=%v", p["compatibilityWitnesses"], expected)
 	}
 	names := map[string]string{}
