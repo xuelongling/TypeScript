@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "name": "fixed-call-upper",
+      "source": "function touch(a:(i32|undefined)[]):i32{return 0;} export function read(a:(i32|undefined)[],i:u32):i32|undefined{const s:ReadSpan<i32|undefined>=readSpan(a,0,1);touch(a);return s[i];}"
+    },
+    {
+      "name": "after-last-use",
+      "source": "export function read(a:(i32|undefined)[],i:u32):i32|undefined{const s:ReadSpan<i32|undefined>=readSpan(a,0,1);const v:i32|undefined=s[i];a[1]=undefined;return v;}"
+    },
+    {
+      "name": "view-parameter-alias",
+      "source": "function identity(s:ReadSpan<i32|undefined>):ReadSpan<i32|undefined>{return s;} export function read(a:(i32|undefined)[],i:u32):i32|undefined{const original:ReadSpan<i32|undefined>=readSpan(a,0,1);const alias:ReadSpan<i32|undefined>=identity(original);a[1]=undefined;return alias[i];}"
+    },
+    {
+      "name": "serial-overwrite",
+      "source": "export function read():i32|undefined{const a:(i32|undefined)[]=[1];const s:ReadSpan<i32|undefined>=readSpan(a,0,1);a[0]=undefined;return s[0];}"
+    },
+    {
+      "name": "value-view-return",
+      "source": "@tsfgValue class Pair{n:i32=1;} function view(a:Pair[]):ReadSpan<Pair>{return readSpan(a,0,1);} export function read(a:Pair[],i:u32):Pair{const s:ReadSpan<Pair>=view(a);return s[i];}"
+    }
+  ]
+}

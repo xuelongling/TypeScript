@@ -79,6 +79,12 @@ func (p *arrayGenericProjection) annotation(node *ast.Node) (string, error) {
 
 func (p *arrayGenericProjection) annotationValue(node *ast.Node) (string, error) {
 	actual := p.check.GetTypeFromTypeNode(node)
+	if node.Kind == ast.KindNumberKeyword && actual == p.check.GetNumberType() {
+		return p.scalarType("f64"), nil
+	}
+	if node.Kind == ast.KindBooleanKeyword && actual == p.check.GetBooleanType() {
+		return p.scalarType("bool"), nil
+	}
 	if node.Kind == ast.KindStringKeyword && actual == p.check.GetStringType() {
 		return p.stringType(), nil
 	}

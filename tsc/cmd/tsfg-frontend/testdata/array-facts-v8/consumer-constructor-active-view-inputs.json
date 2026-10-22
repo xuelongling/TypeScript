@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "name": "explicit-constructor-active-view",
+      "source": "class C{constructor(a:i32[]){a.length=0;}} export function read(a:i32[],i:u32):i32{const s:ReadSpan<i32>=readSpan(a,0,1);new C(a);return s[i];}"
+    },
+    {
+      "name": "implicit-constructor-forward-active-view",
+      "source": "class C{constructor(a:i32[]){a.length=0;}} class D extends C{} export function read(a:i32[],i:u32):i32{const s:ReadSpan<i32>=readSpan(a,0,1);new D(a);return s[i];}"
+    }
+  ]
+}

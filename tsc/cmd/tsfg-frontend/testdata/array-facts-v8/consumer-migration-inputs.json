@@ -1,0 +1,174 @@
+{
+  "cases": [
+    {
+      "name": "full-fresh-aliases",
+      "sourceRoot": "/src",
+      "rootFile": "/src/main.ts",
+      "config": {
+        "allowJs": false,
+        "noEmit": true,
+        "strict": true
+      },
+      "files": [
+        {
+          "content": "// 🧭 dense arrays é\r\nexport function zeta(): f64 {\r\n  const first: f64[] = [-0, 0.1, 1.00000000000000011102230246251565404236316680908203125, 1.00000000000000033306690738754696212708950042724609375, 5e-324, 9007199254740993, +1.5];\r\n  const second: f64[] = [-0, 0.1, 1.00000000000000011102230246251565404236316680908203125, 1.00000000000000033306690738754696212708950042724609375, 5e-324, 9007199254740993, +1.5];\r\n  const front = first;\r\n  const châin: f64[] = front;\r\n  const tail = châin;\r\n  return tail[0x2];\r\n}\r\n\r\nexport function alpha(): f64 {\r\n  const value: f64[] = [2.2250738585072014e-308, 1.7976931348623157e308, -2.5];\r\n  return value[2];\r\n}\r\n",
+          "path": "/src/main.ts",
+          "sha256": "31989dbbd7426eecf25959584d0df5ae3bb1fb3a3b3562565f92f2020ab2491a"
+        }
+      ]
+    },
+    {
+      "name": "empty-checked-read",
+      "sourceRoot": "/src",
+      "rootFile": "/src/main.ts",
+      "config": {
+        "allowJs": false,
+        "noEmit": true,
+        "strict": true
+      },
+      "files": [
+        {
+          "content": "// Empty owner: checked read remains in facts, no execution.\nexport function empty(): f64 {\n  const items: f64[] = [];\n  const same = items;\n  return same[0];\n}\n",
+          "path": "/src/main.ts",
+          "sha256": "4b1348c501995435468eaa52e835ff02f4789b6191de7bb684b5b95a9d54c3de"
+        }
+      ]
+    },
+    {
+      "name": "length-equal-checked-read",
+      "sourceRoot": "/src",
+      "rootFile": "/src/main.ts",
+      "config": {
+        "allowJs": false,
+        "noEmit": true,
+        "strict": true
+      },
+      "files": [
+        {
+          "content": "// Equal-length index is represented, never folded or trapped here.\nexport function equal(): f64 {\n  const items: f64[] = [1, -0];\n  return items[2];\n}\n",
+          "path": "/src/main.ts",
+          "sha256": "d12cd5ec57f23856755a96f888b711eb3c619baeb124377cefcc2a77b9841ec2"
+        }
+      ]
+    },
+    {
+      "name": "far-oob-checked-read",
+      "sourceRoot": "/src",
+      "rootFile": "/src/main.ts",
+      "config": {
+        "allowJs": false,
+        "noEmit": true,
+        "strict": true
+      },
+      "files": [
+        {
+          "content": "// Maximum admitted array index still produces a checked operation.\nexport function far(): f64 {\n  const items: f64[] = [0.1];\n  const same: f64[] = items;\n  return same[4294967294];\n}\n",
+          "path": "/src/main.ts",
+          "sha256": "6ea5f7461d3cbfdf1d691dde67e72c6594e2495a5a96424b9f87612db9bf5a94"
+        }
+      ]
+    },
+    {
+      "name": "dense-overwrite",
+      "sourceRoot": "/src",
+      "rootFile": "/src/main.ts",
+      "config": {
+        "allowJs": false,
+        "noEmit": true,
+        "strict": true
+      },
+      "files": [
+        {
+          "content": "export function overwrite(): f64 {\n  const a: f64[] = [1.0, 2.0];\n  a[1] = 3.0;\n  return a[0];\n}\n",
+          "path": "/src/main.ts",
+          "sha256": "44394d84c971c557802627f9635c3b951c679a07fdfe1b0d042c70ffb62cad79"
+        }
+      ]
+    },
+    {
+      "name": "dynamic-owner-aliases",
+      "sourceRoot": "/src",
+      "rootFile": "/src/main.ts",
+      "config": {
+        "allowJs": false,
+        "noEmit": true,
+        "strict": true
+      },
+      "files": [
+        {
+          "content": "// 🧭 dynamic dense aliases é\r\nexport function zeta(i: u32, n: u32, value: f64): f64 {\r\n  const original: f64[] = [-0, 0.1];\r\n  const same = original;\r\n  const châin: f64[] = same;\r\n  châin[i] = value;\r\n  same.length = n;\r\n  return original[i];\r\n}\r\n\r\nexport function alpha(i: u32, value: f64): f64 {\r\n  const original: f64[] = [2.0];\r\n  original[i] = value;\r\n  return original[i];\r\n}\r\n",
+          "path": "/src/main.ts",
+          "sha256": "8b9f20931ebfef6b72136ed82ee100eaa23532307ff6c22267c1c9667ada3f1b"
+        }
+      ]
+    },
+    {
+      "name": "empty-append-rhs-shrink",
+      "sourceRoot": "/src",
+      "rootFile": "/src/main.ts",
+      "config": {
+        "allowJs": false,
+        "noEmit": true,
+        "strict": true
+      },
+      "files": [
+        {
+          "content": "export function appendThenShrink(): f64 {\n  const empty: f64[] = [];\n  const same = empty;\n  same[0] = 1.0;\n  empty[1] = same[0];\n  same.length = 1;\n  return empty[0];\n}\n",
+          "path": "/src/main.ts",
+          "sha256": "a18cf474d51dbf51567fc1cb4fbbe373ea261a892ce4cd30573a29b5fd0eaef1"
+        }
+      ]
+    },
+    {
+      "name": "uncertain-dense-length",
+      "sourceRoot": "/src",
+      "rootFile": "/src/main.ts",
+      "config": {
+        "allowJs": false,
+        "noEmit": true,
+        "strict": true
+      },
+      "files": [
+        {
+          "content": "export function uncertain(i: u32, n: u32, value: f64): f64 {\n  const a: f64[] = [1.0, 2.0];\n  const alias = a;\n  alias[i] = a[0];\n  a[2] = value;\n  alias.length = n;\n  a.length = 4294967295;\n  return a[4294967294];\n}\n",
+          "path": "/src/main.ts",
+          "sha256": "d8b2074697b9f6129980357ed110c7c7021423d7d1052fcc7fde18096a00b026"
+        }
+      ]
+    },
+    {
+      "name": "tail-array-call-return-local-escape",
+      "sourceRoot": "/readspan26d-closure",
+      "rootFile": "/readspan26d-closure/app.ts",
+      "config": {
+        "allowJs": false,
+        "noEmit": true,
+        "strict": true
+      },
+      "files": [
+        {
+          "content": "function borrow(a: f64[]): ReadSpan<f64> {\n  const v: ReadSpan<f64> = readSpan(a, 0, 1);\n  return v;\n}\nfunction escape(): ReadSpan<f64> {\n  const a: f64[] = [1];\n  return borrow(a);\n}\nexport function entry(): f64 {\n  return 1;\n}\n",
+          "path": "/readspan26d-closure/app.ts",
+          "sha256": "8136679113e7fdb625b1a4c7ee144d9830c4f29ad070611156f3f17afd191bb6"
+        }
+      ]
+    },
+    {
+      "name": "reachable-forty-root-call-results",
+      "sourceRoot": "/readspan26d-closure",
+      "rootFile": "/readspan26d-closure/app.ts",
+      "config": {
+        "allowJs": false,
+        "noEmit": true,
+        "strict": true
+      },
+      "files": [
+        {
+          "content": "function borrow(a: f64[]): ReadSpan<f64> {\n  const v: ReadSpan<f64> = readSpan(a, 0, 1);\n  return v;\n}\nexport function entry(v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>, v7: ReadSpan<f64>): f64 {\n  const a: f64[] = [1];\n  const w0: ReadSpan<f64> = borrow(a);\n  const w1: ReadSpan<f64> = borrow(a);\n  const w2: ReadSpan<f64> = borrow(a);\n  const w3: ReadSpan<f64> = borrow(a);\n  const w4: ReadSpan<f64> = borrow(a);\n  const w5: ReadSpan<f64> = borrow(a);\n  const w6: ReadSpan<f64> = borrow(a);\n  const w7: ReadSpan<f64> = borrow(a);\n  const w8: ReadSpan<f64> = borrow(a);\n  const w9: ReadSpan<f64> = borrow(a);\n  const w10: ReadSpan<f64> = borrow(a);\n  const w11: ReadSpan<f64> = borrow(a);\n  const w12: ReadSpan<f64> = borrow(a);\n  const w13: ReadSpan<f64> = borrow(a);\n  const w14: ReadSpan<f64> = borrow(a);\n  const w15: ReadSpan<f64> = borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  borrow(a);\n  return 1;\n}\n",
+          "path": "/readspan26d-closure/app.ts",
+          "sha256": "adbcd73e9c75395c6927f2ea9d9afb2261c7582d631c461ef988243f3168eee6"
+        }
+      ]
+    }
+  ]
+}

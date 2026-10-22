@@ -1,0 +1,89 @@
+{
+  "cases": [
+    {
+      "name": "global1024",
+      "sourceRoot": "/readspan26d-budget",
+      "rootFile": "/readspan26d-budget/app.ts",
+      "config": {
+        "allowJs": false,
+        "noEmit": true,
+        "strict": true
+      },
+      "files": [
+        {
+          "content": "function borrow(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): ReadSpan<f64> {\n  const r: ReadSpan<f64> = readSpan(a, 0, 1);\n  return r;\n}\nfunction caller0(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): f64 {\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  return 1;\n}\nfunction caller1(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): f64 {\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  return 1;\n}\nfunction caller2(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): f64 {\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  return 1;\n}\nfunction caller3(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): f64 {\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  return 1;\n}\nfunction caller4(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): f64 {\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  return 1;\n}\nfunction caller5(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): f64 {\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  v0.length;\n  v0.length;\n  v0.length;\n  v0.length;\n  v0.length;\n  return 1;\n}\nexport function entry(): f64 { return 1; }\n",
+          "path": "/readspan26d-budget/app.ts",
+          "sha256": "99c59399b10be9f94a54bedb1f05100343d15d8db90c27473d7c44e7c786daf8"
+        }
+      ]
+    },
+    {
+      "name": "global1025",
+      "sourceRoot": "/readspan26d-budget",
+      "rootFile": "/readspan26d-budget/app.ts",
+      "config": {
+        "allowJs": false,
+        "noEmit": true,
+        "strict": true
+      },
+      "files": [
+        {
+          "content": "function borrow(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): ReadSpan<f64> {\n  const r: ReadSpan<f64> = readSpan(a, 0, 1);\n  return r;\n}\nfunction caller0(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): f64 {\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  return 1;\n}\nfunction caller1(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): f64 {\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  return 1;\n}\nfunction caller2(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): f64 {\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  return 1;\n}\nfunction caller3(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): f64 {\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  return 1;\n}\nfunction caller4(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): f64 {\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  return 1;\n}\nfunction caller5(a: f64[], v0: ReadSpan<f64>, v1: ReadSpan<f64>, v2: ReadSpan<f64>, v3: ReadSpan<f64>, v4: ReadSpan<f64>, v5: ReadSpan<f64>, v6: ReadSpan<f64>): f64 {\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  borrow(a, v0, v1, v2, v3, v4, v5, v6);\n  v0.length;\n  v0.length;\n  v0.length;\n  v0.length;\n  v0.length;\n  v0.length;\n  return 1;\n}\nexport function entry(): f64 { return 1; }\n",
+          "path": "/readspan26d-budget/app.ts",
+          "sha256": "172343c4f195cf1b5c50762dcd73da2bd9a0e55959d980956a3d29f366ff5713"
+        }
+      ]
+    },
+    {
+      "name": "generic-union-parameter-scc",
+      "sourceRoot": "/src",
+      "rootFile": "/src/main.ts",
+      "config": {
+        "allowJs": false,
+        "strict": true,
+        "noEmit": true
+      },
+      "files": [
+        {
+          "path": "/src/main.ts",
+          "content": "function even(a:(i32|undefined)[],i:u32,n:i32):i32|undefined{if(n===0){return a[i];}return odd(a,i,n-1);} function odd(a:(i32|undefined)[],i:u32,n:i32):i32|undefined{if(n===0){return a[i];}return even(a,i,n-1);} export function read(a:(i32|undefined)[],i:u32,n:i32):i32|undefined{return even(a,i,n);}",
+          "sha256": "c86d34ed55b680ea23a8605b0f7d46dcd34634b67b1d42341c625b9583401b16"
+        }
+      ]
+    },
+    {
+      "name": "ordered-carrier-refinement",
+      "sourceRoot": "/src",
+      "rootFile": "/src/main.ts",
+      "config": {
+        "allowJs": false,
+        "strict": true,
+        "noEmit": true
+      },
+      "files": [
+        {
+          "path": "/src/main.ts",
+          "content": "export function run():(i32|undefined)[]{const a:(i32|undefined)[]=[undefined,1];const b=[a[1]];return b;}",
+          "sha256": "dc47d14cce567c5bd50180ab39ce7f247ab75dd8c96c8f589828b48f5a41b993"
+        }
+      ]
+    },
+    {
+      "name": "short-circuit-index-binding",
+      "sourceRoot": "/src",
+      "rootFile": "/src/main.ts",
+      "config": {
+        "allowJs": false,
+        "strict": true,
+        "noEmit": true
+      },
+      "files": [
+        {
+          "path": "/src/main.ts",
+          "content": "export function run(flag:boolean):i32|undefined{const a:(i32|undefined)[]=[1,undefined];let i:u32=0;flag&&((i=1)===1);return a[i];}",
+          "sha256": "2c4001ce190e164e6ecbc694fc7a1139ff44c79194a849f50dd7179033040e05"
+        }
+      ]
+    }
+  ]
+}
