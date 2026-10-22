@@ -71,3 +71,62 @@ func TestArrayGenericV8WideFieldWriteThroughAlias25f(t *testing.T) {
 		t.Fatal("original alias/write/read evaluation sequence changed")
 	}
 }
+
+func TestArrayGenericV8NarrowFieldCopyAfterWideWrite25f(t *testing.T) {
+	source := "class Narrow{n:i32=1;} class Wide{n:i32|undefined=undefined;} export function run():i32|undefined{const narrow=new Narrow();const wide:Wide=narrow;wide.n=undefined;const copied:i32=narrow.n;narrow.n=copied;return narrow.n;}"
+	p := genericArrayPublic25f(t, source)
+	if len(p["diagnostics"].([]any)) != 0 {
+		t.Fatal("official checked copy/store source must have zero diagnostics")
+	}
+	types := genericConstructionTypes25f(t, p)
+	narrow, wide := types["Narrow"], types["Wide"]
+	narrowField, wideField := (*narrow.Fields)[0], (*wide.Fields)[0]
+	if narrowField.Type != "i32" || narrowField.Readonly || wideField.Type != "union<i32,undefined>" || wideField.Readonly {
+		t.Fatal("original field identities, static types and write permissions changed")
+	}
+	fn := genericFindFunction25f(t, p, "run")
+	body := fn["body"].([]any)
+	if fn["returnType"] != wideField.Type || len(body) != 6 {
+		t.Fatal("original allocation/view/write/copy/store/return order changed")
+	}
+	narrowBinding := body[0].(map[string]any)["binding"]
+	wideBinding := body[1].(map[string]any)["binding"]
+	wideStore := body[2].(map[string]any)["value"].(map[string]any)
+	wideTarget := wideStore["target"].(map[string]any)
+	if wideStore["kind"] != "fieldAssignment" || wideTarget["property"] != wideField.ID || wideTarget["type"] != wideField.Type || wideTarget["receiver"].(map[string]any)["binding"] != wideBinding || wideStore["value"].(map[string]any)["kind"] != "undefinedLiteral" {
+		t.Fatal("original valid-undefined write through the wider static view changed")
+	}
+	local := body[3].(map[string]any)
+	copyRead := local["initializer"].(map[string]any)
+	bound := false
+	for _, raw := range fn["bindings"].([]any) {
+		binding := raw.(map[string]any)
+		if binding["id"] == local["binding"] {
+			bound = binding["name"] == "copied" && binding["declaredType"] == "i32"
+		}
+	}
+	store := body[4].(map[string]any)["value"].(map[string]any)
+	target := store["target"].(map[string]any)
+	value := store["value"].(map[string]any)
+	if !bound || local["kind"] != "constDeclaration" || store["kind"] != "fieldAssignment" || target["property"] != narrowField.ID || target["type"] != "i32" || target["receiver"].(map[string]any)["binding"] != narrowBinding || value["kind"] != "bindingReference" || value["binding"] != local["binding"] || value["type"] != "i32" || value["flowType"] != "i32" {
+		t.Fatal("copy and subsequent statically permitted narrow field store must share the actual local binding")
+	}
+	result := body[5].(map[string]any)["value"].(map[string]any)
+	for _, read := range []map[string]any{copyRead, result} {
+		if read["kind"] != "fieldAccess" || read["property"] != narrowField.ID || read["type"] != "i32" || read["flowType"] != "i32" || read["receiver"].(map[string]any)["binding"] != narrowBinding {
+			t.Fatal("both reads must preserve the original narrow alias and official i32 static facts")
+		}
+	}
+	previous := -1
+	for _, occurrence := range []struct {
+		value map[string]any
+		text  string
+	}{{wideStore, "wide.n=undefined"}, {copyRead, "narrow.n"}, {store, "narrow.n=copied"}, {result, "narrow.n"}} {
+		r := occurrence.value["range"].(map[string]any)
+		start, end := int(r["start"].(float64)), int(r["end"].(float64))
+		if start <= previous || source[start:end] != occurrence.text {
+			t.Fatal("original alias write/copy/store/read occurrence order or anchor changed")
+		}
+		previous = start
+	}
+}
