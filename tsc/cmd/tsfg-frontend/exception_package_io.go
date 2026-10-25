@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"io"
+	"strconv"
 )
 
 type exceptionFactsReader struct {
@@ -24,7 +25,7 @@ func (r exceptionFactsReader) Read(p []byte) (int, error) {
 	return n, err
 }
 
-func runExceptionFactsCandidate(ctx context.Context, input io.Reader, output io.Writer) error {
+func runExceptionFactsCandidate(ctx context.Context, input io.Reader, output io.Writer, version int) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -32,7 +33,7 @@ func runExceptionFactsCandidate(ctx context.Context, input io.Reader, output io.
 	if err != nil {
 		return err
 	}
-	encoded, err := handleExceptionFactsCandidate(ctx, data)
+	encoded, err := handleExceptionFactsCandidate(ctx, data, version)
 	if err != nil {
 		return err
 	}
@@ -49,7 +50,7 @@ func runExceptionFactsCandidate(ctx context.Context, input io.Reader, output io.
 	return ctx.Err()
 }
 
-func handleExceptionFactsCandidate(ctx context.Context, data []byte) (outputBytes []byte, err error) {
+func handleExceptionFactsCandidate(ctx context.Context, data []byte, version int) (outputBytes []byte, err error) {
 	defer func() {
 		if canceled := ctx.Err(); canceled != nil {
 			outputBytes, err = nil, canceled
@@ -58,13 +59,19 @@ func handleExceptionFactsCandidate(ctx context.Context, data []byte) (outputByte
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	r, err := decodeExceptionFactsRequest(data)
+	r, err := decodeExceptionFactsRequest(data, version)
 	if err != nil {
 		return nil, err
 	}
 	owned, inputID, files, err := exceptionFactsInputs(r.Input)
 	if err != nil {
 		return nil, err
+	}
+	if version == 2 {
+		if owned.Target == nil {
+			return nil, exceptionFactsError("input", "numeric facts require an explicit scalar target")
+		}
+		owned.Target.exceptionNumericFacts = true
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, err
@@ -125,9 +132,10 @@ func handleExceptionFactsCandidate(ctx context.Context, data []byte) (outputByte
 	if err != nil {
 		return nil, err
 	}
-	requestID := exceptionFactsDigest(append([]byte("tsfg.exception-facts.request.v1\x00"), data...))
-	preimage := append([]byte("tsfg.exception-facts.package.v1\x00"+exceptionFactsSchema+"\x00"), payloadBytes...)
-	result := exceptionFactsPackage{Family: "tsfg.exception-facts-package-candidate", Version: 1, SchemaHash: exceptionFactsSchema,
+	schema, _ := exceptionFactsSchemaForVersion(version)
+	requestID := exceptionFactsDigest(append([]byte("tsfg.exception-facts.request.v"+strconv.Itoa(version)+"\x00"), data...))
+	preimage := append([]byte("tsfg.exception-facts.package.v"+strconv.Itoa(version)+"\x00"+schema+"\x00"), payloadBytes...)
+	result := exceptionFactsPackage{Family: "tsfg.exception-facts-package-candidate", Version: version, SchemaHash: schema,
 		RequestID: requestID, PackageID: exceptionFactsDigest(preimage), Payload: payload}
 	encoded, err := exceptionFactsCanonical(result)
 	if err != nil {

@@ -11,11 +11,12 @@ import (
 )
 
 type integerTarget struct {
-	Target         string `json:"target"`
-	Triple         string `json:"triple"`
-	LLVMDataLayout string `json:"llvmDataLayout"`
-	PointerBits    string `json:"pointerBits"`
-	floats         bool
+	Target                string `json:"target"`
+	Triple                string `json:"triple"`
+	LLVMDataLayout        string `json:"llvmDataLayout"`
+	PointerBits           string `json:"pointerBits"`
+	floats                bool
+	exceptionNumericFacts bool
 }
 
 func validIntegerTarget(t *integerTarget) bool {
@@ -71,6 +72,8 @@ func integerHint(node *ast.Node, check *checker.Checker, refs map[*ast.Symbol]sy
 		return ""
 	}
 	switch node.Kind {
+	case ast.KindAsExpression, ast.KindTypeAssertionExpression:
+		return scalar(check.GetTypeAtLocation(node))
 	case ast.KindIdentifier, ast.KindPropertyAccessExpression:
 		if moduleReference(check, node) {
 			return referenceUseType(check, node, refs[check.GetSymbolAtLocation(node)])

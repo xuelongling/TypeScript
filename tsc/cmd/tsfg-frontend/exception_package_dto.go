@@ -174,7 +174,7 @@ func exceptionFactsDigest(data []byte) string {
 	return "sha256:" + hex.EncodeToString(sum[:])
 }
 
-func decodeExceptionFactsRequest(data []byte) (exceptionFactsRequest, error) {
+func decodeExceptionFactsRequest(data []byte, version int) (exceptionFactsRequest, error) {
 	var r exceptionFactsRequest
 	if err := exceptionFactsJSON(data, false); err != nil {
 		return r, err
@@ -195,7 +195,8 @@ func decodeExceptionFactsRequest(data []byte) (exceptionFactsRequest, error) {
 	if !bytes.Equal(encoded, data) {
 		return r, exceptionFactsError("schema", "request exact fields and types")
 	}
-	if r.Family != "tsfg.exception-facts-request-candidate" || r.Version != 1 || r.SchemaHash != exceptionFactsSchema {
+	schema, valid := exceptionFactsSchemaForVersion(version)
+	if !valid || r.Family != "tsfg.exception-facts-request-candidate" || r.Version != version || r.SchemaHash != schema {
 		return r, exceptionFactsError("schema", "request family/version/schema")
 	}
 	return r, nil

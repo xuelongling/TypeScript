@@ -81,7 +81,9 @@ func (p *projection) throwStatement(node *ast.Node) (statement, response) {
 		// A bare absence has no owned nominal payload type. A finite union's
 		// original checker members permit absence without supplying a type hint.
 		if payloadType == "" {
-			return statement{}, failAt("r02b-d-unsupported", "unsupported", p.file, node)
+			if p.integerTarget == nil || !p.integerTarget.exceptionNumericFacts || !undefined || null {
+				return statement{}, failAt("r02b-d-unsupported", "unsupported", p.file, node)
+			}
 		}
 		shape = &parameterPresence{Undefined: undefined, Null: null}
 	}

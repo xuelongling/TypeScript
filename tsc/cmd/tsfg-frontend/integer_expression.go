@@ -86,6 +86,16 @@ func projectIntegerExpression(file *ast.SourceFile, check *checker.Checker, node
 			return &expression{Kind: "absence", Type: expected, Absence: state, Range: valueRange}, nil
 		}
 	}
+	// An existing declared nullable context owns its typed absence above. Only
+	// an unconsumed standalone value uses v2's independent undefined variant.
+	if target.exceptionNumericFacts {
+		if value, failure, handled := projectExceptionNumeric(file, check, node, refs, functions, target); handled {
+			if failure != nil {
+				return nil, failure
+			}
+			return finish(value)
+		}
+	}
 	if value, failure, handled := projectFunctionValueExpression(file, check, node, expected, refs, functions, valueRange, func(child *ast.Node, want string) (*expression, *response) {
 		return projectIntegerExpression(file, check, child, want, refs, functions, target)
 	}); handled {

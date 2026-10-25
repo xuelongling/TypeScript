@@ -81,6 +81,7 @@ type symbol struct {
 }
 
 type expression struct {
+	Assertion    *assertionFact    `json:"assertion,omitempty"`
 	TypeTest     *typeTestFact     `json:"typeTest,omitempty"`
 	Name         string            `json:"name,omitempty"`
 	Receiver     *expression       `json:"receiver,omitempty"`
