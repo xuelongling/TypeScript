@@ -35,6 +35,9 @@ func (p *arrayGenericProjection) index(node *ast.Node, length bool, state *array
 	return p.expression(node, p.scalarType("u32"), state, depth+1)
 }
 func (p *arrayGenericProjection) target(node *ast.Node, state *arrayGenericState, depth int) (*arrayGenericTarget, error) {
+	if err := p.seedCommonGlobals(state); err != nil {
+		return nil, err
+	}
 	if node.Kind == ast.KindParenthesizedExpression {
 		v, err := p.target(node.AsParenthesizedExpression().Expression, state, depth+1)
 		if err == nil {
@@ -43,7 +46,11 @@ func (p *arrayGenericProjection) target(node *ast.Node, state *arrayGenericState
 		return v, err
 	}
 	if node.Kind == ast.KindIdentifier {
-		binding, ok := state.bindings[p.check.GetSymbolAtLocation(node)]
+		symbol := p.check.GetSymbolAtLocation(node)
+		if p.common != nil {
+			symbol = p.commonOriginalSymbol(symbol)
+		}
+		binding, ok := state.bindings[symbol]
 		if !ok || !binding.Writable {
 			return nil, p.fail(node, "actual writable binding required")
 		}
@@ -55,6 +62,15 @@ func (p *arrayGenericProjection) target(node *ast.Node, state *arrayGenericState
 	}
 	v := &arrayGenericTarget{Type: value.Type, Range: value.Range, Receiver: value.Receiver, Index: value.Index, Property: value.Property, NameRange: value.NameRange}
 	switch value.Kind {
+	case "bindingReference":
+		if p.common == nil {
+			return nil, p.fail(node, "checked mutation target required")
+		}
+		binding, ok := p.common.globals[p.commonOriginalSymbol(p.check.GetSymbolAtLocation(node.Name()))]
+		if !ok || !binding.Writable {
+			return nil, p.fail(node, "actual writable module binding required")
+		}
+		v.Kind, v.Binding = "bindingTarget", binding.ID
 	case "checkedElementAccess":
 		if p.types[value.Receiver.FlowType].Kind != "array" {
 			return nil, arrayFactsDensity(ast.GetSourceFileOfNode(node), node, "ReadSpan element is readonly")

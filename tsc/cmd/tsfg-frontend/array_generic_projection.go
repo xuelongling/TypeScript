@@ -11,6 +11,7 @@ import (
 )
 
 type arrayGenericProjection struct {
+	common                             *commonProgramProjection
 	ctx                                context.Context
 	check                              *checker.Checker
 	dts                                *ast.SourceFile
@@ -33,7 +34,7 @@ type arrayGenericProjection struct {
 	witnesses                          map[arrayGenericWitnessIdentity]arrayGenericCompatibilityWitness
 }
 
-func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) (arrayGenericPayload, error) {
+func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput, common ...*commonProgramProjection) (arrayGenericPayload, error) {
 	var empty arrayGenericPayload
 	program, _, consumed, failure := newOwnedProgram(r)
 	if failure != nil {
@@ -60,6 +61,12 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) 
 	check, release := program.GetTypeCheckerForFileExclusive(ctx, file)
 	defer release()
 	p := &arrayGenericProjection{ctx: ctx, check: check, dts: program.GetSourceFile(input.Declarations.Paths[0]), scalars: map[*ast.Symbol]*ast.Node{}, classes: map[*ast.Symbol]string{}, types: map[string]arrayGenericType{}, actual: map[string]*checker.Type{}, headers: map[*ast.Symbol]*arrayGenericHeader{}, fields: map[*ast.Symbol]arrayGenericField{}}
+	if len(common) > 1 {
+		return empty, arrayFactsError("input", "one common program projection", nil)
+	}
+	if len(common) == 1 {
+		p.common = common[0]
+	}
 	p.payload = arrayGenericPayload{SourceRoot: input.SourceRoot, RootFile: input.RootFile, PositionUnit: "utf16", Config: input.Config, Declarations: input.Declarations, Files: []arrayFactsOwnedFile{}, Types: []arrayGenericType{}, Functions: []arrayGenericFunction{}, Exports: []arrayFactsExport{}, Diagnostics: []diagnostic{}}
 	p.payload.CompatibilityWitnesses = []arrayGenericCompatibilityWitness{}
 	p.payload.EntryCompatibilityRoots = []arrayGenericEntryCompatibilityRoots{}
@@ -97,6 +104,10 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) 
 			case ast.KindClassDeclaration:
 				nodes = append(nodes, node)
 			case ast.KindFunctionDeclaration, ast.KindImportDeclaration, ast.KindTypeAliasDeclaration:
+			case ast.KindVariableStatement, ast.KindExportDeclaration, ast.KindExportAssignment:
+				if p.common == nil {
+					return empty, p.fail(node, "complete top-level executable source coverage")
+				}
 			default:
 				return empty, p.fail(node, "complete top-level executable source coverage")
 			}
@@ -126,6 +137,11 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) 
 			ordered = append(ordered, header)
 		}
 	}
+	if p.common != nil {
+		if err := p.commonHeaders(files); err != nil {
+			return empty, err
+		}
+	}
 	if err := p.classBodies(nodes); err != nil {
 		return empty, err
 	}
@@ -139,6 +155,11 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) 
 	if !ast.IsExternalModule(file) || file.AsNode().Symbol() == nil {
 		return empty, p.fail(file.AsNode(), "actual module export table required")
 	}
+	if p.common != nil {
+		if err := p.commonModules(files); err != nil {
+			return empty, err
+		}
+	}
 	for _, export := range check.GetExportsOfModule(file.AsNode().Symbol()) {
 		symbol := export
 		if symbol.Flags&ast.SymbolFlagsAlias != 0 {
@@ -146,6 +167,9 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput) 
 		}
 		header := p.headers[symbol]
 		if header == nil {
+			if p.common != nil {
+				continue // The complete typed module export directory owns non-function exports.
+			}
 			return empty, p.fail(file.AsNode(), "export must join an actual owned function")
 		}
 		p.payload.Exports = append(p.payload.Exports, arrayFactsExport{Name: export.Name, FunctionID: header.function.ID})

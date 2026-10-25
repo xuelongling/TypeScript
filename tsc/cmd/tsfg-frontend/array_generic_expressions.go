@@ -53,6 +53,9 @@ func (p *arrayGenericProjection) fits(actual, expected string) bool {
 	return false
 }
 func (p *arrayGenericProjection) expression(node *ast.Node, expected string, state *arrayGenericState, depth int) (*arrayGenericExpression, error) {
+	if err := p.seedCommonGlobals(state); err != nil {
+		return nil, err
+	}
 	if node == nil {
 		return nil, arrayFactsError("capability", "original expression required", nil)
 	}
@@ -71,6 +74,9 @@ func (p *arrayGenericProjection) expression(node *ast.Node, expected string, sta
 	switch node.Kind {
 	case ast.KindIdentifier:
 		symbol := p.check.GetSymbolAtLocation(node)
+		if p.common != nil {
+			symbol = p.commonOriginalSymbol(symbol)
+		}
 		b, ok := state.bindings[symbol]
 		if ok {
 			v.Kind, v.Type, v.Binding = "bindingReference", b.DeclaredType, b.ID

@@ -109,6 +109,9 @@ func (p *arrayGenericProjection) classHeaders(nodes []*ast.Node) error {
 				return err
 			}
 			v := arrayGenericField{ID: fieldID, Name: field.Name().Text(), Type: fieldType, Readonly: field.ModifierFlags()&ast.ModifierFlagsReadonly != 0, Origin: classNodeAnchor(field)}
+			if p.common != nil {
+				v.Access = commonProgramAccess(field)
+			}
 			if field.Kind == ast.KindParameter {
 				v.ParameterBinding, err = arrayFactsBindingID(ast.GetSourceFileOfNode(field).FileName(), *genericSpan(field.Name()))
 				if err != nil {

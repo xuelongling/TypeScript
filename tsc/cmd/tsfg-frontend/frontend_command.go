@@ -11,6 +11,9 @@ import (
 )
 
 func runFrontendCommand(ctx context.Context, args []string, input io.Reader, output io.Writer) error {
+	if len(args) == 1 && args[0] == "--program-facts-io-v1" {
+		return runCommonProgramFacts(ctx, input, output)
+	}
 	if len(args) == 1 && args[0] == "--array-facts-io-v8" {
 		return runArrayGenericCandidate(ctx, input, output)
 	}

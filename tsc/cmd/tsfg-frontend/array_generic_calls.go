@@ -103,7 +103,7 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 	if len(parameters) != len(args) || len(resolved.Parameters()) != len(args) {
 		return nil, p.fail(node, "all original call parameters required")
 	}
-	if callee.Kind == ast.KindPropertyAccessExpression {
+	if callee.Kind == ast.KindPropertyAccessExpression && (p.common == nil || receiverExpected != "") {
 		var err error
 		receiver, err = p.expression(callee.AsPropertyAccessExpression().Expression, receiverExpected, state, depth+1)
 		if err != nil {
@@ -171,6 +171,14 @@ func (p *arrayGenericProjection) argumentValues(args []*ast.Node, resolved *chec
 
 func (p *arrayGenericProjection) property(node *ast.Node, state *arrayGenericState, depth int) (*arrayGenericExpression, error) {
 	access := node.AsPropertyAccessExpression()
+	if p.common != nil {
+		symbol := p.commonOriginalSymbol(p.check.GetSymbolAtLocation(node.Name()))
+		if binding, ok := p.common.globals[symbol]; ok {
+			flow, err := p.flow(p.check.GetTypeAtLocation(node), binding.DeclaredType)
+			return &arrayGenericExpression{Kind: "bindingReference", Type: binding.DeclaredType, FlowType: flow,
+				Binding: binding.ID, Range: *genericSpan(node)}, err
+		}
+	}
 	if access.QuestionDotToken != nil {
 		return nil, p.fail(node, "ordinary property access required")
 	}

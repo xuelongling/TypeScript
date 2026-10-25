@@ -41,6 +41,7 @@ type arrayGenericConstruction struct {
 	Origin               classAnchor           `json:"origin"`
 }
 type arrayGenericField struct {
+	Access           string                  `json:"access,omitempty"`
 	ParameterBinding string                  `json:"parameterBinding,omitempty"`
 	ID               string                  `json:"id"`
 	Name             string                  `json:"name"`
@@ -113,17 +114,21 @@ type arrayGenericExpression struct {
 	NameRange          *span                                 `json:"nameRange,omitempty"`
 }
 type arrayGenericStatement struct {
-	Kind        string                   `json:"kind"`
-	Range       span                     `json:"range"`
-	Binding     string                   `json:"binding,omitempty"`
-	Initializer *arrayGenericExpression  `json:"initializer,omitempty"`
-	Value       *arrayGenericExpression  `json:"value,omitempty"`
-	Condition   *arrayGenericExpression  `json:"condition,omitempty"`
-	Then        *[]arrayGenericStatement `json:"then,omitzero"`
-	Else        *[]arrayGenericStatement `json:"else,omitzero"`
-	Body        *[]arrayGenericStatement `json:"body,omitzero"`
+	TryBlock     *commonProgramBlock      `json:"tryBlock,omitempty"`
+	CatchClause  *commonProgramCatch      `json:"catchClause,omitempty"`
+	FinallyBlock *commonProgramBlock      `json:"finallyBlock,omitempty"`
+	Kind         string                   `json:"kind"`
+	Range        span                     `json:"range"`
+	Binding      string                   `json:"binding,omitempty"`
+	Initializer  *arrayGenericExpression  `json:"initializer,omitempty"`
+	Value        *arrayGenericExpression  `json:"value,omitempty"`
+	Condition    *arrayGenericExpression  `json:"condition,omitempty"`
+	Then         *[]arrayGenericStatement `json:"then,omitzero"`
+	Else         *[]arrayGenericStatement `json:"else,omitzero"`
+	Body         *[]arrayGenericStatement `json:"body,omitzero"`
 }
 type arrayGenericFunction struct {
+	Access                string                  `json:"access,omitempty"`
 	OwnerType             string                  `json:"ownerType,omitempty"`
 	OverrideTarget        string                  `json:"overrideTarget,omitempty"`
 	ID                    string                  `json:"id"`

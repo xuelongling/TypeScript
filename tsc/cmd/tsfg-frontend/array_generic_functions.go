@@ -29,10 +29,11 @@ func arrayFactsBindingID(path string, name span) (string, error) {
 }
 
 type arrayGenericState struct {
-	ownerType string
-	header    *arrayGenericHeader
-	bindings  map[*ast.Symbol]arrayFactsBinding
-	lengths   map[string]*arrayFactsLengthState
+	commonSeeded bool
+	ownerType    string
+	header       *arrayGenericHeader
+	bindings     map[*ast.Symbol]arrayFactsBinding
+	lengths      map[string]*arrayFactsLengthState
 }
 
 func genericNodeID(domain string, node *ast.Node) (string, error) {
@@ -158,6 +159,9 @@ func (p *arrayGenericProjection) header(node *ast.Node, constructorType string) 
 }
 func (p *arrayGenericProjection) function(header *arrayGenericHeader) (arrayGenericFunction, error) {
 	fn := header.function
+	if p.common != nil {
+		fn.Access = commonProgramAccess(header.node)
+	}
 	state := &arrayGenericState{header: header, ownerType: fn.OwnerType, bindings: map[*ast.Symbol]arrayFactsBinding{}, lengths: map[string]*arrayFactsLengthState{}}
 	var nodes []*ast.Node
 	if header.node.Kind == ast.KindConstructor {
@@ -308,6 +312,15 @@ func (p *arrayGenericProjection) statements(nodes []*ast.Node, state *arrayGener
 				return nil, err
 			}
 			v.Body = &body
+		case ast.KindTryStatement, ast.KindThrowStatement:
+			if p.common == nil {
+				return nil, p.fail(node, "statement has no owned array v8 representation")
+			}
+			var err error
+			v, err = p.commonException(node, state, fn, depth)
+			if err != nil {
+				return nil, err
+			}
 		default:
 			return nil, p.fail(node, "statement has no owned array v8 representation")
 		}
