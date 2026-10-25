@@ -72,6 +72,12 @@ func (p *arrayGenericProjection) assertionClassView(source, target string, node 
 		return nil, nil
 	}
 	from, to := p.types[source], p.types[target]
+	// A common Program retains the original pure assertion through unknown.
+	// It selects no nominal member mapping or physical representation.
+	if p.common != nil && (from.Kind == "unknown" && p.actual[source] == p.check.GetUnknownType() ||
+		to.Kind == "unknown" && p.actual[target] == p.check.GetUnknownType()) {
+		return nil, nil
+	}
 	if to.Kind == "undefined" || to.Kind == "null" || to.Kind == "void" {
 		return nil, nil
 	}
