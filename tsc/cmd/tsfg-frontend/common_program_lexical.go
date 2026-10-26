@@ -106,13 +106,25 @@ func (p *arrayGenericProjection) commonFunctionComplete(node *ast.Node, fn *arra
 			if !found || !ledger.add(b.ID, read, write) {
 				return nil
 			}
-			if b.Kind != "local" || p.types[b.DeclaredType].Kind != "scalar" || len(original.Declarations) != 1 {
-				return p.fail(current, "named closure capture requires initialized scalar function local")
+			if len(original.Declarations) != 1 {
+				return p.fail(current, "captured binding must retain its unique original declaration")
 			}
 			decl := original.Declarations[0]
 			owner := commonLexicalOwner37s(decl)
-			if decl.Kind != ast.KindVariableDeclaration || decl.AsVariableDeclaration().Initializer == nil || owner == nil || decl.Parent == nil || decl.Parent.Parent == nil || decl.Parent.Parent.Parent != owner.Body() {
-				return p.fail(current, "captured local must be initialized in its original function-body scope")
+			typeKind := p.types[b.DeclaredType].Kind
+			// Parameters already own initialized incoming values. ReadSpan keeps
+			// its original descriptor type; consumers decide owner lifetime.
+			if b.Kind == "parameter" && typeKind == "readSpan" {
+				if decl.Kind != ast.KindParameter || owner == nil || decl.Parent != owner {
+					return p.fail(current, "captured ReadSpan parameter must retain its original function declaration")
+				}
+			} else {
+				if b.Kind != "local" || typeKind != "scalar" && typeKind != "readSpan" {
+					return p.fail(current, "named closure capture requires initialized scalar or ReadSpan local, or ReadSpan parameter")
+				}
+				if decl.Kind != ast.KindVariableDeclaration || decl.AsVariableDeclaration().Initializer == nil || owner == nil || decl.Parent == nil || decl.Parent.Parent == nil || decl.Parent.Parent.Parent != owner.Body() {
+					return p.fail(current, "captured local must be initialized in its original function-body scope")
+				}
 			}
 			occurrences[b.ID] = append(occurrences[b.ID], commonProgramCaptureOccurrence{Range: *genericSpan(current), Read: read, Write: write})
 			return nil

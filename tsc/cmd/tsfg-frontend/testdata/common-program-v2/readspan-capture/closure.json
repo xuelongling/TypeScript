@@ -1,0 +1,56 @@
+{
+  "requiredRoots": [
+    {
+      "kind": "kernel",
+      "name": "left",
+      "sourcePath": "/src/main.ts"
+    },
+    {
+      "kind": "kernel",
+      "name": "right",
+      "sourcePath": "/src/main.ts"
+    }
+  ],
+  "roots": [
+    {
+      "kind": "application",
+      "name": "arrayOrdinary",
+      "sourcePath": "/src/main.ts"
+    },
+    {
+      "kind": "application",
+      "name": "captureSpanOrdinary",
+      "sourcePath": "/src/main.ts"
+    },
+    {
+      "kind": "application",
+      "name": "closureEntry",
+      "sourcePath": "/src/main.ts"
+    },
+    {
+      "kind": "application",
+      "name": "ordinary",
+      "sourcePath": "/src/main.ts"
+    },
+    {
+      "kind": "application",
+      "name": "valueOrdinary",
+      "sourcePath": "/src/main.ts"
+    },
+    {
+      "kind": "kernel",
+      "name": "left",
+      "sourcePath": "/src/main.ts"
+    },
+    {
+      "kind": "kernel",
+      "name": "right",
+      "sourcePath": "/src/main.ts"
+    },
+    {
+      "kind": "module-initialization",
+      "name": "$moduleInit",
+      "sourcePath": "/src/main.ts"
+    }
+  ]
+}
