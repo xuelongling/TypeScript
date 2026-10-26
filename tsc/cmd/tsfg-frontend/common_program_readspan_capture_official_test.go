@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/microsoft/typescript-go/internal/ast"
+	"github.com/microsoft/typescript-go/internal/checker"
 	"github.com/microsoft/typescript-go/internal/compiler"
 )
 
@@ -16,63 +17,8 @@ func readSpanCaptureOfficial26i(t *testing.T, source string, program *compiler.P
 	file := program.GetSourceFile("/src/main.ts")
 	check, release := program.GetTypeCheckerForFileExclusive(t.Context(), file)
 	defer release()
-	byID := map[string]arrayGenericFunction{}
-	facts := map[string]arrayGenericFunction{}
-	types := map[string]arrayGenericType{}
-	allTypes := map[string]arrayGenericType{}
-	for _, fn := range p.Functions {
-		byID[fn.ID] = fn
-	}
-	for _, fn := range p.Functions {
-		name := fn.Name
-		if fn.LexicalParent != nil && *fn.LexicalParent != nil {
-			parent, ok := byID[**fn.LexicalParent]
-			if !ok {
-				t.Fatal("missing original lexical parent")
-			}
-			name = parent.Name + "." + name
-		}
-		if _, exists := facts[name]; exists {
-			t.Fatal("duplicate original callable", name)
-		}
-		facts[name] = fn
-	}
-	functionTypes := 0
-	for _, typ := range p.Types {
-		allTypes[typ.ID] = typ
-		if typ.Name != "" {
-			types[typ.Name] = typ
-		}
-		if typ.Kind == "function" {
-			functionTypes++
-		}
-	}
-	index := commonMethodIndex37q(t, source, file, check, facts, types)
-	if len(index.declarations) != sample.functions || len(index.classes) != 2 || functionTypes != 2 {
-		t.Fatal("independent full declaration/type inventory differs")
-	}
+	facts, allTypes, index := commonCaptureInventory26(t, source, file, check, p, sample.functions)
 	rangeOf := index.rangeOf
-	for name, node := range index.declarations {
-		fn := facts[name]
-		if fn.Captures == nil || fn.DeclarationScope == nil {
-			t.Fatal("missing exact lexical inventory", name)
-		}
-		parent := commonLexicalOwnerForOracle26i(node)
-		if parent == nil {
-			if fn.LexicalParent != nil || *fn.DeclarationScope != (span{0, file.GetPositionMap().UTF8ToUTF16(len(source))}) || len(*fn.Captures) != 0 {
-				t.Fatal("top-level lexical facts changed", name)
-			}
-		} else {
-			if fn.LexicalParent == nil || *fn.LexicalParent == nil || **fn.LexicalParent != facts[parent.Name().Text()].ID || *fn.DeclarationScope != rangeOf(parent.Body()) {
-				t.Fatal("original nested owner/scope differs", name)
-			}
-		}
-		for _, b := range append(append([]arrayFactsBinding{}, fn.Parameters...), fn.Bindings...) {
-			if b.LexicalOwner == nil || *b.LexicalOwner == nil || **b.LexicalOwner != fn.ID {
-				t.Fatal("original storage owner differs", name, b.Name)
-			}
-		}
-	}
 	ownerName := "captureSpanOrdinary"
 	if sample.parameter {
 		ownerName = "invokeCapturedSpan"
@@ -163,16 +109,6 @@ func readSpanCaptureOfficial26i(t *testing.T, source string, program *compiler.P
 	if !found {
 		t.Fatal("nested declaration was cropped")
 	}
-	// Keep the unrelated complete ordinary EH, Array/View, scalar closure and both
-	// nominal classes. Source emits no selected-call liveness or borrow verdict.
-	if facts["ordinary"].Body[1].Kind != "try" || facts["ordinary"].Body[1].CatchClause == nil || facts["arrayOrdinary"].Body[0].Initializer == nil || len(*facts["factory.bump"].Captures) != 1 || !(*facts["factory.bump"].Captures)[0].Write || len(*types["Delta"].Fields) != 1 || len(*types["Box"].Fields) != 1 {
-		t.Fatal("unrelated complete business was cropped")
-	}
-	for _, global := range p.Globals {
-		if global.Binding.LexicalOwner != nil {
-			t.Fatal("global acquired function owner")
-		}
-	}
 	t.Log("independent original AST/checker: complete callable/class inventory, original lexical scopes, r Symbol/type/UTF16 and exact read-only capture verified; no lifetime or execution authority")
 }
 
@@ -183,4 +119,81 @@ func commonLexicalOwnerForOracle26i(node *ast.Node) *ast.Node {
 		}
 	}
 	return nil
+}
+
+// Array and ReadSpan capture oracles share only this original-Program inventory
+// join. Each caller keeps its own Symbol/type/access and parameter assertions.
+func commonCaptureInventory26(t *testing.T, source string, file *ast.SourceFile, check *checker.Checker, p commonProgramPayload, expectedFunctions int) (map[string]arrayGenericFunction, map[string]arrayGenericType, commonMethodOracleIndex37q) {
+	t.Helper()
+	byID := map[string]arrayGenericFunction{}
+	facts := map[string]arrayGenericFunction{}
+	types := map[string]arrayGenericType{}
+	allTypes := map[string]arrayGenericType{}
+	for _, fn := range p.Functions {
+		byID[fn.ID] = fn
+	}
+	for _, fn := range p.Functions {
+		name := fn.Name
+		parent := fn.LexicalParent
+		seen := map[string]bool{}
+		for parent != nil && *parent != nil {
+			id := **parent
+			owner, ok := byID[id]
+			if !ok || seen[id] {
+				t.Fatal("missing or cyclic original lexical parent")
+			}
+			seen[id] = true
+			name = owner.Name + "." + name
+			parent = owner.LexicalParent
+		}
+		if _, exists := facts[name]; exists {
+			t.Fatal("duplicate original callable", name)
+		}
+		facts[name] = fn
+	}
+	functionTypes := 0
+	for _, typ := range p.Types {
+		allTypes[typ.ID] = typ
+		if typ.Name != "" {
+			types[typ.Name] = typ
+		}
+		if typ.Kind == "function" {
+			functionTypes++
+		}
+	}
+	index := commonMethodIndex37q(t, source, file, check, facts, types)
+	if len(index.declarations) != expectedFunctions || len(index.classes) != 2 || functionTypes != 2 {
+		t.Fatal("independent full declaration/type inventory differs")
+	}
+	rangeOf := index.rangeOf
+	for name, node := range index.declarations {
+		fn := facts[name]
+		if fn.Captures == nil || fn.DeclarationScope == nil {
+			t.Fatal("missing original lexical inventory", name)
+		}
+		parent := commonLexicalOwnerForOracle26i(node)
+		if parent == nil {
+			if fn.LexicalParent != nil || *fn.DeclarationScope != (span{0, file.GetPositionMap().UTF8ToUTF16(len(source))}) || len(*fn.Captures) != 0 {
+				t.Fatal("top-level lexical facts changed", name)
+			}
+		} else {
+			if fn.LexicalParent == nil || *fn.LexicalParent == nil || byID[**fn.LexicalParent].DeclarationRange != rangeOf(parent) || *fn.DeclarationScope != rangeOf(parent.Body()) {
+				t.Fatal("original nested lexical parent/scope differs", name)
+			}
+		}
+		for _, b := range append(append([]arrayFactsBinding{}, fn.Parameters...), fn.Bindings...) {
+			if b.LexicalOwner == nil || *b.LexicalOwner == nil || **b.LexicalOwner != fn.ID {
+				t.Fatal("storage lost its original function owner", name, b.Name)
+			}
+		}
+	}
+	if facts["ordinary"].Body[1].Kind != "try" || facts["ordinary"].Body[1].CatchClause == nil || facts["arrayOrdinary"].Body[0].Initializer == nil || len(*facts["factory.bump"].Captures) != 1 || !(*facts["factory.bump"].Captures)[0].Write || len(*types["Delta"].Fields) != 1 || len(*types["Box"].Fields) != 1 {
+		t.Fatal("unrelated complete EH/Array/value/ref/scalar closure business cropped")
+	}
+	for _, global := range p.Globals {
+		if global.Binding.LexicalOwner != nil {
+			t.Fatal("global acquired lexical owner")
+		}
+	}
+	return facts, allTypes, index
 }

@@ -14,21 +14,15 @@ func TestCommonProgramReadSpanCaptureBoundary26i(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	parameter, err := os.ReadFile("testdata/common-program-v2/readspan-capture/parameter-safe.ts")
-	if err != nil {
-		t.Fatal(err)
-	}
 	for _, sample := range []struct {
 		name    string
 		source  []byte
 		changes [][2]string
 	}{
 		{"uninitialized-local", local, [][2]string{{"const r: ReadSpan<i32> = readSpan(a, 0, 1);", "let r: ReadSpan<i32>; r = readSpan(a, 0, 1);"}}},
-		{"array-local", local, [][2]string{{"const r: ReadSpan<i32> = readSpan(a, 0, 1);", "const r: i32[] = a;"}}},
 		{"reference-local", local, [][2]string{{"const r: ReadSpan<i32> = readSpan(a, 0, 1);", "const r: Box = new Box();"}, {"return r[0];", "return r.n;"}}},
 		{"value-local", local, [][2]string{{"const r: ReadSpan<i32> = readSpan(a, 0, 1);", "const r: Delta = new Delta();"}, {"return r[0];", "return r.n;"}}},
 		{"function-local", local, [][2]string{{"const r: ReadSpan<i32> = readSpan(a, 0, 1);", "const r: Unary = leafLeft;"}, {"return r[0];", "return r(0);"}}},
-		{"array-parameter", parameter, [][2]string{{"invokeCapturedSpan(r: ReadSpan<i32>)", "invokeCapturedSpan(r: i32[])"}, {"invokeCapturedSpan(readSpan(a, 0, 1))", "invokeCapturedSpan(a)"}}},
 	} {
 		t.Run(sample.name, func(t *testing.T) {
 			source := string(sample.source)

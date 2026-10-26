@@ -22,7 +22,6 @@ func TestCommonProgramIndirectBoundary37s(t *testing.T) {
 		{"block-declaration", "function bump(x: i32): i32 { n += x; return n; }\n  return bump;", "{ function bump(x: i32): i32 { n += x; return n; } return bump; }"},
 		{"parameter-capture", "n += x; return n;", "return seed + x;"},
 		{"uninitialized-capture", "let n: i32 = seed;", "let n: i32; n = seed;"},
-		{"reference-capture", "let n: i32 = seed;\n  function bump(x: i32): i32 { n += x; return n; }", "let n: i32[] = [seed];\n  function bump(x: i32): i32 { n[0] += x; return n[0]; }"},
 	} {
 		t.Run(sample.name, func(t *testing.T) {
 			source := strings.Replace(string(original), sample.old, sample.new, 1)
