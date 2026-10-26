@@ -77,7 +77,7 @@ func TestCommonProgramActualStoragePublic37p(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			input := commonProgramActualRequest37p(t, tc.name)
 			var output bytes.Buffer
-			if err := runFrontendCommand(t.Context(), []string{"--program-facts-io-v1"}, bytes.NewReader(input), &output); err != nil {
+			if err := runFrontendCommand(t.Context(), []string{"--program-facts-io-v2"}, bytes.NewReader(input), &output); err != nil {
 				t.Fatal(err)
 			}
 			if root := os.Getenv("TSFG_COMMON_PROGRAM_CAPTURE_ROOT"); root != "" {
@@ -95,7 +95,7 @@ func TestCommonProgramActualStoragePublic37p(t *testing.T) {
 				t.Fatal(err)
 			}
 			p := packet.Payload
-			if packet.Family != "tsfg.program-facts-package-candidate" || packet.Version != 1 || len(p.Files) != 2 || len(p.Functions) != 7 || len(p.Globals) != 2 || len(p.Modules) != 1 || len(p.Modules[0].Initialization) != 2 || len(p.Closure.Roots) != 6 || len(p.Closure.RequiredRoots) != 2 {
+			if packet.Family != "tsfg.program-facts-package-candidate" || packet.Version != 2 || len(p.Files) != 2 || len(p.Functions) != 7 || len(p.Globals) != 2 || len(p.Modules) != 1 || len(p.Modules[0].Initialization) != 2 || len(p.Closure.Roots) != 6 || len(p.Closure.RequiredRoots) != 2 {
 				t.Fatal("complete actual-storage Program inventory changed")
 			}
 			if p.Files[0].Path != "/src/main.ts" || p.Files[0].SHA256 != tc.sha || p.Files[0].UTF16Length != tc.length || p.Globals[0].Binding.Name != "leftTotal" || p.Globals[1].Binding.Name != "rightTotal" {

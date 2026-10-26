@@ -66,6 +66,9 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput, 
 	}
 	if len(common) == 1 {
 		p.common = common[0]
+		p.common.lexical = map[*ast.Node]*closureProjection{}
+		p.common.bindings = map[string]arrayFactsBinding{}
+		p.common.typeAliases = []commonProgramTypeAlias{}
 	}
 	p.payload = arrayGenericPayload{SourceRoot: input.SourceRoot, RootFile: input.RootFile, PositionUnit: "utf16", Config: input.Config, Declarations: input.Declarations, Files: []arrayFactsOwnedFile{}, Types: []arrayGenericType{}, Functions: []arrayGenericFunction{}, Exports: []arrayFactsExport{}, Diagnostics: []diagnostic{}}
 	p.payload.CompatibilityWitnesses = []arrayGenericCompatibilityWitness{}
@@ -125,15 +128,27 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput, 
 	}
 	ordered := []*arrayGenericHeader{}
 	for _, file := range files {
-		for _, node := range file.Statements.Nodes {
+		declarations := file.Statements.Nodes
+		var lexical *closureProjection
+		if p.common != nil {
+			declarations, lexical = closureDeclarations(file)
+		}
+		for _, node := range declarations {
 			if node.Kind != ast.KindFunctionDeclaration {
 				continue
+			}
+			if lexical != nil && lexical.parents[node] != nil && node.Parent != lexical.parents[node].Body() {
+				return empty, p.fail(node, "named closures require direct function-body declaration scope")
 			}
 			header, err := p.header(node, "")
 			if err != nil {
 				return empty, err
 			}
 			p.headers[check.GetSymbolAtLocation(node.Name())] = header
+			if p.common != nil && lexical != nil {
+				p.common.lexical[node] = lexical
+				lexical.register(node, &symbol{ID: header.function.ID})
+			}
 			ordered = append(ordered, header)
 		}
 	}

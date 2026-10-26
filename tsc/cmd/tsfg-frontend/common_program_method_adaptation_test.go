@@ -20,7 +20,7 @@ func TestCommonProgramMethodAdaptation37q(t *testing.T) {
 	}
 	packet := commonMethodPacket37q(t, "common-method-adaptation", []string{"adapted", "ordinary"})
 	p := packet.Payload
-	if packet.Version != 1 || len(p.Diagnostics) != 0 || len(p.Functions) != 10 || len(p.Globals) != 2 || len(p.Modules) != 1 || len(p.Closure.Roots) != 5 || len(p.EntryCompatibilityRoots) != 3 || p.Files[0].SHA256 != arrayFactsSHA(raw) || p.Files[0].UTF16Length != 982 {
+	if packet.Version != 2 || len(p.Diagnostics) != 0 || len(p.Functions) != 10 || len(p.Globals) != 2 || len(p.Modules) != 1 || len(p.Closure.Roots) != 5 || len(p.EntryCompatibilityRoots) != 3 || p.Files[0].SHA256 != arrayFactsSHA(raw) || p.Files[0].UTF16Length != 982 {
 		t.Fatal("complete adaptation inventory or original Source identity changed")
 	}
 	types, typeNames, members := map[string]arrayGenericType{}, map[string]string{}, map[string]string{}

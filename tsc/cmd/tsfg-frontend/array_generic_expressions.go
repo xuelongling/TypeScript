@@ -84,7 +84,17 @@ func (p *arrayGenericProjection) expression(node *ast.Node, expected string, sta
 		} else if actual.Flags()&checker.TypeFlagsUndefined != 0 {
 			v.Kind, v.Type = "undefinedLiteral", p.addType(arrayGenericType{ID: "undefined", Kind: "undefined"}, actual)
 		} else {
-			return nil, p.fail(node, "reference must join an actual in-scope binding")
+			if p.common == nil {
+				return nil, p.fail(node, "reference must join an actual in-scope binding")
+			}
+			var found bool
+			v, found, err = p.commonFunctionReference(node)
+			if err != nil {
+				return nil, err
+			}
+			if !found {
+				return nil, p.fail(node, "reference must join an actual in-scope binding or named function")
+			}
 		}
 	case ast.KindNullKeyword:
 		v.Kind, v.Type = "nullLiteral", p.addType(arrayGenericType{ID: "null", Kind: "null"}, actual)

@@ -48,6 +48,12 @@ func (p *arrayGenericProjection) commonHeaders(files []*ast.SourceFile) error {
 			return p.fail(file.AsNode(), "common Program requires actual module symbols")
 		}
 		for _, node := range file.Statements.Nodes {
+			if node.Kind == ast.KindTypeAliasDeclaration {
+				if err := p.commonTypeAlias(node); err != nil {
+					return err
+				}
+				continue
+			}
 			if node.Kind != ast.KindVariableStatement {
 				continue
 			}

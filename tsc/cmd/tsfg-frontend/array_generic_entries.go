@@ -42,6 +42,18 @@ func (p *arrayGenericProjection) entryReferenceTargets(id string) ([]string, err
 			return nil, arrayFactsError("identity", "entry type closure has no catalog record", nil)
 		}
 		switch typ.Kind {
+		case "function":
+			if typ.Parameters == nil {
+				return nil, arrayFactsError("identity", "function type parameters missing", nil)
+			}
+			for _, parameter := range *typ.Parameters {
+				if err := push(parameter); err != nil {
+					return nil, err
+				}
+			}
+			if err := push(typ.ReturnType); err != nil {
+				return nil, err
+			}
 		case "array", "readSpan":
 			if err := push(typ.ElementType); err != nil {
 				return nil, err

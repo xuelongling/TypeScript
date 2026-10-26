@@ -8,8 +8,29 @@ import (
 	"github.com/microsoft/typescript-go/internal/ast"
 )
 
-//go:embed testdata/common-program-v1/schema.json
+//go:embed testdata/common-program-v2/schema.json
 var commonProgramSchema []byte
+
+type commonProgramCaptureOccurrence struct {
+	Range span `json:"range"`
+	Read  bool `json:"read"`
+	Write bool `json:"write"`
+}
+type commonProgramCapture struct {
+	Binding     string                           `json:"binding"`
+	Read        bool                             `json:"read"`
+	Write       bool                             `json:"write"`
+	Occurrences []commonProgramCaptureOccurrence `json:"occurrences"`
+}
+type commonProgramTypeAlias struct {
+	ID               string `json:"id"`
+	Name             string `json:"name"`
+	SourcePath       string `json:"sourcePath"`
+	DeclarationRange span   `json:"declarationRange"`
+	NameRange        span   `json:"nameRange"`
+	AnnotationRange  span   `json:"annotationRange"`
+	Type             string `json:"type"`
+}
 
 type commonProgramInput struct {
 	SourceRoot         string                 `json:"sourceRoot"`
@@ -92,6 +113,7 @@ type commonProgramCatch struct {
 	Block            commonProgramBlock `json:"block"`
 }
 type commonProgramPayload struct {
+	TypeAliases             []commonProgramTypeAlias              `json:"typeAliases"`
 	CompatibilityWitnesses  []arrayGenericCompatibilityWitness    `json:"compatibilityWitnesses"`
 	EntryCompatibilityRoots []arrayGenericEntryCompatibilityRoots `json:"entryCompatibilityRoots"`
 	SourceRoot              string                                `json:"sourceRoot"`
@@ -123,7 +145,7 @@ func commonProgramPayloadFrom(payload arrayGenericPayload, selected *commonProgr
 		Declarations: payload.Declarations, Files: payload.Files, Types: payload.Types, ArrayLength: payload.ArrayLength,
 		ReadSpanLength: payload.ReadSpanLength, ReadSpanIntrinsic: payload.ReadSpanIntrinsic, Functions: payload.Functions,
 		Exports: payload.Exports, Diagnostics: payload.Diagnostics, Target: *selected.input.Target,
-		Modules: selected.modules, Globals: selected.globalRows, Closure: selected.closure}
+		Modules: selected.modules, Globals: selected.globalRows, Closure: selected.closure, TypeAliases: selected.typeAliases}
 }
 
 type commonProgramPackage struct {
@@ -138,6 +160,9 @@ type commonProgramPackage struct {
 // Private projection state lives only inside the one official checker lease.
 // Its AST/Symbol keys never enter the returned DTO.
 type commonProgramProjection struct {
+	lexical      map[*ast.Node]*closureProjection
+	bindings     map[string]arrayFactsBinding
+	typeAliases  []commonProgramTypeAlias
 	input        commonProgramInput
 	globals      map[*ast.Symbol]arrayFactsBinding
 	globalNodes  map[*ast.Symbol]*ast.Node

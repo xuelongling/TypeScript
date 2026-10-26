@@ -85,9 +85,10 @@ func (b *arrayFactsJSONBudget) trusted(typ reflect.Type) error {
 	case reflect.String, reflect.Bool, reflect.Int, reflect.Int32, reflect.Int64:
 		return nil
 	case reflect.Pointer:
-		// The selected DTO has single pointers to scalar/struct/slice values.
-		// Reject a recursive pointer-only type that has no JSON container depth.
-		if typ.Elem().Kind() == reflect.Pointer {
+		// Complete Program optional-nullable owners use exactly **string:
+		// outer nil omits the v8 field, inner nil preserves explicit JSON null.
+		// No other pointer chain can evade the JSON container depth bound.
+		if typ.Elem().Kind() == reflect.Pointer && typ.Elem().Elem().Kind() != reflect.String {
 			return arrayFactsError("json", "unsupported DTO pointer chain", nil)
 		}
 		return b.trusted(typ.Elem())

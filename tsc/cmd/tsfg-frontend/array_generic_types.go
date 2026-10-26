@@ -79,6 +79,9 @@ func (p *arrayGenericProjection) annotation(node *ast.Node) (string, error) {
 
 func (p *arrayGenericProjection) annotationValue(node *ast.Node) (string, error) {
 	actual := p.check.GetTypeFromTypeNode(node)
+	if p.common != nil && node.Kind == ast.KindFunctionType {
+		return p.commonFunctionType(node, actual)
+	}
 	if p.common != nil && node.Kind == ast.KindUnknownKeyword && actual == p.check.GetUnknownType() {
 		return p.addType(arrayGenericType{ID: "unknown", Kind: "unknown"}, actual), nil
 	}

@@ -37,7 +37,7 @@ func TestCommonProgramM12Public37o(t *testing.T) {
 	}
 	input = append(input, '\n')
 	var output bytes.Buffer
-	runErr := runFrontendCommand(t.Context(), []string{"--program-facts-io-v1"}, bytes.NewReader(input), &output)
+	runErr := runFrontendCommand(t.Context(), []string{"--program-facts-io-v2"}, bytes.NewReader(input), &output)
 	if capture := os.Getenv("TSFG_COMMON_PROGRAM_CAPTURE_ROOT"); capture != "" {
 		if err := os.MkdirAll(capture, 0700); err != nil {
 			t.Fatal(err)

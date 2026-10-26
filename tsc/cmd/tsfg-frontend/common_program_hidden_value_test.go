@@ -38,7 +38,7 @@ func TestCommonProgramHiddenValuePublic37p(t *testing.T) {
 	}
 	input := append(canonical, '\n')
 	var output bytes.Buffer
-	if err := runFrontendCommand(t.Context(), []string{"--program-facts-io-v1"}, bytes.NewReader(input), &output); err != nil {
+	if err := runFrontendCommand(t.Context(), []string{"--program-facts-io-v2"}, bytes.NewReader(input), &output); err != nil {
 		t.Fatal(err)
 	}
 	if capture := os.Getenv("TSFG_COMMON_PROGRAM_CAPTURE_ROOT"); capture != "" {
@@ -56,7 +56,7 @@ func TestCommonProgramHiddenValuePublic37p(t *testing.T) {
 		t.Fatal(err)
 	}
 	p := packet.Payload
-	if packet.Family != "tsfg.program-facts-package-candidate" || packet.Version != 1 || len(p.Files) != 2 || len(p.Functions) != 7 || len(p.Globals) != 2 || len(p.Modules) != 1 || len(p.Modules[0].Initialization) != 2 || len(p.Closure.Roots) != 6 || len(p.Closure.RequiredRoots) != 2 {
+	if packet.Family != "tsfg.program-facts-package-candidate" || packet.Version != 2 || len(p.Files) != 2 || len(p.Functions) != 7 || len(p.Globals) != 2 || len(p.Modules) != 1 || len(p.Modules[0].Initialization) != 2 || len(p.Closure.Roots) != 6 || len(p.Closure.RequiredRoots) != 2 {
 		t.Fatal("complete original hidden-value Program inventory changed")
 	}
 	if p.Files[0].Path != "/src/main.ts" || p.Files[0].SHA256 != "f6ed9fd4c21e61b90b1ae2b22fa22a4e65a51a5da5b013ac254f3ae73b8f94d1" || p.Files[0].UTF16Length != 975 || p.Globals[0].Binding.Name != "leftTotal" || p.Globals[1].Binding.Name != "rightTotal" {

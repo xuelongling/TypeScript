@@ -76,7 +76,13 @@ func (p *arrayGenericProjection) typedBinding(node, annotation *ast.Node, kind s
 	if annotation != nil {
 		annotationRange = genericSpan(annotation)
 	}
-	return arrayFactsBinding{ID: id, Name: node.Name().Text(), Kind: kind, DeclaredType: typ, Writable: writable, DeclarationRange: *genericSpan(node), NameRange: *genericSpan(node.Name()), AnnotationRange: annotationRange, ElementAnnotationRange: element}, nil
+	b := arrayFactsBinding{ID: id, Name: node.Name().Text(), Kind: kind, DeclaredType: typ, Writable: writable, DeclarationRange: *genericSpan(node), NameRange: *genericSpan(node.Name()), AnnotationRange: annotationRange, ElementAnnotationRange: element}
+	if p.common != nil {
+		if err := p.commonBinding(node, &b); err != nil {
+			return empty, err
+		}
+	}
+	return b, nil
 }
 func (p *arrayGenericProjection) header(node *ast.Node, constructorType string) (*arrayGenericHeader, error) {
 	var signature *checker.Signature
@@ -155,6 +161,11 @@ func (p *arrayGenericProjection) header(node *ast.Node, constructorType string) 
 		}
 		fn.Parameters = append(fn.Parameters, v)
 	}
+	if p.common != nil {
+		if err := p.commonFunctionHeader(node, &fn); err != nil {
+			return nil, err
+		}
+	}
 	return &arrayGenericHeader{node: node, signature: signature, function: fn}, nil
 }
 func (p *arrayGenericProjection) function(header *arrayGenericHeader) (arrayGenericFunction, error) {
@@ -163,6 +174,11 @@ func (p *arrayGenericProjection) function(header *arrayGenericHeader) (arrayGene
 		fn.Access = commonProgramAccess(header.node)
 	}
 	state := &arrayGenericState{header: header, ownerType: fn.OwnerType, bindings: map[*ast.Symbol]arrayFactsBinding{}, lengths: map[string]*arrayFactsLengthState{}}
+	if p.common != nil {
+		if err := p.commonEnterBindings(header.node, state); err != nil {
+			return fn, err
+		}
+	}
 	var nodes []*ast.Node
 	if header.node.Kind == ast.KindConstructor {
 		nodes = header.node.AsConstructorDeclaration().Parameters.Nodes
@@ -187,6 +203,11 @@ func (p *arrayGenericProjection) function(header *arrayGenericHeader) (arrayGene
 		return fn, err
 	}
 	fn.Body = body
+	if p.common != nil {
+		if err := p.commonFunctionComplete(header.node, &fn, state); err != nil {
+			return fn, err
+		}
+	}
 	return fn, nil
 }
 func (p *arrayGenericProjection) statements(nodes []*ast.Node, state *arrayGenericState, fn *arrayGenericFunction, depth int) ([]arrayGenericStatement, error) {
@@ -200,6 +221,16 @@ func (p *arrayGenericProjection) statements(nodes []*ast.Node, state *arrayGener
 		}
 		v := arrayGenericStatement{Range: *genericSpan(node)}
 		switch node.Kind {
+		case ast.KindFunctionDeclaration:
+			if p.common == nil {
+				return nil, p.fail(node, "named nested declaration requires common Program lexical facts")
+			}
+			header := p.headers[p.check.GetSymbolAtLocation(node.Name())]
+			lexical := p.common.lexical[node]
+			if header == nil || lexical == nil || lexical.parents[node] != state.header.node {
+				return nil, p.fail(node, "nested function must join its original parent body")
+			}
+			v.Kind, v.FunctionID = "functionDeclaration", header.function.ID
 		case ast.KindVariableStatement:
 			list := node.AsVariableStatement().DeclarationList
 			for _, local := range list.AsVariableDeclarationList().Declarations.Nodes {

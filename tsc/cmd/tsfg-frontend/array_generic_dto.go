@@ -11,6 +11,8 @@ var arrayGenericSchema []byte
 var arrayGenericDeclarations []byte
 
 type arrayGenericType struct {
+	Parameters          *[]string                 `json:"parameters,omitzero"`
+	ReturnType          string                    `json:"returnType,omitempty"`
 	ID                  string                    `json:"id"`
 	Kind                string                    `json:"kind"`
 	Name                string                    `json:"name,omitempty"`
@@ -83,6 +85,7 @@ type arrayGenericTarget struct {
 	NameRange *span                   `json:"nameRange,omitempty"`
 }
 type arrayGenericExpression struct {
+	FunctionID         string                                `json:"functionId,omitempty"`
 	CompatibilityRoots []arrayGenericCompatibilityDependency `json:"compatibilityRoots,omitempty"`
 	Kind               string                                `json:"kind"`
 	Type               string                                `json:"type"`
@@ -114,6 +117,7 @@ type arrayGenericExpression struct {
 	NameRange          *span                                 `json:"nameRange,omitempty"`
 }
 type arrayGenericStatement struct {
+	FunctionID   string                   `json:"functionId,omitempty"`
 	TryBlock     *commonProgramBlock      `json:"tryBlock,omitempty"`
 	CatchClause  *commonProgramCatch      `json:"catchClause,omitempty"`
 	FinallyBlock *commonProgramBlock      `json:"finallyBlock,omitempty"`
@@ -128,6 +132,9 @@ type arrayGenericStatement struct {
 	Body         *[]arrayGenericStatement `json:"body,omitzero"`
 }
 type arrayGenericFunction struct {
+	LexicalParent         **string                `json:"lexicalParent,omitzero"`
+	DeclarationScope      *span                   `json:"declarationScope,omitempty"`
+	Captures              *[]commonProgramCapture `json:"captures,omitzero"`
 	Access                string                  `json:"access,omitempty"`
 	OwnerType             string                  `json:"ownerType,omitempty"`
 	OverrideTarget        string                  `json:"overrideTarget,omitempty"`

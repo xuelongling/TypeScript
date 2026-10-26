@@ -13,23 +13,37 @@ type closureCapture struct {
 	Write  bool   `json:"write"`
 }
 
-func directClosureCaptures(fn *function, bindings map[string]symbol) []closureCapture {
-	var captures []closureCapture
-	positions := map[string]int{}
-	add := func(id string, read, write bool) {
-		binding, ok := bindings[id]
-		if !ok || binding.LexicalOwner == "" || binding.LexicalOwner == fn.Symbol {
-			return
-		}
-		index, exists := positions[id]
-		if !exists {
-			index = len(captures)
-			positions[id] = index
-			captures = append(captures, closureCapture{Symbol: id})
-		}
-		captures[index].Read = captures[index].Read || read
-		captures[index].Write = captures[index].Write || write
+// Both Snapshot and complete-Program adapters retain original lexical binding
+// ownership here; protocol-specific visitors supply their own direct accesses.
+type closureCaptureLedger struct {
+	owner     string
+	bindings  map[string]symbol
+	captures  []closureCapture
+	positions map[string]int
+}
+
+func newClosureCaptureLedger(owner string, bindings map[string]symbol) *closureCaptureLedger {
+	return &closureCaptureLedger{owner: owner, bindings: bindings, captures: []closureCapture{}, positions: map[string]int{}}
+}
+func (c *closureCaptureLedger) add(id string, read, write bool) bool {
+	binding, ok := c.bindings[id]
+	if !ok || binding.LexicalOwner == "" || binding.LexicalOwner == c.owner {
+		return false
 	}
+	index, exists := c.positions[id]
+	if !exists {
+		index = len(c.captures)
+		c.positions[id] = index
+		c.captures = append(c.captures, closureCapture{Symbol: id})
+	}
+	c.captures[index].Read = c.captures[index].Read || read
+	c.captures[index].Write = c.captures[index].Write || write
+	return true
+}
+
+func directClosureCaptures(fn *function, bindings map[string]symbol) []closureCapture {
+	ledger := newClosureCaptureLedger(fn.Symbol, bindings)
+	add := func(id string, read, write bool) { ledger.add(id, read, write) }
 	var expressionAccess func(*expression, bool, bool)
 	expressionAccess = func(value *expression, read, write bool) {
 		if value == nil {
@@ -84,5 +98,8 @@ func directClosureCaptures(fn *function, bindings map[string]symbol) []closureCa
 		expressionAccess(item.Expression, true, false)
 		expressionAccess(item.Condition, true, false)
 	})
-	return captures
+	if len(ledger.captures) == 0 {
+		return nil
+	}
+	return ledger.captures
 }

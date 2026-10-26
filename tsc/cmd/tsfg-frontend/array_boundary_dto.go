@@ -42,15 +42,16 @@ type arrayFactsOwnedFile struct {
 }
 
 type arrayFactsBinding struct {
-	ID                     string `json:"id"`
-	Name                   string `json:"name"`
-	Kind                   string `json:"kind"`
-	DeclaredType           string `json:"declaredType"`
-	Writable               bool   `json:"writable"`
-	DeclarationRange       span   `json:"declarationRange"`
-	NameRange              span   `json:"nameRange"`
-	AnnotationRange        *span  `json:"annotationRange"`
-	ElementAnnotationRange *span  `json:"elementAnnotationRange"`
+	LexicalOwner           **string `json:"lexicalOwner,omitzero"`
+	ID                     string   `json:"id"`
+	Name                   string   `json:"name"`
+	Kind                   string   `json:"kind"`
+	DeclaredType           string   `json:"declaredType"`
+	Writable               bool     `json:"writable"`
+	DeclarationRange       span     `json:"declarationRange"`
+	NameRange              span     `json:"nameRange"`
+	AnnotationRange        *span    `json:"annotationRange"`
+	ElementAnnotationRange *span    `json:"elementAnnotationRange"`
 }
 
 type arrayFactsLengthProperty struct {

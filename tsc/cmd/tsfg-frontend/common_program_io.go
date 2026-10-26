@@ -35,7 +35,7 @@ func runCommonProgramFacts(ctx context.Context, input io.Reader, output io.Write
 	}
 	encoded, err := arrayFactsCanonical(r)
 	schema := "sha256:" + arrayFactsSHA(commonProgramSchema)
-	if err != nil || !bytes.Equal(encoded, raw) || r.Family != "tsfg.program-facts-request-candidate" || r.Version != 1 || r.SchemaHash != schema {
+	if err != nil || !bytes.Equal(encoded, raw) || r.Family != "tsfg.program-facts-request-candidate" || r.Version != 2 || r.SchemaHash != schema {
 		return arrayFactsError("schema", "common Program identity/fields", err)
 	}
 	owned, err := arrayGenericInput(r.Input.arrayInput())
@@ -70,9 +70,9 @@ func runCommonProgramFacts(ctx context.Context, input io.Reader, output io.Write
 	if err != nil {
 		return err
 	}
-	packet := commonProgramPackage{Family: "tsfg.program-facts-package-candidate", Version: 1, SchemaHash: schema,
-		RequestID: "sha256:" + arrayFactsSHA(append([]byte("tsfg.program-facts.request.v1\x00"), data...)),
-		PackageID: "sha256:" + arrayFactsSHA(append([]byte("tsfg.program-facts.package.v1\x00"+schema+"\x00"), payloadBytes...)), Payload: complete}
+	packet := commonProgramPackage{Family: "tsfg.program-facts-package-candidate", Version: 2, SchemaHash: schema,
+		RequestID: "sha256:" + arrayFactsSHA(append([]byte("tsfg.program-facts.request.v2\x00"), data...)),
+		PackageID: "sha256:" + arrayFactsSHA(append([]byte("tsfg.program-facts.package.v2\x00"+schema+"\x00"), payloadBytes...)), Payload: complete}
 	encoded, err = arrayFactsCanonical(packet)
 	if err != nil {
 		return err

@@ -25,7 +25,7 @@ func TestCommonProgramMethodPublic37q(t *testing.T) {
 	}
 	packet := commonMethodPacket37q(t, "common-method-dispatch", []string{"concreteDerived", "entryBase", "inheritedEntry", "ordered", "ordinary", "peerEntry"})
 	p := packet.Payload
-	if packet.Version != 1 || len(p.Diagnostics) != 0 || len(p.Functions) != 17 || len(p.Modules) != 1 || len(p.Globals) != 2 || len(p.Closure.Roots) != 9 || len(p.EntryCompatibilityRoots) != 8 {
+	if packet.Version != 2 || len(p.Diagnostics) != 0 || len(p.Functions) != 17 || len(p.Modules) != 1 || len(p.Globals) != 2 || len(p.Closure.Roots) != 9 || len(p.EntryCompatibilityRoots) != 8 {
 		t.Fatal("whole Program function/module/global/root/entry inventory changed")
 	}
 	if p.Files[0].SHA256 != arrayFactsSHA(sourceBytes) || p.Files[0].UTF16Length != 1730 {
@@ -135,7 +135,7 @@ func commonMethodPacket37q(t *testing.T, fixture string, applications []string) 
 	}
 	input = append(input, '\n')
 	var output bytes.Buffer
-	runErr := runFrontendCommand(t.Context(), []string{"--program-facts-io-v1"}, bytes.NewReader(input), &output)
+	runErr := runFrontendCommand(t.Context(), []string{"--program-facts-io-v2"}, bytes.NewReader(input), &output)
 	if capture := os.Getenv("TSFG_COMMON_PROGRAM_CAPTURE_ROOT"); capture != "" {
 		if err := os.MkdirAll(capture, 0700); err != nil {
 			t.Fatal(err)

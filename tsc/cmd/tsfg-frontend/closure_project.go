@@ -67,8 +67,24 @@ func (c *closureProjection) enter(node *ast.Node, p *projection) {
 	// Each child receives a separate map after its parent's complete body has
 	// registered locals. Official symbol identity handles forward references
 	// and shadowing; siblings cannot install bindings into one another's map.
+	c.enterBindings(node, func(upstream *ast.Symbol, owned symbol) bool { p.bindings[upstream] = owned; return false })
+}
+
+// A visitor can stop before its next binding write; boundary-specific work and
+// cancellation policies stay with that visitor rather than this lexical index.
+func (c *closureProjection) enterBindings(node *ast.Node, put func(*ast.Symbol, symbol) bool) {
+	if c == nil || !c.members[node] {
+		return
+	}
 	for upstream, owned := range c.environments[c.parents[node]] {
-		p.bindings[upstream] = owned
+		if put(upstream, owned) {
+			return
+		}
+	}
+}
+func (c *closureProjection) completeBindings(node *ast.Node, bindings map[*ast.Symbol]symbol) {
+	if c != nil && c.members[node] {
+		c.environments[node] = bindings
 	}
 }
 
@@ -76,7 +92,7 @@ func (c *closureProjection) complete(node *ast.Node, fn *function, p *projection
 	if c == nil || !c.members[node] {
 		return
 	}
-	c.environments[node] = p.bindings
+	c.completeBindings(node, p.bindings)
 	fn.LexicalParent = c.definitions[c.parents[node]].ID
 	bindings := make(map[string]symbol, len(p.bindings))
 	for _, owned := range p.bindings {

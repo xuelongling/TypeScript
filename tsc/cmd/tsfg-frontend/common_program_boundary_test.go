@@ -17,7 +17,7 @@ func TestCommonProgramInputBoundary37n(t *testing.T) {
 		edit func(map[string]any)
 	}{
 		{"wrong-schema", func(r map[string]any) { r["schemaHash"] = "sha256:" + strings.Repeat("0", 64) }},
-		{"wrong-version", func(r map[string]any) { r["version"] = 2 }},
+		{"wrong-version", func(r map[string]any) { r["version"] = 1 }},
 		{"unknown-field", func(r map[string]any) { r["permission"] = true }},
 		{"wrong-target", func(r map[string]any) { r["input"].(map[string]any)["target"].(map[string]any)["pointerBits"] = "32" }},
 		{"unresolved-root", func(r map[string]any) {
@@ -54,7 +54,7 @@ func TestCommonProgramInputBoundary37n(t *testing.T) {
 				t.Fatal(err)
 			}
 			var output bytes.Buffer
-			if err := runFrontendCommand(t.Context(), []string{"--program-facts-io-v1"}, bytes.NewReader(append(canonical, '\n')), &output); err == nil || output.Len() != 0 {
+			if err := runFrontendCommand(t.Context(), []string{"--program-facts-io-v2"}, bytes.NewReader(append(canonical, '\n')), &output); err == nil || output.Len() != 0 {
 				t.Fatal("invalid original input must not publish any partial Program")
 			}
 		})
@@ -65,7 +65,7 @@ func TestCommonProgramCanceled37n(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 	var output bytes.Buffer
-	if err := runFrontendCommand(ctx, []string{"--program-facts-io-v1"}, bytes.NewReader(commonProgramRequest37n(t, "positive")), &output); err == nil || output.Len() != 0 {
+	if err := runFrontendCommand(ctx, []string{"--program-facts-io-v2"}, bytes.NewReader(commonProgramRequest37n(t, "positive")), &output); err == nil || output.Len() != 0 {
 		t.Fatal("canceled original projection must not publish a partial Program")
 	}
 }
@@ -87,7 +87,7 @@ func TestCommonProgramAccess37n(t *testing.T) {
 		t.Fatal(err)
 	}
 	var output bytes.Buffer
-	if err := runFrontendCommand(t.Context(), []string{"--program-facts-io-v1"}, bytes.NewReader(append(canonical, '\n')), &output); err != nil {
+	if err := runFrontendCommand(t.Context(), []string{"--program-facts-io-v2"}, bytes.NewReader(append(canonical, '\n')), &output); err != nil {
 		t.Fatal(err)
 	}
 	var packet commonProgramPackage

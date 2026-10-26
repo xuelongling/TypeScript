@@ -65,6 +65,7 @@ func commonMethodOfficial37q(t *testing.T, source string, facts map[string]array
 
 type commonMethodOracleIndex37q struct {
 	classes, declarations, calls map[string]*ast.Node
+	callNodes                    []*ast.Node
 	rangeOf                      func(*ast.Node) span
 }
 
@@ -87,14 +88,23 @@ func commonMethodIndex37q(t *testing.T, source string, file *ast.SourceFile, che
 			}
 		}
 	}
-	var walk func(*ast.Node)
-	walk = func(node *ast.Node) {
+	var walk func(*ast.Node, string)
+	walk = func(node *ast.Node, parent string) {
+		if node.Kind == ast.KindFunctionDeclaration {
+			if parent != "" {
+				index.declarations[parent+"."+node.Name().Text()] = node
+				parent += "." + node.Name().Text()
+			} else {
+				parent = node.Name().Text()
+			}
+		}
 		if node.Kind == ast.KindCallExpression {
+			index.callNodes = append(index.callNodes, node)
 			index.calls[source[scanner.SkipTrivia(source, node.Pos()):node.End()]] = node
 		}
-		node.ForEachChild(func(child *ast.Node) bool { walk(child); return false })
+		node.ForEachChild(func(child *ast.Node) bool { walk(child, parent); return false })
 	}
-	walk(file.AsNode())
+	walk(file.AsNode(), "")
 	position := file.GetPositionMap()
 	index.rangeOf = func(node *ast.Node) span {
 		return span{Start: position.UTF8ToUTF16(scanner.SkipTrivia(source, node.Pos())), End: position.UTF8ToUTF16(node.End())}

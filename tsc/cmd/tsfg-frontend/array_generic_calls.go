@@ -30,6 +30,15 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 	if callee.Kind == ast.KindSuperKeyword {
 		return p.superConstruct(node, state, depth)
 	}
+	if p.common != nil && kind == "call" {
+		var original *ast.Symbol
+		if callee.Kind == ast.KindIdentifier {
+			original = p.commonOriginalSymbol(p.check.GetSymbolAtLocation(callee))
+		}
+		if _, local := state.bindings[original]; local || callee.Kind != ast.KindIdentifier && callee.Kind != ast.KindPropertyAccessExpression {
+			return p.commonIndirectCall(node, callee, args, state, depth)
+		}
+	}
 	if callee.Kind != ast.KindIdentifier && callee.Kind != ast.KindPropertyAccessExpression {
 		return nil, p.fail(callee, "callee requires actual ordinary function/class binding")
 	}

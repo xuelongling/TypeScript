@@ -53,11 +53,11 @@ func commonProgramRequest37n(t *testing.T, name string) []byte {
 	if err := json.Unmarshal(genericArrayRequest25f(t, string(source)), &request); err != nil {
 		t.Fatal(err)
 	}
-	schema, err := os.ReadFile("testdata/common-program-v1/schema.json")
+	schema, err := os.ReadFile("testdata/common-program-v2/schema.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	request["family"], request["version"], request["schemaHash"] = "tsfg.program-facts-request-candidate", 1, "sha256:"+arrayFactsSHA(schema)
+	request["family"], request["version"], request["schemaHash"] = "tsfg.program-facts-request-candidate", 2, "sha256:"+arrayFactsSHA(schema)
 	input := request["input"].(map[string]any)
 	if name == "mixed" {
 		files := []arrayFactsInputFile{}
@@ -102,7 +102,7 @@ func commonProgramRequest37n(t *testing.T, name string) []byte {
 func TestCommonProgramMixedPublic37n(t *testing.T) {
 	input := commonProgramRequest37n(t, "mixed")
 	var output bytes.Buffer
-	if err := runFrontendCommand(t.Context(), []string{"--program-facts-io-v1"}, bytes.NewReader(input), &output); err != nil {
+	if err := runFrontendCommand(t.Context(), []string{"--program-facts-io-v2"}, bytes.NewReader(input), &output); err != nil {
 		t.Fatal(err)
 	}
 	if root := os.Getenv("TSFG_COMMON_PROGRAM_CAPTURE_ROOT"); root != "" {
@@ -151,7 +151,7 @@ func TestCommonProgramFullPublic37n(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			input := commonProgramRequest37n(t, name)
 			var output bytes.Buffer
-			if err := runFrontendCommand(t.Context(), []string{"--program-facts-io-v1"}, bytes.NewReader(input), &output); err != nil {
+			if err := runFrontendCommand(t.Context(), []string{"--program-facts-io-v2"}, bytes.NewReader(input), &output); err != nil {
 				t.Fatalf("complete official common Program: %v", err)
 			}
 			if root := os.Getenv("TSFG_COMMON_PROGRAM_CAPTURE_ROOT"); root != "" {
@@ -169,7 +169,7 @@ func TestCommonProgramFullPublic37n(t *testing.T) {
 				t.Fatal(err)
 			}
 			p := packet.Payload
-			if packet.Family != "tsfg.program-facts-package-candidate" || packet.Version != 1 || len(p.Functions) != 4 || len(p.Globals) != 2 || len(p.Modules) != 1 || len(p.Closure.Roots) != 4 {
+			if packet.Family != "tsfg.program-facts-package-candidate" || packet.Version != 2 || len(p.Functions) != 4 || len(p.Globals) != 2 || len(p.Modules) != 1 || len(p.Closure.Roots) != 4 {
 				t.Fatal("complete source inventory was pruned or split")
 			}
 			if p.Globals[0].Binding.Name != "leftTotal" || p.Globals[1].Binding.Name != "rightTotal" || len(p.Modules[0].Initialization) != 2 || p.Modules[0].Initialization[0].Binding != p.Globals[0].Binding.ID || p.Modules[0].Initialization[1].Binding != p.Globals[1].Binding.ID {
