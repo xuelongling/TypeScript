@@ -38,6 +38,14 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 		if _, local := state.bindings[original]; local || callee.Kind != ast.KindIdentifier && callee.Kind != ast.KindPropertyAccessExpression {
 			return p.commonIndirectCall(node, callee, args, state, depth)
 		}
+		if callee.Kind == ast.KindPropertyAccessExpression {
+			// Callable fields are stored values; methods and namespace functions
+			// retain their original declaration route.
+			field, owned := p.fields[p.check.GetSymbolAtLocation(callee.Name())]
+			if owned && p.types[field.Type].Kind == "function" {
+				return p.commonIndirectCall(node, callee, args, state, depth)
+			}
+		}
 	}
 	if callee.Kind != ast.KindIdentifier && callee.Kind != ast.KindPropertyAccessExpression {
 		return nil, p.fail(callee, "callee requires actual ordinary function/class binding")
