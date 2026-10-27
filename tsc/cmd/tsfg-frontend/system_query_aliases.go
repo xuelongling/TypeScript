@@ -46,6 +46,11 @@ func (p *arrayGenericProjection) systemResolve(node *ast.Node, env map[*ast.Symb
 		(*traces)[index].Target = p.systemAliasTarget(resolved)
 		return resolved, next, nil
 	}
+	for _, name := range []string{"Read", "Write"} {
+		if declaration := p.systemBuiltins[name]; declaration != nil && symbol == p.check.GetSymbolAtLocation(declaration.Name()) {
+			return node, env, nil
+		}
+	}
 	if len(symbol.Declarations) != 1 || symbol.Declarations[0].Kind != ast.KindTypeAliasDeclaration {
 		return node, env, nil
 	}

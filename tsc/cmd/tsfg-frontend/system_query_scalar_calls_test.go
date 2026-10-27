@@ -14,7 +14,7 @@ import (
 func systemScalarRequest38g(t *testing.T) request {
 	t.Helper()
 	r := systemRequest38c(t)
-	source, e := os.ReadFile("testdata/system-query-v3/scalar-helper.ts")
+	source, e := os.ReadFile("testdata/system-query-v4/scalar-helper.ts")
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -34,7 +34,7 @@ func systemScalarRun38g(t *testing.T, r request, name string) (systemQueryPackag
 		}
 	}
 	var output bytes.Buffer
-	if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v3"}, bytes.NewReader(raw), &output); e != nil {
+	if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v4"}, bytes.NewReader(raw), &output); e != nil {
 		return systemQueryPackage{}, e, output.Len()
 	}
 	var packet systemQueryPackage
@@ -56,7 +56,7 @@ func TestSystemQueryScalarHelperPublic38g(t *testing.T) {
 			if name == "imported" {
 				r.Files[0].Content = strings.Replace(r.Files[0].Content, "function scaled(v:f32,dt:f32):f32{return v*dt;}\n", "", 1)
 				r.Files[0].Content = "import {scaled as gain} from './helpers';\n" + strings.Replace(r.Files[0].Content, "scaled(v.x, dt)", "gain(v.x, dt)", 1)
-				helper, e := os.ReadFile("testdata/system-query-v3/scalar-imported.ts")
+				helper, e := os.ReadFile("testdata/system-query-v4/scalar-imported.ts")
 				if e != nil {
 					t.Fatal(e)
 				}
@@ -92,7 +92,7 @@ func TestSystemQueryScalarHelperPublic38g(t *testing.T) {
 					t.Fatal("call selected signature differs")
 				}
 			}
-			t.Logf("actual whole publicv3 helpers=%d files=%d nodes=%d", len(packet.Payload.ScalarHelpers), len(packet.Payload.Program.Files), len(packet.Payload.Nodes))
+			t.Logf("actual whole publicv4 helpers=%d files=%d nodes=%d", len(packet.Payload.ScalarHelpers), len(packet.Payload.Program.Files), len(packet.Payload.Nodes))
 		})
 	}
 }

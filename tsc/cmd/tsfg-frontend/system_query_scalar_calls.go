@@ -5,6 +5,7 @@ package main
 
 import (
 	"github.com/microsoft/typescript-go/internal/ast"
+	"github.com/microsoft/typescript-go/internal/checker"
 )
 
 type systemScalarCallState struct {
@@ -33,15 +34,26 @@ func (p *arrayGenericProjection) systemScalarHelper(node *ast.Node) (systemQuery
 	if node.Kind != ast.KindFunctionDeclaration || node.Parent == nil || node.Parent.Kind != ast.KindSourceFile || !ast.IsExternalModule(ast.GetSourceFileOfNode(node)) || ast.GetFunctionFlags(node)&ast.FunctionFlagsAsyncGenerator != 0 {
 		return empty, 0, p.fail(node, "scalar helper requires an original ordinary module-level function")
 	}
-	header, e := p.header(node, "")
+	declaration := node.AsFunctionDeclaration()
+	symbol := p.check.GetSymbolAtLocation(node.Name())
+	if symbol == nil || len(symbol.Declarations) != 1 || symbol.Declarations[0] != node || declaration.TypeParameters != nil || declaration.Type == nil {
+		return empty, 0, p.fail(node, "scalar helper requires original unique concrete function signature")
+	}
+	signatures := p.check.GetSignaturesOfType(p.check.GetTypeOfSymbolAtLocation(symbol, node), checker.SignatureKindCall)
+	if len(signatures) != 1 || signatures[0].Declaration() != node || len(signatures[0].Parameters()) != len(declaration.Parameters.Nodes) {
+		return empty, 0, p.fail(node, "scalar helper selected original signature differs")
+	}
+	returns, e := p.annotation(declaration.Type)
 	if e != nil {
 		return empty, 0, e
 	}
-	if header.function.ReturnType != "f32" || len(header.function.Parameters) > 32 {
+	if returns != "f32" || len(declaration.Parameters.Nodes) > 32 || !p.check.IsTypeAssignableTo(p.check.GetReturnTypeOfSignature(signatures[0]), p.actual["f32"]) {
 		return empty, 0, p.fail(node, "scalar helper requires native f32 return and at most32 scalar parameters")
 	}
-	declaration := node.AsFunctionDeclaration()
 	body := declaration.Body
+	if body == nil || body.Kind != ast.KindBlock {
+		return empty, 0, p.fail(node, "original scalar helper body required")
+	}
 	if len(body.AsBlock().Statements.Nodes) != 1 || body.AsBlock().Statements.Nodes[0].Kind != ast.KindReturnStatement {
 		return empty, 0, p.fail(body, "scalar helper requires one original pure scalar return expression")
 	}
@@ -53,18 +65,53 @@ func (p *arrayGenericProjection) systemScalarHelper(node *ast.Node) (systemQuery
 	parameters := []systemQueryParameter{}
 	logical := []string{}
 	params := map[*ast.Symbol]systemQueryParameter{}
-	for index, binding := range header.function.Parameters {
-		parameter := declaration.Parameters.Nodes[index]
-		if binding.DeclaredType != "f32" {
-			return empty, 0, p.fail(parameter, "scalar helper parameter must retain native f32 annotation")
+	bindings := map[*ast.Symbol]systemQueryLoopBinding{}
+	for index, parameter := range declaration.Parameters.Nodes {
+		pd := parameter.AsParameterDeclaration()
+		if pd.Type == nil || pd.QuestionToken != nil || pd.Initializer != nil || pd.DotDotDotToken != nil || parameter.Name() == nil || parameter.Name().Kind != ast.KindIdentifier {
+			return empty, 0, p.fail(parameter, "required original helper parameter annotation")
 		}
-		row := systemQueryParameter{Index: index, Binding: systemOrigin(parameter), AnnotationRange: *binding.AnnotationRange, LogicalType: "f32"}
+		parameterSymbol := p.check.GetSymbolAtLocation(parameter.Name())
+		if parameterSymbol != signatures[0].Parameters()[index] {
+			return empty, 0, p.fail(parameter, "original helper parameter Symbol differs")
+		}
+		row := systemQueryParameter{Index: index, Binding: systemOrigin(parameter), AnnotationRange: *genericSpan(pd.Type)}
+		traces := []systemQueryAlias{}
+		resolved, _, e := p.systemResolve(pd.Type, map[*ast.Symbol]*ast.Node{}, &traces, 0)
+		if e != nil {
+			return empty, 0, e
+		}
+		var wrapper *ast.Symbol
+		if resolved.Kind == ast.KindTypeReference {
+			wrapper = p.commonOriginalSymbol(p.check.GetSymbolAtLocation(resolved.AsTypeReferenceNode().TypeName))
+		}
+		if wrapper == p.check.GetSymbolAtLocation(p.systemBuiltins["Read"].Name()) || wrapper == p.check.GetSymbolAtLocation(p.systemBuiltins["Write"].Name()) {
+			view, e := p.systemView(pd.Type, map[*ast.Symbol]*ast.Node{})
+			if e != nil {
+				return empty, 0, e
+			}
+			row.View, row.LogicalType = &view, view.Access.ComponentType
+			bindings[parameterSymbol] = systemQueryLoopBinding{index, row.Binding, row.LogicalType, view.Access.Mode}
+		} else {
+			typ, e := p.annotation(pd.Type)
+			if e != nil {
+				return empty, 0, e
+			}
+			if typ != "f32" {
+				return empty, 0, p.fail(parameter, "scalar helper parameter must retain native f32 annotation or owned Read/Write view")
+			}
+			row.LogicalType = typ
+		}
+		binding, e := p.typedBinding(parameter, pd.Type, "parameter", true, row.LogicalType)
+		if e != nil {
+			return empty, 0, e
+		}
 		if row.Binding.ID != binding.ID {
 			return empty, 0, p.fail(parameter, "scalar helper original parameter identity differs")
 		}
 		parameters = append(parameters, row)
-		logical = append(logical, "f32")
-		params[p.check.GetSymbolAtLocation(parameter.Name())] = row
+		logical = append(logical, row.LogicalType)
+		params[parameterSymbol] = row
 	}
 	signatureID, e := genericNodeID("tsfg.array-facts.signature.v8\x00", node)
 	if e != nil {
@@ -73,14 +120,18 @@ func (p *arrayGenericProjection) systemScalarHelper(node *ast.Node) (systemQuery
 	state.active[node] = true
 	state.frames = append(state.frames, 0)
 	defer func() { delete(state.active, node); state.frames = state.frames[:len(state.frames)-1] }()
-	value, e := p.systemLoopExpression(expression, map[*ast.Symbol]systemQueryLoopBinding{}, params, 0)
+	value, e := p.systemLoopExpression(expression, bindings, params, 0)
 	if e != nil {
 		return empty, 0, e
 	}
 	if value.Type != "f32" || value.FlowType != "f32" {
 		return empty, 0, p.fail(expression, "scalar helper return must preserve f32")
 	}
-	helper := systemQueryScalarHelper{ID: header.function.ID, Declaration: systemOrigin(node), Signature: arrayGenericSignature{ID: signatureID, SourcePath: header.function.SourcePath, DeclarationRange: *genericSpan(node), Parameters: logical, ReturnType: "f32"}, Parameters: parameters, ReturnType: "f32", ReturnAnnotationRange: *header.function.ReturnAnnotationRange, BodyRange: *genericSpan(body), ReturnRange: *genericSpan(statement), Value: value}
+	id, e := genericNodeID("tsfg.array-facts.function.v8\x00", node)
+	if e != nil {
+		return empty, 0, e
+	}
+	helper := systemQueryScalarHelper{ID: id, Declaration: systemOrigin(node), Signature: arrayGenericSignature{ID: signatureID, SourcePath: ast.GetSourceFileOfNode(node).FileName(), DeclarationRange: *genericSpan(node), Parameters: logical, ReturnType: "f32"}, Parameters: parameters, ReturnType: "f32", ReturnAnnotationRange: *genericSpan(declaration.Type), BodyRange: *genericSpan(body), ReturnRange: *genericSpan(statement), Value: value}
 	height := 1 + state.frames[len(state.frames)-1]
 	state.helpers[node] = helper
 	state.heights[node] = height
@@ -122,8 +173,26 @@ func (p *arrayGenericProjection) systemScalarCall(node *ast.Node, bindings map[*
 			return nil, e
 		}
 		parameter := selected.Parameters()[index]
-		if value.Type != "f32" || value.FlowType != "f32" || len(parameter.Declarations) != 1 || systemOrigin(parameter.Declarations[0]).ID != helper.Parameters[index].Binding.ID || !p.check.IsTypeAssignableTo(p.check.GetTypeAtLocation(arg), p.check.GetTypeOfSymbolAtLocation(parameter, arg)) {
-			return nil, p.fail(arg, "scalar call argument must join original f32 parameter in Source order")
+		formal := helper.Parameters[index]
+		if value.Type != formal.LogicalType || value.FlowType != formal.LogicalType || len(parameter.Declarations) != 1 || systemOrigin(parameter.Declarations[0]).ID != formal.Binding.ID || !p.check.IsTypeAssignableTo(p.check.GetTypeAtLocation(arg), p.check.GetTypeOfSymbolAtLocation(parameter, arg)) {
+			return nil, p.fail(arg, "scalar call argument must join original parameter and component in Source order")
+		}
+		if formal.View != nil {
+			bound := value
+			for bound.Kind == "parentheses" {
+				bound = bound.Expression
+			}
+			permitted := false
+			if bound.Kind == "bindingReference" {
+				for _, binding := range bindings {
+					if binding.Declaration.ID == bound.Binding && binding.ComponentType == formal.View.Access.ComponentType && (formal.View.Access.Mode == "read" || binding.Mode == "write") {
+						permitted = true
+					}
+				}
+			}
+			if !permitted {
+				return nil, p.fail(arg, "view call requires original Query or formal view binding without Read-to-Write upgrade")
+			}
 		}
 		values = append(values, *value)
 	}

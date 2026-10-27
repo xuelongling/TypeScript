@@ -12,6 +12,7 @@ import (
 
 type arrayGenericProjection struct {
 	systemComponent                    *ast.Symbol
+	systemBuiltins                     map[string]*ast.Node
 	systemArray                        *ast.Node
 	systemScalarCalls                  *systemScalarCallState
 	common                             *commonProgramProjection

@@ -22,7 +22,7 @@ func systemPublicRequest38c(t *testing.T, r request) []byte {
 		in.Files = append(in.Files, arrayFactsInputFile{Path: file.Path, Content: file.Content, SHA256: arrayFactsSHA([]byte(file.Content))})
 	}
 	slices.SortFunc(in.Files, func(a, b arrayFactsInputFile) int { return strings.Compare(a.Path, b.Path) })
-	raw, e := arrayFactsCanonical(systemQueryRequest{Family: "tsfg.system-query-facts-request-candidate", Version: 3, SchemaHash: schema, Input: in})
+	raw, e := arrayFactsCanonical(systemQueryRequest{Family: "tsfg.system-query-facts-request-candidate", Version: 4, SchemaHash: schema, Input: in})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -45,7 +45,7 @@ func TestSystemQueryPublicFacts38c(t *testing.T) {
 			}
 			raw := systemPublicRequest38c(t, r)
 			var out bytes.Buffer
-			if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v3"}, bytes.NewReader(raw), &out); e != nil {
+			if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v4"}, bytes.NewReader(raw), &out); e != nil {
 				t.Fatal(e)
 			}
 			var packet systemQueryPackage
@@ -107,7 +107,7 @@ func TestSystemQueryCapabilityNegatives38c(t *testing.T) {
 				raw = bytes.Replace(raw, []byte("sha256:"), []byte("SHA256:"), 1)
 			}
 			var out bytes.Buffer
-			e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v3"}, bytes.NewReader(raw), &out)
+			e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v4"}, bytes.NewReader(raw), &out)
 			if e == nil || out.Len() != 0 {
 				t.Fatal("invalid boundary emitted partial facts", e, out.Len())
 			}
@@ -138,7 +138,7 @@ func TestSystemQueryUnionNever38c(t *testing.T) {
 		}
 	}
 	var out bytes.Buffer
-	e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v3"}, bytes.NewReader(raw), &out)
+	e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v4"}, bytes.NewReader(raw), &out)
 	if e == nil || out.Len() != 0 || !strings.Contains(e.Error(), "original concrete component reference required") {
 		t.Fatal("union/never must fail precisely without partial facts", e, out.Len())
 	}

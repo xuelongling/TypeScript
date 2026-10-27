@@ -98,6 +98,7 @@ func projectSystemQueries(ctx context.Context, r request) (systemQueryPayload, e
 	}
 	p := &arrayGenericProjection{ctx: ctx, check: check, dts: pgr.GetSourceFile("/src/minimal-arrays-v8.d.ts"), scalars: map[*ast.Symbol]*ast.Node{}, classes: map[*ast.Symbol]string{}, types: map[string]arrayGenericType{}, actual: map[string]*checker.Type{}, headers: map[*ast.Symbol]*arrayGenericHeader{}, fields: map[*ast.Symbol]arrayGenericField{}, common: &commonProgramProjection{bindings: map[string]arrayFactsBinding{}}, resources: &classResources{ctx: ctx, maxNodes: 100000, maxDepth: 64}}
 	p.systemComponent = check.GetSymbolAtLocation(builtins["component"].Name())
+	p.systemBuiltins = builtins
 	p.systemArray = builtins["Array"]
 	p.systemScalarCalls = &systemScalarCallState{helpers: map[*ast.Node]systemQueryScalarHelper{}, heights: map[*ast.Node]int{}, active: map[*ast.Node]bool{}}
 	p.payload.Functions = []arrayGenericFunction{}
@@ -288,52 +289,17 @@ func (p *arrayGenericProjection) systemAccess(annotation *ast.Node, actual *chec
 	}
 	out := systemQueryParameterAccess{Declaration: systemOrigin(builtins["Query"]), TupleSourcePath: ast.GetSourceFileOfNode(tuple).FileName(), TupleRange: *genericSpan(tuple), Aliases: traces, Items: []systemQueryAccess{}}
 	for index, element := range elements {
-		owner := systemTypeSymbol(element)
-		mode := ""
-		var wrapper *ast.Node
-		for _, name := range []string{"Read", "Write"} {
-			if owner == p.check.GetSymbolAtLocation(builtins[name].Name()) {
-				mode = strings.ToLower(name)
-				wrapper = builtins[name]
-			}
-		}
-		if mode == "" {
-			return empty, p.fail(nodes[index], "access must resolve exact owned Read or Write declaration")
-		}
-		arguments := p.check.GetTypeArguments(element)
-		if len(arguments) != 1 {
-			return empty, p.fail(nodes[index], "one actual component type required")
-		}
-		id := p.classes[arguments[0].Symbol()]
-		typ := p.types[id]
-		if id == "" || typ.NominalKey == nil || typ.NominalKey.Category != "component" {
-			return empty, p.fail(nodes[index], "Query access requires owned component")
-		}
-
-		if e := p.systemFixed(id, 0, map[string]bool{}, map[string]int{}); e != nil {
-			return empty, e
-		}
-		accessNode := nodes[index]
-		resolved, wrapperEnv, e := p.systemResolve(accessNode, tupleEnv, &out.Aliases, 0)
+		view, e := p.systemView(nodes[index], tupleEnv)
 		if e != nil {
 			return empty, e
 		}
-		if resolved.Kind != ast.KindTypeReference || resolved.AsTypeReferenceNode().TypeArguments == nil {
-			return empty, p.fail(accessNode, "original Read/Write arguments required")
+		item := view.Access
+		if !p.check.IsTypeAssignableTo(element, p.actual[item.ComponentType]) || item.Mode == "write" && systemTypeSymbol(element) != p.classNodes[item.ComponentType].Symbol() {
+			return empty, p.fail(nodes[index], "actual Query view must preserve original component fields")
 		}
-		componentNode, _, e := p.systemResolve(resolved.AsTypeReferenceNode().TypeArguments.Nodes[0], wrapperEnv, &out.Aliases, 0)
-		if e != nil {
-			return empty, e
-		}
-		if componentNode.Kind != ast.KindTypeReference {
-			return empty, p.fail(componentNode, "original concrete component reference required")
-		}
-		componentSymbol := p.commonOriginalSymbol(p.check.GetSymbolAtLocation(componentNode.AsTypeReferenceNode().TypeName))
-		if componentSymbol != arguments[0].Symbol() {
-			return empty, p.fail(componentNode, "original concrete component alias target differs")
-		}
-		out.Items = append(out.Items, systemQueryAccess{Index: index, Mode: mode, Range: *genericSpan(accessNode), Wrapper: systemOrigin(wrapper), ComponentType: id, Component: systemOrigin(p.classNodes[id]), ComponentSourcePath: ast.GetSourceFileOfNode(componentNode).FileName(), ComponentRange: *genericSpan(componentNode)})
-
+		item.Index = index
+		out.Aliases = append(out.Aliases, view.Aliases...)
+		out.Items = append(out.Items, item)
 	}
 	return out, nil
 }

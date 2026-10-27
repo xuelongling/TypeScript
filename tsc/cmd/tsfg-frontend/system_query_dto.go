@@ -46,6 +46,11 @@ type systemQueryParameter struct {
 	AnnotationRange span                        `json:"annotationRange"`
 	LogicalType     string                      `json:"logicalType"`
 	Query           *systemQueryParameterAccess `json:"query"`
+	View            *systemQueryView            `json:"view"`
+}
+type systemQueryView struct {
+	Aliases []systemQueryAlias `json:"aliases"`
+	Access  systemQueryAccess  `json:"access"`
 }
 type systemQueryParameterAccess struct {
 	Declaration     systemQueryOrigin   `json:"declaration"`

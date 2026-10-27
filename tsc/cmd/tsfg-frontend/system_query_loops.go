@@ -77,35 +77,10 @@ func (p *arrayGenericProjection) systemLoops(body *ast.Node, parameters []system
 			if assignment.OperatorToken.Kind != ast.KindPlusEqualsToken && assignment.OperatorToken.Kind != ast.KindEqualsToken {
 				return nil, p.fail(expression, "Query field assignment requires = or +=")
 			}
-			target, e := p.systemLoopExpression(assignment.Left, bindings, params, 0)
+			mutation, e := p.systemLoopAssignment(expression, bindings, params, 0)
 			if e != nil {
 				return nil, e
 			}
-			if target.Kind != "fieldAccess" || target.Receiver == nil {
-				return nil, p.fail(assignment.Left, "Query assignment requires original field target")
-			}
-			writable := false
-			for _, binding := range bindings {
-				if binding.Declaration.ID == target.Receiver.Binding {
-					writable = binding.Mode == "write"
-				}
-			}
-			if !writable {
-				return nil, p.fail(assignment.Left, "Read Query borrow is readonly")
-			}
-			original := p.check.GetPropertyOfType(p.actual[target.Receiver.Type], assignment.Left.Name().Text())
-			field := p.fields[original]
-			if field.Readonly {
-				return nil, p.fail(assignment.Left, "component field is readonly")
-			}
-			value, e := p.systemLoopExpression(assignment.Right, bindings, params, 0)
-			if e != nil {
-				return nil, e
-			}
-			if target.Type != "f32" || value.Type != "f32" || p.check.GetTypeAtLocation(expression).Flags()&checker.TypeFlagsNumberLike == 0 {
-				return nil, p.fail(expression, "Query arithmetic requires original f32 operands")
-			}
-			mutation := &arrayGenericExpression{Kind: "fieldAssignment", Type: target.Type, FlowType: target.Type, Range: *genericSpan(expression), Operator: genericText(assignment.OperatorToken), OperatorRange: genericSpan(assignment.OperatorToken), Target: &arrayGenericTarget{Kind: "fieldTarget", Type: target.Type, Range: target.Range, Receiver: target.Receiver, Property: target.Property, NameRange: target.NameRange}, Value: value}
 			row.Statements = append(row.Statements, arrayGenericStatement{Kind: "expression", Range: *genericSpan(node), Value: mutation})
 		}
 		out = append(out, row)
@@ -167,6 +142,8 @@ func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings m
 	case ast.KindBinaryExpression:
 		binary := node.AsBinaryExpression()
 		switch binary.OperatorToken.Kind {
+		case ast.KindEqualsToken, ast.KindPlusEqualsToken:
+			return p.systemLoopAssignment(node, bindings, params, depth)
 		case ast.KindPlusToken, ast.KindMinusToken, ast.KindAsteriskToken, ast.KindSlashToken:
 		default:
 			return nil, p.fail(node, "Query expression requires f32 arithmetic operator")
@@ -186,4 +163,36 @@ func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings m
 	default:
 		return nil, p.fail(node, "Query expression has no owned typed representation")
 	}
+}
+
+func (p *arrayGenericProjection) systemLoopAssignment(node *ast.Node, bindings map[*ast.Symbol]systemQueryLoopBinding, params map[*ast.Symbol]systemQueryParameter, depth int) (*arrayGenericExpression, error) {
+	assignment := node.AsBinaryExpression()
+	target, e := p.systemLoopExpression(assignment.Left, bindings, params, depth+1)
+	if e != nil {
+		return nil, e
+	}
+	if target.Kind != "fieldAccess" || target.Receiver == nil {
+		return nil, p.fail(assignment.Left, "Query assignment requires original field target")
+	}
+	writable := false
+	for _, binding := range bindings {
+		if binding.Declaration.ID == target.Receiver.Binding {
+			writable = binding.Mode == "write"
+		}
+	}
+	if !writable {
+		return nil, p.fail(assignment.Left, "Read Query borrow is readonly")
+	}
+	original := p.check.GetPropertyOfType(p.actual[target.Receiver.Type], assignment.Left.Name().Text())
+	if p.fields[original].Readonly {
+		return nil, p.fail(assignment.Left, "component field is readonly")
+	}
+	value, e := p.systemLoopExpression(assignment.Right, bindings, params, depth+1)
+	if e != nil {
+		return nil, e
+	}
+	if target.Type != "f32" || value.Type != "f32" || p.check.GetTypeAtLocation(node).Flags()&checker.TypeFlagsNumberLike == 0 {
+		return nil, p.fail(node, "Query arithmetic requires original f32 operands")
+	}
+	return &arrayGenericExpression{Kind: "fieldAssignment", Type: target.Type, FlowType: target.Type, Range: *genericSpan(node), Operator: genericText(assignment.OperatorToken), OperatorRange: genericSpan(assignment.OperatorToken), Target: &arrayGenericTarget{Kind: "fieldTarget", Type: target.Type, Range: target.Range, Receiver: target.Receiver, Property: target.Property, NameRange: target.NameRange}, Value: value}, nil
 }

@@ -11,7 +11,7 @@ import (
 )
 
 func runFrontendCommand(ctx context.Context, args []string, input io.Reader, output io.Writer) error {
-	if len(args) == 1 && args[0] == "--system-query-facts-io-v3" {
+	if len(args) == 1 && args[0] == "--system-query-facts-io-v4" {
 		return runSystemQueryFacts(ctx, input, output)
 	}
 	if len(args) == 1 && args[0] == "--program-facts-io-v2" {
