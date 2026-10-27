@@ -238,7 +238,7 @@ func (c *Checker) checkGrammarModifiers(node *ast.Node /*Union[HasModifiers, Has
 	modifiers := node.ModifierNodes()
 	for _, modifier := range modifiers {
 		if ast.IsDecorator(modifier) {
-			if !ast.NodeCanBeDecorated(c.legacyDecorators, node, node.Parent, node.Parent.Parent) {
+			if !ast.NodeCanBeDecorated(c.legacyDecorators, node, node.Parent, node.Parent.Parent) && !c.isOwnedSystemDecorator(node, modifier) {
 				if node.Kind == ast.KindMethodDeclaration && !ast.NodeIsPresent(node.Body()) {
 					return c.grammarErrorOnFirstToken(node, diagnostics.A_decorator_can_only_decorate_a_method_implementation_not_an_overload)
 				} else {
@@ -648,8 +648,9 @@ func (c *Checker) reportObviousDecoratorErrors(node *ast.Node) bool {
 
 func (c *Checker) findFirstIllegalDecorator(node *ast.Node) *ast.Node {
 	if ast.CanHaveIllegalDecorators(node) {
-		decorator := core.Find(node.ModifierNodes(), ast.IsDecorator)
-		return decorator
+		return core.Find(node.ModifierNodes(), func(modifier *ast.Node) bool {
+			return ast.IsDecorator(modifier) && !c.isOwnedSystemDecorator(node, modifier)
+		})
 	} else {
 		return nil
 	}
@@ -2199,4 +2200,32 @@ func (c *Checker) checkGrammarImportCallExpression(node *ast.Node) bool {
 		return c.grammarErrorOnNode(spreadElement, diagnostics.Argument_of_dynamic_import_cannot_be_spread_element)
 	}
 	return false
+}
+
+// Optional, narrowly scoped owned-system declaration. This is not a general
+// decorator switch and it cannot admit a foreign or shadowing declaration.
+func (c *Checker) isOwnedSystemDecorator(node, decorator *ast.Node) bool {
+	if node.Kind != ast.KindFunctionDeclaration || node.Parent == nil || node.Parent.Kind != ast.KindSourceFile || node.Body() == nil {
+		return false
+	}
+	owner, ok := c.program.(interface{ OwnedSystemDeclaration() *ast.Node })
+	if !ok {
+		return false
+	}
+	declaration := owner.OwnedSystemDeclaration()
+	if declaration == nil {
+		return false
+	}
+	expr := decorator.AsDecorator().Expression
+	if expr.Kind != ast.KindIdentifier && expr.Kind != ast.KindPropertyAccessExpression {
+		return false
+	}
+	symbol := c.GetSymbolAtLocation(expr)
+	if symbol == nil {
+		return false
+	}
+	if symbol.Flags&ast.SymbolFlagsAlias != 0 {
+		symbol = c.GetAliasedSymbol(symbol)
+	}
+	return symbol != nil && len(symbol.Declarations) == 1 && symbol.Declarations[0] == declaration
 }

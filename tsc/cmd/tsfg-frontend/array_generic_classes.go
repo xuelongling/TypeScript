@@ -4,6 +4,7 @@ package main
 
 import (
 	"github.com/microsoft/typescript-go/internal/ast"
+	"github.com/microsoft/typescript-go/internal/checker"
 	"strings"
 )
 
@@ -29,6 +30,13 @@ func (p *arrayGenericProjection) classHeaders(nodes []*ast.Node) error {
 				}
 				expr := modifier.AsDecorator().Expression
 				resolved := p.check.GetSymbolAtLocation(expr)
+				if resolved != nil && resolved == p.systemComponent {
+					calls := p.check.GetSignaturesOfType(p.check.GetTypeOfSymbolAtLocation(resolved, expr), checker.SignatureKindCall)
+					if len(calls) != 1 || calls[0].Declaration() == nil || ast.GetSourceFileOfNode(calls[0].Declaration()) != p.dts || calls[0].Declaration().Name().Text() != "tsfgComponent" {
+						return p.fail(modifier, "owned component alias must retain its actual standard marker target")
+					}
+					resolved = p.check.GetSymbolAtLocation(calls[0].Declaration().Name())
+				}
 				if origin != nil || expr.Kind != ast.KindIdentifier || resolved == nil || len(resolved.Declarations) != 1 || ast.GetSourceFileOfNode(resolved.Declarations[0]) != p.dts {
 					return p.fail(modifier, "pinned standard class marker symbol required")
 				}

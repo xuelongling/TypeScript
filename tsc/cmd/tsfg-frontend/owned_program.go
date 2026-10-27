@@ -12,6 +12,10 @@ import (
 )
 
 func newOwnedProgram(r request) (*compiler.Program, *ast.SourceFile, []string, *response) {
+	return newOwnedProgramProfile(r, "")
+}
+
+func newOwnedProgramProfile(r request, systemDeclarationPath string) (*compiler.Program, *ast.SourceFile, []string, *response) {
 	contents := map[string]string{}
 	for _, file := range r.Files {
 		contents[file.Path] = file.Content
@@ -26,6 +30,7 @@ func newOwnedProgram(r request) (*compiler.Program, *ast.SourceFile, []string, *
 	slices.Sort(fileNames)
 	fs := vfstest.FromMap(contents, true)
 	program := compiler.NewProgram(compiler.ProgramOptions{
+		OwnedSystemDeclarationPath: systemDeclarationPath,
 		Config: &tsoptions.ParsedCommandLine{ParsedConfig: &core.ParsedOptions{
 			FileNames:       fileNames,
 			CompilerOptions: &core.CompilerOptions{NoLib: core.TSTrue, NoEmit: core.TSTrue, Strict: core.TSTrue, Target: core.ScriptTargetESNext},

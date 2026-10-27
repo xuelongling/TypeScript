@@ -33,6 +33,8 @@ import (
 )
 
 type ProgramOptions struct {
+	// Owned-system is an explicit frontend profile; ordinary TS remains unset.
+	OwnedSystemDeclarationPath  string
 	Host                        CompilerHost
 	Config                      *tsoptions.ParsedCommandLine
 	UseSourceOfProjectReference bool
@@ -2193,3 +2195,25 @@ var plainJSErrors = collections.NewSetFromItems(
 	// Type errors
 	diagnostics.This_condition_will_always_return_0_since_JavaScript_compares_objects_by_reference_not_value.Code(),
 )
+
+// The frontend pins the complete profile before opting this fresh Program in.
+// Returning its actual declaration lets the checker compare resolved Symbols.
+func (p *Program) OwnedSystemDeclaration() *ast.Node {
+	if p.opts.OwnedSystemDeclarationPath == "" {
+		return nil
+	}
+	file := p.GetSourceFile(p.opts.OwnedSystemDeclarationPath)
+	if file == nil {
+		return nil
+	}
+	var found *ast.Node
+	for _, node := range file.Statements.Nodes {
+		if node.Kind == ast.KindFunctionDeclaration && node.Name() != nil && node.Name().Text() == "system" {
+			if found != nil {
+				return nil
+			}
+			found = node
+		}
+	}
+	return found
+}
