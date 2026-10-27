@@ -156,6 +156,14 @@ func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings m
 			return nil, p.fail(node, "Query field arithmetic supports original f32 declaration")
 		}
 		return &arrayGenericExpression{Kind: "fieldAccess", Type: field.Type, FlowType: field.Type, Range: *genericSpan(node), Receiver: receiver, Property: field.ID, NameRange: genericSpan(node.Name())}, nil
+	case ast.KindCallExpression:
+		return p.systemScalarCall(node, bindings, params, depth)
+	case ast.KindParenthesizedExpression:
+		inner, e := p.systemLoopExpression(node.AsParenthesizedExpression().Expression, bindings, params, depth+1)
+		if e != nil {
+			return nil, e
+		}
+		return &arrayGenericExpression{Kind: "parentheses", Type: inner.Type, FlowType: inner.FlowType, Range: *genericSpan(node), Expression: inner}, nil
 	case ast.KindBinaryExpression:
 		binary := node.AsBinaryExpression()
 		switch binary.OperatorToken.Kind {

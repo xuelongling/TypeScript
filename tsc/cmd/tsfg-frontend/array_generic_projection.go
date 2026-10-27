@@ -13,6 +13,7 @@ import (
 type arrayGenericProjection struct {
 	systemComponent                    *ast.Symbol
 	systemArray                        *ast.Node
+	systemScalarCalls                  *systemScalarCallState
 	common                             *commonProgramProjection
 	ctx                                context.Context
 	check                              *checker.Checker

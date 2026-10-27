@@ -89,14 +89,26 @@ type systemQueryProgram struct {
 	Files        []arrayFactsOwnedFile  `json:"files"`
 	Diagnostics  []diagnostic           `json:"diagnostics"`
 }
+type systemQueryScalarHelper struct {
+	ID                    string                  `json:"id"`
+	Declaration           systemQueryOrigin       `json:"declaration"`
+	Signature             arrayGenericSignature   `json:"signature"`
+	Parameters            []systemQueryParameter  `json:"parameters"`
+	ReturnType            string                  `json:"returnType"`
+	ReturnAnnotationRange span                    `json:"returnAnnotationRange"`
+	BodyRange             span                    `json:"bodyRange"`
+	ReturnRange           span                    `json:"returnRange"`
+	Value                 *arrayGenericExpression `json:"value"`
+}
 type systemQueryPayload struct {
-	Program       systemQueryProgram       `json:"program"`
-	ProfilePath   string                   `json:"profilePath"`
-	ProfileSHA256 string                   `json:"profileSHA256"`
-	Builtins      []systemQueryOrigin      `json:"builtins"`
-	Nodes         []systemQueryNode        `json:"nodes"`
-	Types         []arrayGenericType       `json:"types"`
-	Functions     []arrayGenericFunction   `json:"functions"`
-	MarkerAliases []systemQueryMarkerAlias `json:"markerAliases"`
-	Systems       []systemQueryFunction    `json:"systems"`
+	ScalarHelpers []systemQueryScalarHelper `json:"scalarHelpers"`
+	Program       systemQueryProgram        `json:"program"`
+	ProfilePath   string                    `json:"profilePath"`
+	ProfileSHA256 string                    `json:"profileSHA256"`
+	Builtins      []systemQueryOrigin       `json:"builtins"`
+	Nodes         []systemQueryNode         `json:"nodes"`
+	Types         []arrayGenericType        `json:"types"`
+	Functions     []arrayGenericFunction    `json:"functions"`
+	MarkerAliases []systemQueryMarkerAlias  `json:"markerAliases"`
+	Systems       []systemQueryFunction     `json:"systems"`
 }

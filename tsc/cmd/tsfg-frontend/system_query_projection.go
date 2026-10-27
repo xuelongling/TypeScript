@@ -96,9 +96,10 @@ func projectSystemQueries(ctx context.Context, r request) (systemQueryPayload, e
 			return empty, arrayFactsError("identity", "complete owned system builtin context", nil)
 		}
 	}
-	p := &arrayGenericProjection{ctx: ctx, check: check, dts: pgr.GetSourceFile("/src/minimal-arrays-v8.d.ts"), scalars: map[*ast.Symbol]*ast.Node{}, classes: map[*ast.Symbol]string{}, types: map[string]arrayGenericType{}, actual: map[string]*checker.Type{}, headers: map[*ast.Symbol]*arrayGenericHeader{}, fields: map[*ast.Symbol]arrayGenericField{}, common: &commonProgramProjection{}, resources: &classResources{ctx: ctx, maxNodes: 100000, maxDepth: 64}}
+	p := &arrayGenericProjection{ctx: ctx, check: check, dts: pgr.GetSourceFile("/src/minimal-arrays-v8.d.ts"), scalars: map[*ast.Symbol]*ast.Node{}, classes: map[*ast.Symbol]string{}, types: map[string]arrayGenericType{}, actual: map[string]*checker.Type{}, headers: map[*ast.Symbol]*arrayGenericHeader{}, fields: map[*ast.Symbol]arrayGenericField{}, common: &commonProgramProjection{bindings: map[string]arrayFactsBinding{}}, resources: &classResources{ctx: ctx, maxNodes: 100000, maxDepth: 64}}
 	p.systemComponent = check.GetSymbolAtLocation(builtins["component"].Name())
 	p.systemArray = builtins["Array"]
+	p.systemScalarCalls = &systemScalarCallState{helpers: map[*ast.Node]systemQueryScalarHelper{}, heights: map[*ast.Node]int{}, active: map[*ast.Node]bool{}}
 	p.payload.Functions = []arrayGenericFunction{}
 	p.payload.Files = []arrayFactsOwnedFile{}
 	out := systemQueryPayload{Program: systemQueryProgram{SourceRoot: r.SourceRoot, RootFile: r.RootFile, PositionUnit: "utf16", Config: arrayFactsConfig{Strict: true, NoEmit: true, AllowJS: false}, Declarations: arrayFactsDeclarations{Version: r.Declarations.Version, Paths: append([]string{}, r.Declarations.Paths...)}, Target: &commonProgramTarget{Target: r.Target.Target, Triple: r.Target.Triple, LLVMDataLayout: r.Target.LLVMDataLayout, PointerBits: r.Target.PointerBits}, Files: []arrayFactsOwnedFile{}, Diagnostics: []diagnostic{}}, ProfilePath: systemQueryProfilePath, ProfileSHA256: arrayFactsSHA([]byte(systemQueryDeclarations)), Builtins: []systemQueryOrigin{}, Nodes: []systemQueryNode{}, Types: []arrayGenericType{}, Functions: []arrayGenericFunction{}, MarkerAliases: []systemQueryMarkerAlias{}, Systems: []systemQueryFunction{}}
@@ -187,6 +188,11 @@ func projectSystemQueries(ctx context.Context, r request) (systemQueryPayload, e
 	}
 	slices.SortFunc(out.Types, func(a, b arrayGenericType) int { return strings.Compare(a.ID, b.ID) })
 	out.Functions = p.payload.Functions
+	out.ScalarHelpers = []systemQueryScalarHelper{}
+	for _, helper := range p.systemScalarCalls.helpers {
+		out.ScalarHelpers = append(out.ScalarHelpers, helper)
+	}
+	slices.SortFunc(out.ScalarHelpers, func(a, b systemQueryScalarHelper) int { return strings.Compare(a.ID, b.ID) })
 	return out, nil
 }
 func (p *arrayGenericProjection) systemFunction(node, marker *ast.Node, builtins map[string]*ast.Node) (systemQueryFunction, error) {
