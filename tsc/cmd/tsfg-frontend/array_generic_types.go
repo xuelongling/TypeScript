@@ -5,6 +5,7 @@ package main
 import (
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/checker"
+	"slices"
 )
 
 func genericSpan(node *ast.Node) *span {
@@ -210,8 +211,17 @@ func (p *arrayGenericProjection) origins() error {
 		}
 		name := node.Name().Text()
 		symbol := p.check.GetSymbolAtLocation(node.Name())
-		if symbol == nil || len(symbol.Declarations) != 1 || symbol.Declarations[0] != node {
+		declarations := []*ast.Node{node}
+		if name == "Array" && p.systemArray != nil {
+			declarations = append(declarations, p.systemArray)
+		}
+		if symbol == nil || len(symbol.Declarations) != len(declarations) {
 			return p.fail(node, "unique pinned declaration symbol required")
+		}
+		for _, declaration := range symbol.Declarations {
+			if !slices.Contains(declarations, declaration) {
+				return p.fail(node, "pinned declaration context differs")
+			}
 		}
 		if node.Kind == ast.KindTypeAliasDeclaration {
 			actual := p.check.GetTypeFromTypeNode(node.AsTypeAliasDeclaration().Type)

@@ -13,7 +13,7 @@ func systemRequest38c(t *testing.T) request {
 	t.Helper()
 	path := os.Getenv("TSFG_QUERY38_SOURCE")
 	if path == "" {
-		path = "testdata/system-query-v1/architecture.ts"
+		path = "testdata/system-query-v2/declarations-only.ts"
 	}
 	source, e := os.ReadFile(path)
 	if e != nil {

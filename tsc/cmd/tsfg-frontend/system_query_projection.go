@@ -52,8 +52,8 @@ func systemInventory(node *ast.Node, parent string, out *[]systemQueryNode, coun
 	name := ""
 	var nr *span
 	switch node.Kind {
-	case ast.KindClassDeclaration, ast.KindFunctionDeclaration, ast.KindInterfaceDeclaration, ast.KindTypeAliasDeclaration, ast.KindVariableDeclaration, ast.KindParameter, ast.KindPropertyDeclaration, ast.KindMethodDeclaration, ast.KindTypeParameter:
-		if node.Name() != nil {
+	case ast.KindClassDeclaration, ast.KindFunctionDeclaration, ast.KindInterfaceDeclaration, ast.KindTypeAliasDeclaration, ast.KindVariableDeclaration, ast.KindParameter, ast.KindPropertyDeclaration, ast.KindMethodDeclaration, ast.KindTypeParameter, ast.KindBindingElement:
+		if node.Name() != nil && node.Name().Kind == ast.KindIdentifier {
 			name = node.Name().Text()
 			nr = genericSpan(node.Name())
 		}
@@ -98,6 +98,7 @@ func projectSystemQueries(ctx context.Context, r request) (systemQueryPayload, e
 	}
 	p := &arrayGenericProjection{ctx: ctx, check: check, dts: pgr.GetSourceFile("/src/minimal-arrays-v8.d.ts"), scalars: map[*ast.Symbol]*ast.Node{}, classes: map[*ast.Symbol]string{}, types: map[string]arrayGenericType{}, actual: map[string]*checker.Type{}, headers: map[*ast.Symbol]*arrayGenericHeader{}, fields: map[*ast.Symbol]arrayGenericField{}, common: &commonProgramProjection{}, resources: &classResources{ctx: ctx, maxNodes: 100000, maxDepth: 64}}
 	p.systemComponent = check.GetSymbolAtLocation(builtins["component"].Name())
+	p.systemArray = builtins["Array"]
 	p.payload.Functions = []arrayGenericFunction{}
 	p.payload.Files = []arrayFactsOwnedFile{}
 	out := systemQueryPayload{Program: systemQueryProgram{SourceRoot: r.SourceRoot, RootFile: r.RootFile, PositionUnit: "utf16", Config: arrayFactsConfig{Strict: true, NoEmit: true, AllowJS: false}, Declarations: arrayFactsDeclarations{Version: r.Declarations.Version, Paths: append([]string{}, r.Declarations.Paths...)}, Target: &commonProgramTarget{Target: r.Target.Target, Triple: r.Target.Triple, LLVMDataLayout: r.Target.LLVMDataLayout, PointerBits: r.Target.PointerBits}, Files: []arrayFactsOwnedFile{}, Diagnostics: []diagnostic{}}, ProfilePath: systemQueryProfilePath, ProfileSHA256: arrayFactsSHA([]byte(systemQueryDeclarations)), Builtins: []systemQueryOrigin{}, Nodes: []systemQueryNode{}, Types: []arrayGenericType{}, Functions: []arrayGenericFunction{}, MarkerAliases: []systemQueryMarkerAlias{}, Systems: []systemQueryFunction{}}
@@ -238,6 +239,14 @@ func (p *arrayGenericProjection) systemFunction(node, marker *ast.Node, builtins
 	}
 	if queries == 0 {
 		return empty, p.fail(node, "system must retain an original Query parameter")
+	}
+	if decl.Body == nil || decl.Body.Kind != ast.KindBlock {
+		return empty, p.fail(node, "original system body required")
+	}
+	out.BodyRange = *genericSpan(decl.Body)
+	out.Loops, e = p.systemLoops(decl.Body, out.Parameters)
+	if e != nil {
+		return empty, e
 	}
 	return out, nil
 }

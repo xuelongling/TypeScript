@@ -54,7 +54,24 @@ type systemQueryParameterAccess struct {
 	Aliases         []systemQueryAlias  `json:"aliases"`
 	Items           []systemQueryAccess `json:"items"`
 }
+type systemQueryLoopBinding struct {
+	Index         int               `json:"index"`
+	Declaration   systemQueryOrigin `json:"declaration"`
+	ComponentType string            `json:"componentType"`
+	Mode          string            `json:"mode"`
+}
+type systemQueryLoop struct {
+	Range        span                     `json:"range"`
+	QueryBinding string                   `json:"queryBinding"`
+	QueryRange   span                     `json:"queryRange"`
+	BindingRange span                     `json:"bindingRange"`
+	BodyRange    span                     `json:"bodyRange"`
+	Bindings     []systemQueryLoopBinding `json:"bindings"`
+	Statements   []arrayGenericStatement  `json:"statements"`
+}
 type systemQueryFunction struct {
+	BodyRange   span                   `json:"bodyRange"`
+	Loops       []systemQueryLoop      `json:"loops"`
 	Declaration systemQueryOrigin      `json:"declaration"`
 	MarkerRange span                   `json:"markerRange"`
 	Marker      systemQueryOrigin      `json:"marker"`
