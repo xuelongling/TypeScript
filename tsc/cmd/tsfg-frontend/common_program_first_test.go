@@ -76,6 +76,7 @@ func commonProgramRequest37n(t *testing.T, name string) []byte {
 		slices.SortFunc(files, func(a, b arrayFactsInputFile) int { return strings.Compare(a.Path, b.Path) })
 		input["files"] = files
 	}
+	input["hostImports"] = []commonProgramHostImport{}
 	input["target"] = map[string]string{"target": "windows-x86_64-msvc", "triple": "x86_64-pc-windows-msvc", "pointerBits": "64", "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"}
 	root := func(kind, name string) map[string]string {
 		return map[string]string{"kind": kind, "sourcePath": "/src/main.ts", "name": name}

@@ -113,14 +113,8 @@ func projectModules(r request, program *compiler.Program, check *checker.Checker
 		if file == nil || !strings.HasSuffix(host.SourcePath, ".d.ts") || host.CapabilityID != 31 || host.ReturnType != "i32" || len(host.ParameterTypes) != 1 || host.ParameterTypes[0] != "i32" {
 			return fail("r02b-d-input", "input", host.SourcePath, span{})
 		}
-		var found *ast.Node
-		for _, node := range file.Statements.Nodes {
-			if node.Kind == ast.KindFunctionDeclaration && node.Name() != nil && node.Name().Text() == host.Name {
-				found = node
-				break
-			}
-		}
-		if found == nil || found.Body() != nil {
+		found := counterHostDeclaration(file, host.Name)
+		if found == nil {
 			return fail("r02b-d-input", "input", host.SourcePath, span{})
 		}
 		decl := found.AsFunctionDeclaration()

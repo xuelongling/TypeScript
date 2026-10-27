@@ -74,6 +74,7 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput, 
 	p.payload.CompatibilityWitnesses = []arrayGenericCompatibilityWitness{}
 	p.payload.EntryCompatibilityRoots = []arrayGenericEntryCompatibilityRoots{}
 	files := []*ast.SourceFile{}
+	hostFiles := []*ast.SourceFile{}
 	nodes := []*ast.Node{}
 	count := 0
 	for _, f := range input.Files {
@@ -85,7 +86,18 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput, 
 		if actual == p.dts {
 			continue
 		}
-		files = append(files, actual)
+		isHost := false
+		if p.common != nil {
+			for _, host := range p.common.input.HostImports {
+				if err := p.annotationWork(); err != nil {
+					return empty, err
+				}
+				isHost = isHost || host.SourcePath == f.Path
+			}
+		}
+		if !isHost {
+			files = append(files, actual)
+		}
 		var visit func(*ast.Node, int) error
 		visit = func(n *ast.Node, depth int) error {
 			count++
@@ -101,6 +113,10 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput, 
 		}
 		if err := visit(actual.AsNode(), 0); err != nil {
 			return empty, err
+		}
+		if isHost {
+			hostFiles = append(hostFiles, actual)
+			continue
 		}
 		for _, node := range actual.Statements.Nodes {
 			switch node.Kind {
@@ -120,6 +136,11 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput, 
 		return empty, err
 	}
 	p.resources = &classResources{ctx: ctx, maxNodes: 100000, maxDepth: 64, nodes: count}
+	if p.common != nil {
+		if err := p.commonHostHeaders(hostFiles); err != nil {
+			return empty, err
+		}
+	}
 	if err := p.classHeaders(nodes); err != nil {
 		return empty, err
 	}

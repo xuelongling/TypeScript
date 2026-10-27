@@ -38,7 +38,11 @@ func runCommonProgramFacts(ctx context.Context, input io.Reader, output io.Write
 	if err != nil || !bytes.Equal(encoded, raw) || r.Family != "tsfg.program-facts-request-candidate" || r.Version != 2 || r.SchemaHash != schema {
 		return arrayFactsError("schema", "common Program identity/fields", err)
 	}
-	owned, err := arrayGenericInput(r.Input.arrayInput())
+	hostPaths, err := commonHostPaths(r.Input)
+	if err != nil {
+		return err
+	}
+	owned, err := arrayGenericInput(r.Input.arrayInput(), hostPaths...)
 	if err != nil {
 		return err
 	}
@@ -60,6 +64,7 @@ func runCommonProgramFacts(ctx context.Context, input io.Reader, output io.Write
 		}
 	}
 	owned.Target, owned.CompilationClosure = target, r.Input.CompilationClosure
+	owned.Declarations.Paths = append(owned.Declarations.Paths, hostPaths...)
 	projection := &commonProgramProjection{input: r.Input}
 	payload, err := projectArrayGeneric(ctx, owned, r.Input.arrayInput(), projection)
 	if err != nil {

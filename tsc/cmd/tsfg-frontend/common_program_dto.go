@@ -32,14 +32,33 @@ type commonProgramTypeAlias struct {
 	Type             string `json:"type"`
 }
 
+type commonProgramHostImport struct {
+	SourcePath     string   `json:"sourcePath"`
+	Name           string   `json:"name"`
+	CapabilityID   int      `json:"capabilityId"`
+	ParameterTypes []string `json:"parameterTypes"`
+	ReturnType     string   `json:"returnType"`
+}
+type commonProgramHost struct {
+	ID               string                `json:"id"`
+	SourcePath       string                `json:"sourcePath"`
+	Name             string                `json:"name"`
+	CapabilityID     int                   `json:"capabilityId"`
+	ParameterTypes   []string              `json:"parameterTypes"`
+	ReturnType       string                `json:"returnType"`
+	DeclarationRange span                  `json:"declarationRange"`
+	NameRange        span                  `json:"nameRange"`
+	Signature        arrayGenericSignature `json:"signature"`
+}
 type commonProgramInput struct {
-	SourceRoot         string                 `json:"sourceRoot"`
-	RootFile           string                 `json:"rootFile"`
-	Files              []arrayFactsInputFile  `json:"files"`
-	Declarations       arrayFactsDeclarations `json:"declarations"`
-	Config             arrayFactsConfig       `json:"config"`
-	Target             *commonProgramTarget   `json:"target"`
-	CompilationClosure *closureConfiguration  `json:"compilationClosure"`
+	HostImports        []commonProgramHostImport `json:"hostImports"`
+	SourceRoot         string                    `json:"sourceRoot"`
+	RootFile           string                    `json:"rootFile"`
+	Files              []arrayFactsInputFile     `json:"files"`
+	Declarations       arrayFactsDeclarations    `json:"declarations"`
+	Config             arrayFactsConfig          `json:"config"`
+	Target             *commonProgramTarget      `json:"target"`
+	CompilationClosure *closureConfiguration     `json:"compilationClosure"`
 }
 type commonProgramTarget struct {
 	Target         string `json:"target"`
@@ -113,6 +132,7 @@ type commonProgramCatch struct {
 	Block            commonProgramBlock `json:"block"`
 }
 type commonProgramPayload struct {
+	HostImports             []commonProgramHost                   `json:"hostImports"`
 	TypeAliases             []commonProgramTypeAlias              `json:"typeAliases"`
 	CompatibilityWitnesses  []arrayGenericCompatibilityWitness    `json:"compatibilityWitnesses"`
 	EntryCompatibilityRoots []arrayGenericEntryCompatibilityRoots `json:"entryCompatibilityRoots"`
@@ -145,7 +165,7 @@ func commonProgramPayloadFrom(payload arrayGenericPayload, selected *commonProgr
 		Declarations: payload.Declarations, Files: payload.Files, Types: payload.Types, ArrayLength: payload.ArrayLength,
 		ReadSpanLength: payload.ReadSpanLength, ReadSpanIntrinsic: payload.ReadSpanIntrinsic, Functions: payload.Functions,
 		Exports: payload.Exports, Diagnostics: payload.Diagnostics, Target: *selected.input.Target,
-		Modules: selected.modules, Globals: selected.globalRows, Closure: selected.closure, TypeAliases: selected.typeAliases}
+		Modules: selected.modules, Globals: selected.globalRows, Closure: selected.closure, TypeAliases: selected.typeAliases, HostImports: selected.hostImports}
 }
 
 type commonProgramPackage struct {
@@ -160,6 +180,9 @@ type commonProgramPackage struct {
 // Private projection state lives only inside the one official checker lease.
 // Its AST/Symbol keys never enter the returned DTO.
 type commonProgramProjection struct {
+	hosts        map[*ast.Symbol]commonProgramHost
+	hostNodes    map[*ast.Symbol]*ast.Node
+	hostImports  []commonProgramHost
 	lexical      map[*ast.Node]*closureProjection
 	bindings     map[string]arrayFactsBinding
 	typeAliases  []commonProgramTypeAlias

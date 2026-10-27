@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"slices"
 	"strings"
 	"unicode/utf8"
 
@@ -40,7 +41,7 @@ func decodeArrayGenericRequest(data []byte) (arrayFactsRequest, error) {
 	}
 	return r, nil
 }
-func arrayGenericInput(input arrayFactsInput) (request, error) {
+func arrayGenericInput(input arrayFactsInput, hostDeclarations ...string) (request, error) {
 	var r request
 	root, dts := input.SourceRoot, input.SourceRoot+"/minimal-arrays-v8.d.ts"
 	if !arrayFactsPath(root) || !arrayFactsPath(input.RootFile) || !strings.HasPrefix(input.RootFile, root+"/") || strings.HasSuffix(input.RootFile, ".d.ts") || !strings.HasSuffix(input.RootFile, ".ts") || len(input.Files) < 2 || len(input.Files) > 64 || input.Declarations.Version != "minimal-arrays-v8" || len(input.Declarations.Paths) != 1 || input.Declarations.Paths[0] != dts || !input.Config.Strict || !input.Config.NoEmit || input.Config.AllowJS {
@@ -48,7 +49,7 @@ func arrayGenericInput(input arrayFactsInput) (request, error) {
 	}
 	seen := map[string]bool{}
 	for i, f := range input.Files {
-		if !arrayFactsPath(f.Path) || !strings.HasPrefix(f.Path, root+"/") || !strings.HasSuffix(f.Path, ".ts") || f.Path != dts && strings.HasSuffix(f.Path, ".d.ts") || i > 0 && input.Files[i-1].Path >= f.Path || !utf8.ValidString(f.Content) || len(f.Content) > 1048576 || f.SHA256 != arrayFactsSHA([]byte(f.Content)) {
+		if !arrayFactsPath(f.Path) || !strings.HasPrefix(f.Path, root+"/") || !strings.HasSuffix(f.Path, ".ts") || f.Path != dts && strings.HasSuffix(f.Path, ".d.ts") && !slices.Contains(hostDeclarations, f.Path) || i > 0 && input.Files[i-1].Path >= f.Path || !utf8.ValidString(f.Content) || len(f.Content) > 1048576 || f.SHA256 != arrayFactsSHA([]byte(f.Content)) {
 			return r, arrayFactsError("input", "v8 exact sorted original files", nil)
 		}
 		for prior := range seen {

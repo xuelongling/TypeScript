@@ -98,6 +98,13 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 		}
 		parameters = []string{owner.FlowType, p.scalarType("u32"), p.scalarType("u32")}
 		calleeID = p.payload.ReadSpanIntrinsic.ID
+	} else if p.common != nil && p.common.hostNodes[symbol] != nil {
+		host := p.common.hosts[symbol]
+		if decl != p.common.hostNodes[symbol] {
+			return nil, p.fail(node, "Host call must join its original declaration")
+		}
+		kind, calleeID, result = "hostCall", host.ID, host.ReturnType
+		parameters = host.ParameterTypes
 	} else {
 		header := p.headers[symbol]
 		if header == nil {

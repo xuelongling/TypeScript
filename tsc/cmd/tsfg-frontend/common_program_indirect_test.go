@@ -19,6 +19,7 @@ func commonIndirectRequest37s(t *testing.T, source []byte) []byte {
 	}
 	request["family"], request["version"], request["schemaHash"] = "tsfg.program-facts-request-candidate", 2, "sha256:"+arrayFactsSHA(commonProgramSchema)
 	input := request["input"].(map[string]any)
+	input["hostImports"] = []commonProgramHostImport{}
 	input["target"] = map[string]string{"target": "windows-x86_64-msvc", "triple": "x86_64-pc-windows-msvc", "pointerBits": "64", "llvmDataLayout": "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"}
 	root := func(kind, name string) closureRoot {
 		return closureRoot{Kind: kind, SourcePath: "/src/main.ts", Name: name}
