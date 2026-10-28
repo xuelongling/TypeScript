@@ -74,8 +74,10 @@ func (p *arrayGenericProjection) systemLoops(body *ast.Node, parameters []system
 			}
 			expression := node.AsExpressionStatement().Expression
 			assignment := expression.AsBinaryExpression()
-			if assignment.OperatorToken.Kind != ast.KindPlusEqualsToken && assignment.OperatorToken.Kind != ast.KindEqualsToken {
-				return nil, p.fail(expression, "Query field assignment requires = or +=")
+			switch assignment.OperatorToken.Kind {
+			case ast.KindEqualsToken, ast.KindPlusEqualsToken, ast.KindMinusEqualsToken, ast.KindAsteriskEqualsToken, ast.KindSlashEqualsToken:
+			default:
+				return nil, p.fail(expression, "Query field assignment requires =, +=, -=, *= or /=")
 			}
 			mutation, e := p.systemLoopAssignment(expression, bindings, params, 0)
 			if e != nil {
@@ -142,7 +144,7 @@ func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings m
 	case ast.KindBinaryExpression:
 		binary := node.AsBinaryExpression()
 		switch binary.OperatorToken.Kind {
-		case ast.KindEqualsToken, ast.KindPlusEqualsToken:
+		case ast.KindEqualsToken, ast.KindPlusEqualsToken, ast.KindMinusEqualsToken, ast.KindAsteriskEqualsToken, ast.KindSlashEqualsToken:
 			return p.systemLoopAssignment(node, bindings, params, depth)
 		case ast.KindPlusToken, ast.KindMinusToken, ast.KindAsteriskToken, ast.KindSlashToken:
 		default:
