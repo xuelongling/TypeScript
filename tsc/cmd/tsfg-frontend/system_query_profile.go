@@ -9,7 +9,7 @@ import (
 
 const systemQueryProfilePath = "/src/system-query-context.d.ts"
 
-//go:embed profiles/system-query-v5.d.ts
+//go:embed profiles/system-query-v6.d.ts
 var systemQueryDeclarations string
 
 func newOwnedSystemProgram(r request) (*compiler.Program, *ast.SourceFile, []string, *response) {

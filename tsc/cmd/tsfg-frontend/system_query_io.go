@@ -10,7 +10,7 @@ import (
 	"slices"
 )
 
-//go:embed testdata/system-query-v5/schema.json
+//go:embed testdata/system-query-v6/schema.json
 var systemQuerySchema []byte
 
 type systemQueryInput struct {
@@ -68,7 +68,7 @@ func runSystemQueryFacts(ctx context.Context, input io.Reader, output io.Writer)
 	}
 	encoded, e := arrayFactsCanonical(request)
 	schema, e2 := systemQuerySchemaID()
-	if e != nil || e2 != nil || !bytes.Equal(raw, encoded) || request.Family != "tsfg.system-query-facts-request-candidate" || request.Version != 5 || request.SchemaHash != schema {
+	if e != nil || e2 != nil || !bytes.Equal(raw, encoded) || request.Family != "tsfg.system-query-facts-request-candidate" || request.Version != 6 || request.SchemaHash != schema {
 		return arrayFactsError("schema", "system Query identity/fields", e)
 	}
 	in := request.Input
@@ -99,7 +99,7 @@ func runSystemQueryFacts(ctx context.Context, input io.Reader, output io.Writer)
 	if e != nil {
 		return e
 	}
-	packet := systemQueryPackage{Family: "tsfg.system-query-facts-package-candidate", Version: 5, SchemaHash: schema, RequestID: "sha256:" + arrayFactsSHA(append([]byte("tsfg.system-query.request.v5\x00"), data...)), PackageID: "sha256:" + arrayFactsSHA(append([]byte("tsfg.system-query.package.v5\x00"+schema+"\x00"), payloadBytes...)), Payload: payload}
+	packet := systemQueryPackage{Family: "tsfg.system-query-facts-package-candidate", Version: 6, SchemaHash: schema, RequestID: "sha256:" + arrayFactsSHA(append([]byte("tsfg.system-query.request.v6\x00"), data...)), PackageID: "sha256:" + arrayFactsSHA(append([]byte("tsfg.system-query.package.v6\x00"+schema+"\x00"), payloadBytes...)), Payload: payload}
 	encoded, e = arrayFactsCanonical(packet)
 	if e != nil {
 		return e

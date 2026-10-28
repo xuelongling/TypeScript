@@ -54,14 +54,6 @@ func (p *arrayGenericProjection) systemScalarHelper(node *ast.Node) (systemQuery
 	if body == nil || body.Kind != ast.KindBlock {
 		return empty, 0, p.fail(node, "original scalar helper body required")
 	}
-	if len(body.AsBlock().Statements.Nodes) != 1 || body.AsBlock().Statements.Nodes[0].Kind != ast.KindReturnStatement {
-		return empty, 0, p.fail(body, "scalar helper requires one original pure scalar return expression")
-	}
-	statement := body.AsBlock().Statements.Nodes[0]
-	expression := statement.AsReturnStatement().Expression
-	if expression == nil {
-		return empty, 0, p.fail(statement, "scalar helper requires an original f32/f64 return value")
-	}
 	parameters := []systemQueryParameter{}
 	logical := []string{}
 	params := map[*ast.Symbol]systemQueryParameter{}
@@ -120,25 +112,22 @@ func (p *arrayGenericProjection) systemScalarHelper(node *ast.Node) (systemQuery
 	state.active[node] = true
 	state.frames = append(state.frames, 0)
 	defer func() { delete(state.active, node); state.frames = state.frames[:len(state.frames)-1] }()
-	value, e := p.systemLoopExpression(expression, bindings, params, 0)
+	statements, localBindings, e := p.systemStatements(body, bindings, params, returns)
 	if e != nil {
 		return empty, 0, e
-	}
-	if value.Type != returns || value.FlowType != returns {
-		return empty, 0, p.fail(expression, "scalar helper return must preserve declared f32/f64 type")
 	}
 	id, e := genericNodeID("tsfg.array-facts.function.v8\x00", node)
 	if e != nil {
 		return empty, 0, e
 	}
-	helper := systemQueryScalarHelper{ID: id, Declaration: systemOrigin(node), Signature: arrayGenericSignature{ID: signatureID, SourcePath: ast.GetSourceFileOfNode(node).FileName(), DeclarationRange: *genericSpan(node), Parameters: logical, ReturnType: returns}, Parameters: parameters, ReturnType: returns, ReturnAnnotationRange: *genericSpan(declaration.Type), BodyRange: *genericSpan(body), ReturnRange: *genericSpan(statement), Value: value}
+	helper := systemQueryScalarHelper{ID: id, Declaration: systemOrigin(node), Signature: arrayGenericSignature{ID: signatureID, SourcePath: ast.GetSourceFileOfNode(node).FileName(), DeclarationRange: *genericSpan(node), Parameters: logical, ReturnType: returns}, Parameters: parameters, ReturnType: returns, ReturnAnnotationRange: *genericSpan(declaration.Type), BodyRange: *genericSpan(body), Bindings: localBindings, Statements: statements}
 	height := 1 + state.frames[len(state.frames)-1]
 	state.helpers[node] = helper
 	state.heights[node] = height
 	return helper, height, nil
 }
 
-func (p *arrayGenericProjection) systemScalarCall(node *ast.Node, bindings map[*ast.Symbol]systemQueryLoopBinding, params map[*ast.Symbol]systemQueryParameter, depth int) (*arrayGenericExpression, error) {
+func (p *arrayGenericProjection) systemScalarCall(node *ast.Node, bindings map[*ast.Symbol]systemQueryLoopBinding, params map[*ast.Symbol]systemQueryParameter, locals map[*ast.Symbol]arrayFactsBinding, depth int) (*arrayGenericExpression, error) {
 	call := node.AsCallExpression()
 	if call.QuestionDotToken != nil || call.TypeArguments != nil || call.Expression.Kind != ast.KindIdentifier {
 		return nil, p.fail(node, "Query scalar call requires a direct named function or named import")
@@ -168,7 +157,7 @@ func (p *arrayGenericProjection) systemScalarCall(node *ast.Node, bindings map[*
 	}
 	values := []arrayGenericExpression{}
 	for index, arg := range args {
-		value, e := p.systemLoopExpression(arg, bindings, params, depth+1)
+		value, e := p.systemLoopExpression(arg, bindings, params, locals, depth+1, helper.Parameters[index].LogicalType)
 		if e != nil {
 			return nil, e
 		}

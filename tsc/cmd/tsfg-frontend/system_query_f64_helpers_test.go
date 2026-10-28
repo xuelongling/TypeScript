@@ -48,9 +48,9 @@ func TestSystemQueryF64ViewHelpers38n(t *testing.T) {
 			}
 			packet, e, partial := systemScalarRun38g(t, r, name)
 			if e != nil {
-				t.Fatal("actual v5 f64 view helper rejected", e, partial)
+				t.Fatal("actual v6 f64 view helper rejected", e, partial)
 			}
-			if packet.Version != 5 || len(packet.Payload.Program.Files) != len(r.Files) || len(packet.Payload.ScalarHelpers) != 3 {
+			if packet.Version != 6 || len(packet.Payload.Program.Files) != len(r.Files) || len(packet.Payload.ScalarHelpers) != 3 {
 				t.Fatal("whole Program/selected helper inventory differs")
 			}
 			helperIDs := map[string]string{}
@@ -58,7 +58,7 @@ func TestSystemQueryF64ViewHelpers38n(t *testing.T) {
 				helperIDs[helper.Declaration.Name] = helper.ID
 			}
 			for _, helper := range packet.Payload.ScalarHelpers {
-				if helper.ReturnType != "f64" || helper.Signature.ReturnType != "f64" || helper.Value.Type != "f64" {
+				if helper.ReturnType != "f64" || helper.Signature.ReturnType != "f64" || helper.Statements[len(helper.Statements)-1].Value.Type != "f64" {
 					t.Fatal("original f64 signature/result differs")
 				}
 				for index, parameter := range helper.Parameters {
@@ -69,13 +69,13 @@ func TestSystemQueryF64ViewHelpers38n(t *testing.T) {
 				if name == "f64-view-imported" && helper.Declaration.SourcePath != "/src/helpers.ts" {
 					t.Fatal("named import resolved wrong original declaration")
 				}
-				if helper.Declaration.Name == "readX" && (helper.Value.Kind != "fieldAccess" || helper.Value.Receiver.Binding != helper.Parameters[0].Binding.ID || helper.Parameters[0].View.Access.Mode != "read") {
+				if helper.Declaration.Name == "readX" && (helper.Statements[len(helper.Statements)-1].Value.Kind != "fieldAccess" || helper.Statements[len(helper.Statements)-1].Value.Receiver.Binding != helper.Parameters[0].Binding.ID || helper.Parameters[0].View.Access.Mode != "read") {
 					t.Fatal("original Read field binding differs")
 				}
-				if helper.Declaration.Name == "scaledX" && (helper.Value.Kind != "binary" || helper.Value.Operator != "-" || helper.Value.Left.Kind != "call" || helper.Value.Left.Type != "f64" || helper.Value.Left.Callee != helperIDs["readX"] || helper.Value.Right.Binding != helper.Parameters[1].Binding.ID) {
+				if helper.Declaration.Name == "scaledX" && (helper.Statements[len(helper.Statements)-1].Value.Kind != "binary" || helper.Statements[len(helper.Statements)-1].Value.Operator != "-" || helper.Statements[len(helper.Statements)-1].Value.Left.Kind != "call" || helper.Statements[len(helper.Statements)-1].Value.Left.Type != "f64" || helper.Statements[len(helper.Statements)-1].Value.Left.Callee != helperIDs["readX"] || helper.Statements[len(helper.Statements)-1].Value.Right.Binding != helper.Parameters[1].Binding.ID) {
 					t.Fatal("original nested call and arithmetic order differs")
 				}
-				if helper.Declaration.Name == "update" && (helper.Value.Kind != "fieldAssignment" || helper.Value.Operator != "+=" || helper.Value.Target.Receiver.Binding != helper.Parameters[0].Binding.ID || helper.Parameters[0].View.Access.Mode != "write" || helper.Parameters[1].View.Access.Mode != "read" || helper.Value.Value.Operator != "/" || helper.Value.Value.Left.Receiver.Binding != helper.Parameters[1].Binding.ID) {
+				if helper.Declaration.Name == "update" && (helper.Statements[len(helper.Statements)-1].Value.Kind != "fieldAssignment" || helper.Statements[len(helper.Statements)-1].Value.Operator != "+=" || helper.Statements[len(helper.Statements)-1].Value.Target.Receiver.Binding != helper.Parameters[0].Binding.ID || helper.Parameters[0].View.Access.Mode != "write" || helper.Parameters[1].View.Access.Mode != "read" || helper.Statements[len(helper.Statements)-1].Value.Value.Operator != "/" || helper.Statements[len(helper.Statements)-1].Value.Value.Left.Receiver.Binding != helper.Parameters[1].Binding.ID) {
 					t.Fatal("original Write/Read field effect bindings differ")
 				}
 			}
@@ -84,7 +84,7 @@ func TestSystemQueryF64ViewHelpers38n(t *testing.T) {
 			if call.Callee != helperIDs["update"] || call.Type != "f64" || call.Arguments == nil || len(*call.Arguments) != 3 || (*call.Arguments)[0].Binding != loop.Bindings[0].Declaration.ID || (*call.Arguments)[1].Binding != loop.Bindings[1].Declaration.ID {
 				t.Fatal("original caller argument order/callee differs")
 			}
-			t.Logf("actual whole publicv5 f64 view helpers=%d files=%d nodes=%d", len(packet.Payload.ScalarHelpers), len(packet.Payload.Program.Files), len(packet.Payload.Nodes))
+			t.Logf("actual whole publicv6 f64 view helpers=%d files=%d nodes=%d", len(packet.Payload.ScalarHelpers), len(packet.Payload.Program.Files), len(packet.Payload.Nodes))
 		})
 	}
 }
@@ -100,7 +100,7 @@ func TestSystemQueryF64HelperBoundaries38n(t *testing.T) {
 				expected = "argument must join original parameter"
 			case "return-width":
 				r.Files[0].Content = strings.Replace(r.Files[0].Content, "function scaled(v:f64,dt:f64):f64", "function scaled(v:f64,dt:f64):f32", 1)
-				expected = "return must preserve declared f32/f64 type"
+				expected = "Query helper return width differs"
 			case "arithmetic-width":
 				r.Files[0].Content = strings.Replace(r.Files[0].Content, "function scaled(v:f64,dt:f64):f64", "function scaled(v:f64,dt:f32):f64", 1)
 				expected = "same-width f32/f64 operands"
@@ -150,7 +150,7 @@ func TestSystemQueryRetiredV4Rejected38n(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v5"}, bytes.NewReader(append(old, '\n')), &output); e == nil || output.Len() != 0 {
+	if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v6"}, bytes.NewReader(append(old, '\n')), &output); e == nil || output.Len() != 0 {
 		t.Fatal("retired v4 request accepted", e, output.Len())
 	}
 }
@@ -166,13 +166,13 @@ func TestSystemQueryF64ScalarHelper38n(t *testing.T) {
 	}
 	packet, e, partial := systemScalarRun38g(t, r, "f64-scalar-helper")
 	if e != nil {
-		t.Fatal("public v5 f64 scalar helper rejected", e, partial)
+		t.Fatal("public v6 f64 scalar helper rejected", e, partial)
 	}
-	if packet.Version != 5 || len(packet.Payload.Program.Files) != len(r.Files) || len(packet.Payload.ScalarHelpers) != 1 || len(packet.Payload.Systems) != 1 {
+	if packet.Version != 6 || len(packet.Payload.Program.Files) != len(r.Files) || len(packet.Payload.ScalarHelpers) != 1 || len(packet.Payload.Systems) != 1 {
 		t.Fatal("whole original Program or selected helper inventory differs")
 	}
 	helper := packet.Payload.ScalarHelpers[0]
-	if helper.Declaration.Name != "scaled" || helper.ReturnType != "f64" || helper.Signature.ReturnType != "f64" || len(helper.Parameters) != 2 || len(helper.Signature.Parameters) != 2 || helper.Value.Kind != "binary" || helper.Value.Operator != "*" || helper.Value.Type != "f64" {
+	if helper.Declaration.Name != "scaled" || helper.ReturnType != "f64" || helper.Signature.ReturnType != "f64" || len(helper.Parameters) != 2 || len(helper.Signature.Parameters) != 2 || helper.Statements[len(helper.Statements)-1].Value.Kind != "binary" || helper.Statements[len(helper.Statements)-1].Value.Operator != "*" || helper.Statements[len(helper.Statements)-1].Value.Type != "f64" {
 		t.Fatal("actual f64 signature/return expression differs")
 	}
 	for index, parameter := range helper.Parameters {
@@ -180,7 +180,7 @@ func TestSystemQueryF64ScalarHelper38n(t *testing.T) {
 			t.Fatal("original ordered f64 helper parameters differ")
 		}
 	}
-	if helper.Value.Left.Binding != helper.Parameters[0].Binding.ID || helper.Value.Right.Binding != helper.Parameters[1].Binding.ID {
+	if helper.Statements[len(helper.Statements)-1].Value.Left.Binding != helper.Parameters[0].Binding.ID || helper.Statements[len(helper.Statements)-1].Value.Right.Binding != helper.Parameters[1].Binding.ID {
 		t.Fatal("original parameter Symbol bindings differ")
 	}
 	system := packet.Payload.Systems[0]
@@ -198,5 +198,5 @@ func TestSystemQueryF64ScalarHelper38n(t *testing.T) {
 	if call.Range != (span{start, start + len("scaled(v.x, dt)")}) || call.CalleeRange == nil || *call.CalleeRange != (span{start, start + len("scaled")}) || !strings.Contains(source, "function unused(v:i32)") || !strings.Contains(source, "class Box") {
 		t.Fatal("original UTF16 callee or complete unused context differs")
 	}
-	t.Logf("actual whole publicv5 f64 scalar helper files=%d nodes=%d helper=%s return=%s", len(packet.Payload.Program.Files), len(packet.Payload.Nodes), helper.Declaration.Name, helper.ReturnType)
+	t.Logf("actual whole publicv6 f64 scalar helper files=%d nodes=%d helper=%s return=%s", len(packet.Payload.Program.Files), len(packet.Payload.Nodes), helper.Declaration.Name, helper.ReturnType)
 }

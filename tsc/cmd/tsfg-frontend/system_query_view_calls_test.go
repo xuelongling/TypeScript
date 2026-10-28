@@ -12,7 +12,7 @@ import (
 func systemViewRequest38h(t *testing.T) request {
 	t.Helper()
 	r := systemRequest38c(t)
-	source, e := os.ReadFile("testdata/system-query-v5/view-helper.ts")
+	source, e := os.ReadFile("testdata/system-query-v6/view-helper.ts")
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -73,10 +73,10 @@ func TestSystemQueryViewHelperPublic38h(t *testing.T) {
 						t.Fatal("non-view helper parameter is not native f32")
 					}
 				}
-				if helper.Declaration.Name == "readX" && (helper.Value.Kind != "fieldAccess" || helper.Value.Receiver.Binding != helper.Parameters[0].Binding.ID) {
+				if helper.Declaration.Name == "readX" && (helper.Statements[len(helper.Statements)-1].Value.Kind != "fieldAccess" || helper.Statements[len(helper.Statements)-1].Value.Receiver.Binding != helper.Parameters[0].Binding.ID) {
 					t.Fatal("read field must reference original formal view binding")
 				}
-				if helper.Declaration.Name == "update" && (helper.Value.Kind != "fieldAssignment" || helper.Value.Target.Receiver.Binding != helper.Parameters[0].Binding.ID || helper.Parameters[0].View.Access.Mode != "write" || helper.Parameters[1].View.Access.Mode != "read") {
+				if helper.Declaration.Name == "update" && (helper.Statements[len(helper.Statements)-1].Value.Kind != "fieldAssignment" || helper.Statements[len(helper.Statements)-1].Value.Target.Receiver.Binding != helper.Parameters[0].Binding.ID || helper.Parameters[0].View.Access.Mode != "write" || helper.Parameters[1].View.Access.Mode != "read") {
 					t.Fatal("original write/read views or field assignment differ")
 				}
 			}
@@ -185,7 +185,7 @@ func TestSystemQueryViewOldVersion38h(t *testing.T) {
 		t.Fatal(e)
 	}
 	old = append(old, '\n')
-	if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v5"}, bytes.NewReader(old), &out); e == nil || out.Len() != 0 {
+	if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v6"}, bytes.NewReader(old), &out); e == nil || out.Len() != 0 {
 		t.Fatal("retired private version was accepted", e, out.Len())
 	}
 }

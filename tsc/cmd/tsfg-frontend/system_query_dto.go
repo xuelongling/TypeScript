@@ -66,13 +66,14 @@ type systemQueryLoopBinding struct {
 	Mode          string            `json:"mode"`
 }
 type systemQueryLoop struct {
-	Range        span                     `json:"range"`
-	QueryBinding string                   `json:"queryBinding"`
-	QueryRange   span                     `json:"queryRange"`
-	BindingRange span                     `json:"bindingRange"`
-	BodyRange    span                     `json:"bodyRange"`
-	Bindings     []systemQueryLoopBinding `json:"bindings"`
-	Statements   []arrayGenericStatement  `json:"statements"`
+	Range         span                     `json:"range"`
+	QueryBinding  string                   `json:"queryBinding"`
+	QueryRange    span                     `json:"queryRange"`
+	BindingRange  span                     `json:"bindingRange"`
+	BodyRange     span                     `json:"bodyRange"`
+	Bindings      []systemQueryLoopBinding `json:"bindings"`
+	LocalBindings []arrayFactsBinding      `json:"localBindings"`
+	Statements    []arrayGenericStatement  `json:"statements"`
 }
 type systemQueryFunction struct {
 	BodyRange   span                   `json:"bodyRange"`
@@ -102,8 +103,8 @@ type systemQueryScalarHelper struct {
 	ReturnType            string                  `json:"returnType"`
 	ReturnAnnotationRange span                    `json:"returnAnnotationRange"`
 	BodyRange             span                    `json:"bodyRange"`
-	ReturnRange           span                    `json:"returnRange"`
-	Value                 *arrayGenericExpression `json:"value"`
+	Bindings              []arrayFactsBinding     `json:"bindings"`
+	Statements            []arrayGenericStatement `json:"statements"`
 }
 type systemQueryPayload struct {
 	ScalarHelpers []systemQueryScalarHelper `json:"scalarHelpers"`

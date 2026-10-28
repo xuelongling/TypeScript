@@ -42,7 +42,7 @@ func (p *arrayGenericProjection) systemLoops(body *ast.Node, parameters []system
 		if len(elements) != len(parameter.Query.Items) {
 			return nil, p.fail(declaration, "Query tuple binding inventory differs")
 		}
-		row := systemQueryLoop{Range: *genericSpan(statement), QueryBinding: parameter.Binding.ID, QueryRange: *genericSpan(loop.Expression), BindingRange: *genericSpan(declaration.Name()), BodyRange: *genericSpan(loop.Statement), Bindings: []systemQueryLoopBinding{}, Statements: []arrayGenericStatement{}}
+		row := systemQueryLoop{Range: *genericSpan(statement), QueryBinding: parameter.Binding.ID, QueryRange: *genericSpan(loop.Expression), BindingRange: *genericSpan(declaration.Name()), BodyRange: *genericSpan(loop.Statement), Bindings: []systemQueryLoopBinding{}, LocalBindings: []arrayFactsBinding{}, Statements: []arrayGenericStatement{}}
 		bindings := map[*ast.Symbol]systemQueryLoopBinding{}
 		for index, element := range elements {
 			if element.Kind != ast.KindBindingElement || element.Name() == nil || element.Name().Kind != ast.KindIdentifier {
@@ -68,29 +68,17 @@ func (p *arrayGenericProjection) systemLoops(body *ast.Node, parameters []system
 			row.Bindings = append(row.Bindings, owned)
 			bindings[symbol] = owned
 		}
-		for _, node := range loop.Statement.AsBlock().Statements.Nodes {
-			if node.Kind != ast.KindExpressionStatement || node.AsExpressionStatement().Expression.Kind != ast.KindBinaryExpression {
-				return nil, p.fail(node, "Query body supports original f32/f64 field assignments")
-			}
-			expression := node.AsExpressionStatement().Expression
-			assignment := expression.AsBinaryExpression()
-			switch assignment.OperatorToken.Kind {
-			case ast.KindEqualsToken, ast.KindPlusEqualsToken, ast.KindMinusEqualsToken, ast.KindAsteriskEqualsToken, ast.KindSlashEqualsToken:
-			default:
-				return nil, p.fail(expression, "Query field assignment requires =, +=, -=, *= or /=")
-			}
-			mutation, e := p.systemLoopAssignment(expression, bindings, params, 0)
-			if e != nil {
-				return nil, e
-			}
-			row.Statements = append(row.Statements, arrayGenericStatement{Kind: "expression", Range: *genericSpan(node), Value: mutation})
+		statements, localBindings, e := p.systemStatements(loop.Statement, bindings, params, "")
+		if e != nil {
+			return nil, e
 		}
+		row.Statements, row.LocalBindings = statements, localBindings
 		out = append(out, row)
 	}
 	return out, nil
 }
 
-func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings map[*ast.Symbol]systemQueryLoopBinding, params map[*ast.Symbol]systemQueryParameter, depth int) (*arrayGenericExpression, error) {
+func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings map[*ast.Symbol]systemQueryLoopBinding, params map[*ast.Symbol]systemQueryParameter, locals map[*ast.Symbol]arrayFactsBinding, depth int, expected ...string) (*arrayGenericExpression, error) {
 	if depth >= 32 {
 		return nil, p.fail(node, "Query expression exceeds32 nodes")
 	}
@@ -101,9 +89,29 @@ func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings m
 	if actual == nil || actual.Flags()&(checker.TypeFlagsAny|checker.TypeFlagsUnknown) != 0 {
 		return nil, p.fail(node, "original checked Query expression type required")
 	}
+	context := ""
+	if len(expected) > 0 {
+		context = expected[0]
+	}
 	switch node.Kind {
+	case ast.KindNumericLiteral, ast.KindPrefixUnaryExpression:
+		if node.Kind == ast.KindPrefixUnaryExpression && (node.AsPrefixUnaryExpression().Operator != ast.KindMinusToken || node.AsPrefixUnaryExpression().Operand.Kind != ast.KindNumericLiteral) {
+			return nil, p.fail(node, "Query floating literal unary syntax differs")
+		}
+		value, e := p.number(node, context)
+		if e != nil {
+			return nil, e
+		}
+		if value.Type != "f32" && value.Type != "f64" {
+			return nil, p.fail(node, "Query literal requires original floating-point context")
+		}
+		value.FlowType = value.Type
+		return value, nil
 	case ast.KindIdentifier:
 		symbol := p.check.GetSymbolAtLocation(node)
+		if local, ok := locals[symbol]; ok && actual.Flags()&checker.TypeFlagsNumberLike != 0 {
+			return &arrayGenericExpression{Kind: "bindingReference", Type: local.DeclaredType, FlowType: local.DeclaredType, Range: *genericSpan(node), Binding: local.ID}, nil
+		}
 		if binding, ok := bindings[symbol]; ok {
 			return &arrayGenericExpression{Kind: "bindingReference", Type: binding.ComponentType, FlowType: binding.ComponentType, Range: *genericSpan(node), Binding: binding.Declaration.ID}, nil
 		}
@@ -116,7 +124,7 @@ func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings m
 		if access.QuestionDotToken != nil || access.Expression.Kind != ast.KindIdentifier {
 			return nil, p.fail(node, "direct Query component field access required")
 		}
-		receiver, e := p.systemLoopExpression(access.Expression, bindings, params, depth+1)
+		receiver, e := p.systemLoopExpression(access.Expression, bindings, params, locals, depth+1, context)
 		if e != nil {
 			return nil, e
 		}
@@ -134,9 +142,9 @@ func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings m
 		}
 		return &arrayGenericExpression{Kind: "fieldAccess", Type: field.Type, FlowType: field.Type, Range: *genericSpan(node), Receiver: receiver, Property: field.ID, NameRange: genericSpan(node.Name())}, nil
 	case ast.KindCallExpression:
-		return p.systemScalarCall(node, bindings, params, depth)
+		return p.systemScalarCall(node, bindings, params, locals, depth)
 	case ast.KindParenthesizedExpression:
-		inner, e := p.systemLoopExpression(node.AsParenthesizedExpression().Expression, bindings, params, depth+1)
+		inner, e := p.systemLoopExpression(node.AsParenthesizedExpression().Expression, bindings, params, locals, depth+1, context)
 		if e != nil {
 			return nil, e
 		}
@@ -145,16 +153,20 @@ func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings m
 		binary := node.AsBinaryExpression()
 		switch binary.OperatorToken.Kind {
 		case ast.KindEqualsToken, ast.KindPlusEqualsToken, ast.KindMinusEqualsToken, ast.KindAsteriskEqualsToken, ast.KindSlashEqualsToken:
-			return p.systemLoopAssignment(node, bindings, params, depth)
+			return p.systemLoopAssignment(node, bindings, params, locals, depth)
 		case ast.KindPlusToken, ast.KindMinusToken, ast.KindAsteriskToken, ast.KindSlashToken:
 		default:
 			return nil, p.fail(node, "Query expression requires f32 arithmetic operator")
 		}
-		left, e := p.systemLoopExpression(binary.Left, bindings, params, depth+1)
+		left, e := p.systemLoopExpression(binary.Left, bindings, params, locals, depth+1, context)
 		if e != nil {
 			return nil, e
 		}
-		right, e := p.systemLoopExpression(binary.Right, bindings, params, depth+1)
+		rightContext := context
+		if rightContext == "" {
+			rightContext = left.Type
+		}
+		right, e := p.systemLoopExpression(binary.Right, bindings, params, locals, depth+1, rightContext)
 		if e != nil {
 			return nil, e
 		}
@@ -167,11 +179,25 @@ func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings m
 	}
 }
 
-func (p *arrayGenericProjection) systemLoopAssignment(node *ast.Node, bindings map[*ast.Symbol]systemQueryLoopBinding, params map[*ast.Symbol]systemQueryParameter, depth int) (*arrayGenericExpression, error) {
+func (p *arrayGenericProjection) systemLoopAssignment(node *ast.Node, bindings map[*ast.Symbol]systemQueryLoopBinding, params map[*ast.Symbol]systemQueryParameter, locals map[*ast.Symbol]arrayFactsBinding, depth int) (*arrayGenericExpression, error) {
 	assignment := node.AsBinaryExpression()
-	target, e := p.systemLoopExpression(assignment.Left, bindings, params, depth+1)
+	target, e := p.systemLoopExpression(assignment.Left, bindings, params, locals, depth+1)
 	if e != nil {
 		return nil, e
+	}
+	if target.Kind == "bindingReference" {
+		local, ok := locals[p.check.GetSymbolAtLocation(assignment.Left)]
+		if !ok || !local.Writable {
+			return nil, p.fail(assignment.Left, "Query local assignment requires original writable local")
+		}
+		value, e := p.systemLoopExpression(assignment.Right, bindings, params, locals, depth+1, target.Type)
+		if e != nil {
+			return nil, e
+		}
+		if value.Type != local.DeclaredType || value.FlowType != local.DeclaredType {
+			return nil, p.fail(node, "Query local assignment must preserve floating-point width")
+		}
+		return &arrayGenericExpression{Kind: "bindingAssignment", Type: local.DeclaredType, FlowType: local.DeclaredType, Range: *genericSpan(node), Operator: genericText(assignment.OperatorToken), OperatorRange: genericSpan(assignment.OperatorToken), Target: &arrayGenericTarget{Kind: "bindingTarget", Type: local.DeclaredType, Range: target.Range, Binding: local.ID}, Value: value}, nil
 	}
 	if target.Kind != "fieldAccess" || target.Receiver == nil {
 		return nil, p.fail(assignment.Left, "Query assignment requires original field target")
@@ -189,7 +215,7 @@ func (p *arrayGenericProjection) systemLoopAssignment(node *ast.Node, bindings m
 	if p.fields[original].Readonly {
 		return nil, p.fail(assignment.Left, "component field is readonly")
 	}
-	value, e := p.systemLoopExpression(assignment.Right, bindings, params, depth+1)
+	value, e := p.systemLoopExpression(assignment.Right, bindings, params, locals, depth+1, target.Type)
 	if e != nil {
 		return nil, e
 	}

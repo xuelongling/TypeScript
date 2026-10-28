@@ -14,7 +14,7 @@ import (
 func systemScalarRequest38g(t *testing.T) request {
 	t.Helper()
 	r := systemRequest38c(t)
-	source, e := os.ReadFile("testdata/system-query-v5/scalar-helper.ts")
+	source, e := os.ReadFile("testdata/system-query-v6/scalar-helper.ts")
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -34,7 +34,7 @@ func systemScalarRun38g(t *testing.T, r request, name string) (systemQueryPackag
 		}
 	}
 	var output bytes.Buffer
-	if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v5"}, bytes.NewReader(raw), &output); e != nil {
+	if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v6"}, bytes.NewReader(raw), &output); e != nil {
 		return systemQueryPackage{}, e, output.Len()
 	}
 	var packet systemQueryPackage
@@ -56,7 +56,7 @@ func TestSystemQueryScalarHelperPublic38g(t *testing.T) {
 			if name == "imported" {
 				r.Files[0].Content = strings.Replace(r.Files[0].Content, "function scaled(v:f32,dt:f32):f32{return v*dt;}\n", "", 1)
 				r.Files[0].Content = "import {scaled as gain} from './helpers';\n" + strings.Replace(r.Files[0].Content, "scaled(v.x, dt)", "gain(v.x, dt)", 1)
-				helper, e := os.ReadFile("testdata/system-query-v5/scalar-imported.ts")
+				helper, e := os.ReadFile("testdata/system-query-v6/scalar-imported.ts")
 				if e != nil {
 					t.Fatal(e)
 				}
@@ -92,7 +92,7 @@ func TestSystemQueryScalarHelperPublic38g(t *testing.T) {
 					t.Fatal("call selected signature differs")
 				}
 			}
-			t.Logf("actual whole publicv5 helpers=%d files=%d nodes=%d", len(packet.Payload.ScalarHelpers), len(packet.Payload.Program.Files), len(packet.Payload.Nodes))
+			t.Logf("actual whole publicv6 helpers=%d files=%d nodes=%d", len(packet.Payload.ScalarHelpers), len(packet.Payload.Program.Files), len(packet.Payload.Nodes))
 		})
 	}
 }
@@ -109,7 +109,7 @@ func TestSystemQueryScalarHelperNegatives38g(t *testing.T) {
 				expected = "original loop binding or f32/f64 parameter"
 			case "global-mutation":
 				replacement = "let global:f32=1;function scaled(v:f32,dt:f32):f32{global+=v;return v*dt;}"
-				expected = "one original pure scalar return"
+				expected = "original loop binding or f32/f64 parameter"
 			case "reference-parameter":
 				replacement = "function scaled(v:Position,dt:f32):f32{return v.x*dt;}"
 				r.Files[0].Content = strings.Replace(r.Files[0].Content, "scaled(v.x, dt)", "scaled(p, dt)", 1)
@@ -119,7 +119,7 @@ func TestSystemQueryScalarHelperNegatives38g(t *testing.T) {
 				expected = "native f32/f64 annotation"
 			case "mixed-return-width":
 				replacement = "function scaled(v:f32,dt:f32):f64{return v*dt;}"
-				expected = "return must preserve declared f32/f64 type"
+				expected = "Query helper return width differs"
 			case "indirect":
 				replacement = original + "const redirect=scaled;"
 				r.Files[0].Content = strings.Replace(r.Files[0].Content, "scaled(v.x, dt)", "redirect(v.x, dt)", 1)
@@ -129,7 +129,7 @@ func TestSystemQueryScalarHelperNegatives38g(t *testing.T) {
 				expected = "direct Query component field access"
 			case "throw":
 				replacement = "function scaled(v:f32,dt:f32):f32{throw v;}"
-				expected = "one original pure scalar return"
+				expected = "straight-line floating-point local statements"
 			case "recursion":
 				replacement = "function scaled(v:f32,dt:f32):f32{return scaled(v,dt);}"
 				expected = "recursive Query scalar helper graph"

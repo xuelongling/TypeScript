@@ -101,7 +101,7 @@ func TestSystemQueryLoopPublicFacts38d(t *testing.T) {
 			}
 			raw := systemPublicRequest38c(t, r)
 			var out bytes.Buffer
-			if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v5"}, bytes.NewReader(raw), &out); e != nil {
+			if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v6"}, bytes.NewReader(raw), &out); e != nil {
 				t.Fatal(e)
 			}
 			var packet systemQueryPackage
@@ -162,7 +162,7 @@ func TestSystemQueryLoopBoundary38d(t *testing.T) {
 			}
 			raw := systemPublicRequest38c(t, r)
 			var out bytes.Buffer
-			e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v5"}, bytes.NewReader(raw), &out)
+			e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v6"}, bytes.NewReader(raw), &out)
 			if e == nil || out.Len() != 0 {
 				t.Fatal("invalid loop emitted facts", e, out.Len())
 			}

@@ -31,9 +31,9 @@ func TestSystemQueryF64Addition38n(t *testing.T) {
 	}
 	packet, e, partial := systemScalarRun38g(t, r, "f64-add")
 	if e != nil {
-		t.Fatal("public v5 f64 Query capability missing", e, partial)
+		t.Fatal("public v6 f64 Query capability missing", e, partial)
 	}
-	if packet.Version != 5 || len(packet.Payload.Program.Files) != len(r.Files) || len(packet.Payload.Systems) != 1 || len(packet.Payload.ScalarHelpers) != 0 {
+	if packet.Version != 6 || len(packet.Payload.Program.Files) != len(r.Files) || len(packet.Payload.Systems) != 1 || len(packet.Payload.ScalarHelpers) != 0 {
 		t.Fatal("whole original Program or reachable helper inventory differs")
 	}
 	for _, file := range r.Files {
@@ -59,7 +59,7 @@ func TestSystemQueryF64Addition38n(t *testing.T) {
 	if value.Range != (span{start, start + len(expression)}) || value.OperatorRange == nil || *value.OperatorRange != (span{start + 4, start + 6}) || value.Target.Range != (span{start, start + 3}) {
 		t.Fatal("original UTF16 assignment/operator/target anchors differ", value)
 	}
-	t.Logf("actual complete publicv5 f64 files=%d nodes=%d helpers=%d officialDiagnostics0", len(packet.Payload.Program.Files), len(packet.Payload.Nodes), len(packet.Payload.ScalarHelpers))
+	t.Logf("actual complete publicv6 f64 files=%d nodes=%d helpers=%d officialDiagnostics0", len(packet.Payload.Program.Files), len(packet.Payload.Nodes), len(packet.Payload.ScalarHelpers))
 }
 
 func TestSystemQueryF64Remaining38n(t *testing.T) {
@@ -88,9 +88,9 @@ func TestSystemQueryF64Remaining38n(t *testing.T) {
 			}
 			packet, e, partial := systemScalarRun38g(t, r, c.name)
 			if e != nil {
-				t.Fatal("public v5 same-width Query rejected", e, partial)
+				t.Fatal("public v6 same-width Query rejected", e, partial)
 			}
-			if packet.Version != 5 || len(packet.Payload.Program.Files) != len(r.Files) || len(packet.Payload.ScalarHelpers) != 0 || len(packet.Payload.Systems) != 1 || !strings.Contains(packet.Payload.Program.Files[0].Content, "class Box") || !strings.Contains(packet.Payload.Program.Files[0].Content, "function unused(v:i32)") {
+			if packet.Version != 6 || len(packet.Payload.Program.Files) != len(r.Files) || len(packet.Payload.ScalarHelpers) != 0 || len(packet.Payload.Systems) != 1 || !strings.Contains(packet.Payload.Program.Files[0].Content, "class Box") || !strings.Contains(packet.Payload.Program.Files[0].Content, "function unused(v:i32)") {
 				t.Fatal("whole original Source or selected helper inventory differs")
 			}
 			system := packet.Payload.Systems[0]
@@ -125,7 +125,7 @@ func TestSystemQueryF64Remaining38n(t *testing.T) {
 			if c.name == "independent-widths" && (len(system.Parameters) != 3 || system.Parameters[1].LogicalType != "f64" || system.Parameters[2].LogicalType != "f32" || loop.Statements[1].Value.Type != "f32" || loop.Statements[1].Value.Value.Right.Binding != system.Parameters[2].Binding.ID) {
 				t.Fatal("independent f32 and f64 fields/parameters were globally coerced")
 			}
-			t.Logf("actual complete publicv5 name=%s files=%d nodes=%d sameWidth=f64", c.name, len(packet.Payload.Program.Files), len(packet.Payload.Nodes))
+			t.Logf("actual complete publicv6 name=%s files=%d nodes=%d sameWidth=f64", c.name, len(packet.Payload.Program.Files), len(packet.Payload.Nodes))
 		})
 	}
 }
