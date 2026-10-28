@@ -87,14 +87,13 @@ func scalarParameterRequest19m(t *testing.T, source []byte) []byte {
 	return append(canonical, '\n')
 }
 
-// Scalar incoming initialization does not make reference/union parameters legal
+// Scalar incoming initialization does not make union parameters legal
 // closure captures. These complete Programs remain checker-valid.
 func TestCommonProgramScalarParameterBoundary19m(t *testing.T) {
 	for _, sample := range []struct {
 		name, sha string
 		bytes     int
 	}{
-		{name: "reference-parameter", sha: "9f19e8d23ec70b7db461c5011ae3c1fdf16de473018f5f7ebdf4983733a6ef6e", bytes: 2303},
 		{name: "union-parameter", sha: "57825f630aa81016c1af240571904826f5607f07c90b7dfb782ed3167d74ca37", bytes: 2317},
 	} {
 		t.Run(sample.name, func(t *testing.T) {

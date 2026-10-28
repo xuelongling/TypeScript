@@ -1,0 +1,172 @@
+[
+  {
+    "name": "local-const",
+    "sha": "39faa8918e4f6c5c9eccb4ddd1a09e6b624d5b45a328664063707e9e5b6fb6ad",
+    "failure": false
+  },
+  {
+    "name": "local-let",
+    "sha": "23e1b01e972a9a7efef6b14cbbe36b1f5c84bb14e51109f21787c62a8c7b24b8",
+    "failure": false
+  },
+  {
+    "name": "owner-write",
+    "sha": "6d53aaf9844d6b7e54ba8c5dde86345debf794f065d2a4b3cffc01efd63e30c6",
+    "failure": false
+  },
+  {
+    "name": "sibling-write",
+    "sha": "b4e208158236e8a664493cf60e918813226a70c352febf4376db9a8bfde77ff8",
+    "failure": false
+  },
+  {
+    "name": "sibling-early-write",
+    "sha": "df374691f4687c303235c46293c3c20ad0bbe4c1d0e8408cccb8161151a340b0",
+    "failure": false
+  },
+  {
+    "name": "parameter",
+    "sha": "7b057ba56f71e9d7b5ac88377fd3bb1278907763ce7fb1a236dd9da9e494f347",
+    "failure": false
+  },
+  {
+    "name": "ancestor",
+    "sha": "44ec7c7d7c2154155119f004f795d1c453335642faa7c5fa4d66c2453f27c4fb",
+    "failure": false
+  },
+  {
+    "name": "shadow",
+    "sha": "e1e7330ee2882c6930896d80d81c8816981cce85033c7f1b436b229740413b70",
+    "failure": false
+  },
+  {
+    "name": "alias-field-write",
+    "sha": "a7b1e6055de21f3e86a5df60f660714f17cd54b443701d4122f18308cfbb24ee",
+    "failure": false
+  },
+  {
+    "name": "inheritance",
+    "sha": "e6be4ef05f41fda84ad47ed1e40e287a3f713c1554fefe4d99f68eca45721403",
+    "failure": false
+  },
+  {
+    "name": "ancestor-rebind",
+    "sha": "b8ecfd01347dd4575da98f48b62e706f94ca8a703f89d061b697dd89f3855eac",
+    "failure": false
+  },
+  {
+    "name": "alias-type",
+    "sha": "4b35d862065f81356b824aca5dd7f4b5608522bde77ae3281b2739da50a7dbf4",
+    "failure": false
+  },
+  {
+    "name": "parameter-rebind",
+    "sha": "60704166d3efc3b20c64b996b866e30889a82fb4e540207ac3a27534ea7ad681",
+    "failure": false
+  },
+  {
+    "name": "const-field-write",
+    "sha": "475a90148d2ff8307ddacdd55c00bdf2a8bc11bb0fd42bc5bd7ba889dfea7b6d",
+    "failure": false
+  },
+  {
+    "name": "array-span-readonly",
+    "sha": "b9172317d84a6eacf9d40b7b57d2856f82c616ef4acd3fe197b09e1df326f929",
+    "failure": false
+  },
+  {
+    "name": "owner-resize",
+    "sha": "a69efbc52017f3ada7631b3b5258c208b73a4f9fd7842daaf4ac1258b3d04bae",
+    "failure": false
+  },
+  {
+    "name": "slot-replaced",
+    "sha": "efa4b8b1f297caaa4e965b96660ba5297adc94c1a26a026aa6228029e6c9b540",
+    "failure": false
+  },
+  {
+    "name": "uninitialized",
+    "sha": "d3114e195dda680a30a501b9a066f2f47dc8ab6368af4473cd2a1d4e5d6f8636",
+    "failure": true
+  },
+  {
+    "name": "const-write",
+    "sha": "18573f9fd46b4311f09bc4e94588aa184c43f31e88fe76695bbec2819da8c0f4",
+    "failure": true
+  },
+  {
+    "name": "wrong-class",
+    "sha": "f107f39f1af6754f58d8a8b4195aca1448bb5406c90ed6536e8e83703f06b1c9",
+    "failure": true
+  },
+  {
+    "name": "value-local",
+    "sha": "ff7986f3783217f336a10db02bff1c39aa46e5a2dc0539f4c2c8c471afeab4ab",
+    "failure": true
+  },
+  {
+    "name": "null-parameter",
+    "sha": "f98105edc11fd80110e7ae0192c812deb07aa1e828d670f3921f1581b5d4a0c1",
+    "failure": true
+  },
+  {
+    "name": "block-local",
+    "sha": "59991f4e0ac30657df1a9f989381beabfb5de2f99a357f7b5d361008f710fa26",
+    "failure": true
+  },
+  {
+    "name": "named-import",
+    "sha": "8791821816cf3ffd2feabccd3796ad909c526c7102e086751ab59035933ec6a3",
+    "failure": false
+  },
+  {
+    "name": "exported-entry",
+    "sha": "dcb238c29c3178b202301bcf2049d4730ada05c6ffe555b544980125e8449c5e",
+    "failure": false
+  },
+  {
+    "name": "mutable-span-field",
+    "sha": "84b659d651acac5149b641a18861e15da2ccf17cc58e4b2559682dbdb5aad500",
+    "failure": true
+  },
+  {
+    "name": "array-span-inherited",
+    "sha": "fff12a36961a9f8302c0735d9639e0fe95d352f36dab05ba0a2fb9da3b2d16d2",
+    "failure": false
+  },
+  {
+    "name": "array-span-writable-field",
+    "sha": "9890c6dc30a6cc77a8b9e73dd328373cb2d03b884cbb52de0e5c7f7dfe3dc30f",
+    "failure": false
+  },
+  {
+    "name": "inherited-throw",
+    "sha": "0e3b0f05088fbd9965c8a30363180b643661364ad325d795318a5dd10a118ddc",
+    "failure": false
+  },
+  {
+    "name": "branch-owner-mismatch",
+    "sha": "7863c9b09e7592180a063d6316949b036bc836f03a6eec4065c3b9a3122820e9",
+    "failure": false
+  },
+  {
+    "name": "constructor-uninitialized",
+    "sha": "f9004004af982ea4614fa430d7e85082286c054615ccdb5be619f601ffd9aa6c",
+    "failure": true
+  },
+  {
+    "name": "method-sequence",
+    "sha": "381fb90b8d32c873085a154adaca6531d3731cd53602de54ffbf64a7cb7ec9c0",
+    "failure": false
+  },
+  {
+    "name": "method-language",
+    "sha": "025a9d400b512053e420f83e098e6f20fac45615aa0fad0d87c210bb90cf20d6",
+    "failure": false
+  },
+  {
+    "name": "capture-language",
+    "sha": "115bb4c0746a51f26296b3cb56359948ae2c3a061406d42b9c677cb27e5d908b",
+    "failure": false
+  }
+]

@@ -114,13 +114,13 @@ func (p *arrayGenericProjection) commonFunctionComplete(node *ast.Node, fn *arra
 			typeKind := p.types[b.DeclaredType].Kind
 			// These parameters already have incoming values. Keep their original
 			// binding identity; callable types do not prove targets or lifetime.
-			if b.Kind == "parameter" && (typeKind == "scalar" || typeKind == "string" || typeKind == "function" || typeKind == "readSpan" || typeKind == "array") {
+			if b.Kind == "parameter" && (typeKind == "scalar" || typeKind == "string" || typeKind == "function" || typeKind == "readSpan" || typeKind == "array" || typeKind == "reference") {
 				if decl.Kind != ast.KindParameter || owner == nil || decl.Parent != owner {
-					return p.fail(current, "captured scalar/String/function/Array/ReadSpan parameter must retain its original function declaration")
+					return p.fail(current, "captured scalar/String/function/Array/ReadSpan/reference parameter must retain its original function declaration")
 				}
 			} else {
-				if b.Kind != "local" || typeKind != "scalar" && typeKind != "string" && typeKind != "function" && typeKind != "readSpan" && typeKind != "array" {
-					return p.fail(current, "named closure capture requires initialized scalar/String/function/Array/ReadSpan local or direct scalar/String/function/Array/ReadSpan parameter")
+				if b.Kind != "local" || typeKind != "scalar" && typeKind != "string" && typeKind != "function" && typeKind != "readSpan" && typeKind != "array" && typeKind != "reference" {
+					return p.fail(current, "named closure capture requires initialized scalar/String/function/Array/ReadSpan/reference local or direct scalar/String/function/Array/ReadSpan/reference parameter")
 				}
 				if decl.Kind != ast.KindVariableDeclaration || decl.AsVariableDeclaration().Initializer == nil || owner == nil || decl.Parent == nil || decl.Parent.Parent == nil || decl.Parent.Parent.Parent != owner.Body() {
 					return p.fail(current, "captured local must be initialized in its original function-body scope")
