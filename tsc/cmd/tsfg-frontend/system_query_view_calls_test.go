@@ -12,7 +12,7 @@ import (
 func systemViewRequest38h(t *testing.T) request {
 	t.Helper()
 	r := systemRequest38c(t)
-	source, e := os.ReadFile("testdata/system-query-v4/view-helper.ts")
+	source, e := os.ReadFile("testdata/system-query-v5/view-helper.ts")
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -102,7 +102,7 @@ func TestSystemQueryViewHelperNegatives38h(t *testing.T) {
 				expected = "original parameter and component"
 			case "plain-formal":
 				r.Files[0].Content = strings.Replace(r.Files[0].Content, "p:Write<Position>", "p:Position", 1)
-				expected = "native f32 annotation or owned Read/Write view"
+				expected = "native f32/f64 annotation or owned Read/Write view"
 			case "foreign-wrapper":
 				r.Files[0].Content = "interface Read<T> {readonly x:f32;readonly y:f32;}\n" + r.Files[0].Content
 				expected = "owned Read or Write"
@@ -185,7 +185,7 @@ func TestSystemQueryViewOldVersion38h(t *testing.T) {
 		t.Fatal(e)
 	}
 	old = append(old, '\n')
-	if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v4"}, bytes.NewReader(old), &out); e == nil || out.Len() != 0 {
+	if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v5"}, bytes.NewReader(old), &out); e == nil || out.Len() != 0 {
 		t.Fatal("retired private version was accepted", e, out.Len())
 	}
 }

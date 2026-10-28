@@ -24,9 +24,9 @@ func TestSystemQueryFieldCompound38m(t *testing.T) {
 	}
 	packet, e, partial := systemScalarRun38g(t, r, "compound-multiply")
 	if e != nil {
-		t.Fatal("public v4 field compound rejected", e, partial)
+		t.Fatal("public v5 field compound rejected", e, partial)
 	}
-	if packet.Version != 4 || len(packet.Payload.Program.Files) != len(r.Files) || len(packet.Payload.ScalarHelpers) != 3 || len(packet.Payload.Systems) != 1 {
+	if packet.Version != 5 || len(packet.Payload.Program.Files) != len(r.Files) || len(packet.Payload.ScalarHelpers) != 3 || len(packet.Payload.Systems) != 1 {
 		t.Fatal("complete original Program or reachable helper inventory differs")
 	}
 	for _, file := range r.Files {
@@ -52,7 +52,7 @@ func TestSystemQueryFieldCompound38m(t *testing.T) {
 	if arguments[0].Binding != loop.Bindings[0].Declaration.ID || arguments[1].Binding != loop.Bindings[1].Declaration.ID || arguments[2].Binding != packet.Payload.Systems[0].Parameters[1].Binding.ID {
 		t.Fatal("ordered original helper arguments differ")
 	}
-	t.Logf("actual publicv4 whole files=%d nodes=%d helpers=%d compound=%s originalUnusedAndBox=true", len(packet.Payload.Program.Files), len(packet.Payload.Nodes), len(packet.Payload.ScalarHelpers), value.Operator)
+	t.Logf("actual publicv5 whole files=%d nodes=%d helpers=%d compound=%s originalUnusedAndBox=true", len(packet.Payload.Program.Files), len(packet.Payload.Nodes), len(packet.Payload.ScalarHelpers), value.Operator)
 }
 
 func TestSystemQueryRemainingFieldCompounds38m(t *testing.T) {
@@ -90,9 +90,9 @@ func TestSystemQueryRemainingFieldCompounds38m(t *testing.T) {
 			}
 			packet, e, partial := systemScalarRun38g(t, r, c.name)
 			if e != nil {
-				t.Fatal("public v4 compound rejected", e, partial)
+				t.Fatal("public v5 compound rejected", e, partial)
 			}
-			if packet.Version != 4 || len(packet.Payload.Program.Files) != len(r.Files) || len(packet.Payload.ScalarHelpers) != expectedHelpers || len(packet.Payload.Systems) != 1 {
+			if packet.Version != 5 || len(packet.Payload.Program.Files) != len(r.Files) || len(packet.Payload.ScalarHelpers) != expectedHelpers || len(packet.Payload.Systems) != 1 {
 				t.Fatal("complete original Program or selected helper inventory differs")
 			}
 			for _, file := range r.Files {
@@ -127,7 +127,7 @@ func TestSystemQueryRemainingFieldCompounds38m(t *testing.T) {
 					t.Fatal("original nested RHS assignment/order structure lost")
 				}
 			}
-			t.Logf("actual complete publicv4 name=%s files=%d nodes=%d helpers=%d operator=%s", c.name, len(packet.Payload.Program.Files), len(packet.Payload.Nodes), len(packet.Payload.ScalarHelpers), c.operator)
+			t.Logf("actual complete publicv5 name=%s files=%d nodes=%d helpers=%d operator=%s", c.name, len(packet.Payload.Program.Files), len(packet.Payload.Nodes), len(packet.Payload.ScalarHelpers), c.operator)
 		})
 	}
 }

@@ -14,7 +14,7 @@ import (
 func systemScalarRequest38g(t *testing.T) request {
 	t.Helper()
 	r := systemRequest38c(t)
-	source, e := os.ReadFile("testdata/system-query-v4/scalar-helper.ts")
+	source, e := os.ReadFile("testdata/system-query-v5/scalar-helper.ts")
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -34,7 +34,7 @@ func systemScalarRun38g(t *testing.T, r request, name string) (systemQueryPackag
 		}
 	}
 	var output bytes.Buffer
-	if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v4"}, bytes.NewReader(raw), &output); e != nil {
+	if e := runFrontendCommand(t.Context(), []string{"--system-query-facts-io-v5"}, bytes.NewReader(raw), &output); e != nil {
 		return systemQueryPackage{}, e, output.Len()
 	}
 	var packet systemQueryPackage
@@ -56,7 +56,7 @@ func TestSystemQueryScalarHelperPublic38g(t *testing.T) {
 			if name == "imported" {
 				r.Files[0].Content = strings.Replace(r.Files[0].Content, "function scaled(v:f32,dt:f32):f32{return v*dt;}\n", "", 1)
 				r.Files[0].Content = "import {scaled as gain} from './helpers';\n" + strings.Replace(r.Files[0].Content, "scaled(v.x, dt)", "gain(v.x, dt)", 1)
-				helper, e := os.ReadFile("testdata/system-query-v4/scalar-imported.ts")
+				helper, e := os.ReadFile("testdata/system-query-v5/scalar-imported.ts")
 				if e != nil {
 					t.Fatal(e)
 				}
@@ -92,12 +92,12 @@ func TestSystemQueryScalarHelperPublic38g(t *testing.T) {
 					t.Fatal("call selected signature differs")
 				}
 			}
-			t.Logf("actual whole publicv4 helpers=%d files=%d nodes=%d", len(packet.Payload.ScalarHelpers), len(packet.Payload.Program.Files), len(packet.Payload.Nodes))
+			t.Logf("actual whole publicv5 helpers=%d files=%d nodes=%d", len(packet.Payload.ScalarHelpers), len(packet.Payload.Program.Files), len(packet.Payload.Nodes))
 		})
 	}
 }
 func TestSystemQueryScalarHelperNegatives38g(t *testing.T) {
-	for _, name := range []string{"captured-global", "global-mutation", "reference-parameter", "i32-parameter", "f64-return", "indirect", "allocation", "throw", "recursion", "cached-depth33", "inventory65", "arguments33"} {
+	for _, name := range []string{"captured-global", "global-mutation", "reference-parameter", "i32-parameter", "mixed-return-width", "indirect", "allocation", "throw", "recursion", "cached-depth33", "inventory65", "arguments33"} {
 		t.Run(name, func(t *testing.T) {
 			r := systemScalarRequest38g(t)
 			original := "function scaled(v:f32,dt:f32):f32{return v*dt;}"
@@ -113,13 +113,13 @@ func TestSystemQueryScalarHelperNegatives38g(t *testing.T) {
 			case "reference-parameter":
 				replacement = "function scaled(v:Position,dt:f32):f32{return v.x*dt;}"
 				r.Files[0].Content = strings.Replace(r.Files[0].Content, "scaled(v.x, dt)", "scaled(p, dt)", 1)
-				expected = "native f32 annotation"
+				expected = "native f32/f64 annotation"
 			case "i32-parameter":
 				replacement = "function scaled(v:i32,dt:f32):f32{return v*dt;}"
-				expected = "native f32 annotation"
-			case "f64-return":
+				expected = "native f32/f64 annotation"
+			case "mixed-return-width":
 				replacement = "function scaled(v:f32,dt:f32):f64{return v*dt;}"
-				expected = "native f32 return"
+				expected = "return must preserve declared f32/f64 type"
 			case "indirect":
 				replacement = original + "const redirect=scaled;"
 				r.Files[0].Content = strings.Replace(r.Files[0].Content, "scaled(v.x, dt)", "redirect(v.x, dt)", 1)

@@ -47,8 +47,8 @@ func (p *arrayGenericProjection) systemScalarHelper(node *ast.Node) (systemQuery
 	if e != nil {
 		return empty, 0, e
 	}
-	if returns != "f32" || len(declaration.Parameters.Nodes) > 32 || !p.check.IsTypeAssignableTo(p.check.GetReturnTypeOfSignature(signatures[0]), p.actual["f32"]) {
-		return empty, 0, p.fail(node, "scalar helper requires native f32 return and at most32 scalar parameters")
+	if returns != "f32" && returns != "f64" || len(declaration.Parameters.Nodes) > 32 || !p.check.IsTypeAssignableTo(p.check.GetReturnTypeOfSignature(signatures[0]), p.actual[returns]) {
+		return empty, 0, p.fail(node, "scalar helper requires native f32/f64 return and at most32 scalar parameters")
 	}
 	body := declaration.Body
 	if body == nil || body.Kind != ast.KindBlock {
@@ -60,7 +60,7 @@ func (p *arrayGenericProjection) systemScalarHelper(node *ast.Node) (systemQuery
 	statement := body.AsBlock().Statements.Nodes[0]
 	expression := statement.AsReturnStatement().Expression
 	if expression == nil {
-		return empty, 0, p.fail(statement, "scalar helper requires an original f32 return value")
+		return empty, 0, p.fail(statement, "scalar helper requires an original f32/f64 return value")
 	}
 	parameters := []systemQueryParameter{}
 	logical := []string{}
@@ -97,8 +97,8 @@ func (p *arrayGenericProjection) systemScalarHelper(node *ast.Node) (systemQuery
 			if e != nil {
 				return empty, 0, e
 			}
-			if typ != "f32" {
-				return empty, 0, p.fail(parameter, "scalar helper parameter must retain native f32 annotation or owned Read/Write view")
+			if typ != "f32" && typ != "f64" {
+				return empty, 0, p.fail(parameter, "scalar helper parameter must retain native f32/f64 annotation or owned Read/Write view")
 			}
 			row.LogicalType = typ
 		}
@@ -124,14 +124,14 @@ func (p *arrayGenericProjection) systemScalarHelper(node *ast.Node) (systemQuery
 	if e != nil {
 		return empty, 0, e
 	}
-	if value.Type != "f32" || value.FlowType != "f32" {
-		return empty, 0, p.fail(expression, "scalar helper return must preserve f32")
+	if value.Type != returns || value.FlowType != returns {
+		return empty, 0, p.fail(expression, "scalar helper return must preserve declared f32/f64 type")
 	}
 	id, e := genericNodeID("tsfg.array-facts.function.v8\x00", node)
 	if e != nil {
 		return empty, 0, e
 	}
-	helper := systemQueryScalarHelper{ID: id, Declaration: systemOrigin(node), Signature: arrayGenericSignature{ID: signatureID, SourcePath: ast.GetSourceFileOfNode(node).FileName(), DeclarationRange: *genericSpan(node), Parameters: logical, ReturnType: "f32"}, Parameters: parameters, ReturnType: "f32", ReturnAnnotationRange: *genericSpan(declaration.Type), BodyRange: *genericSpan(body), ReturnRange: *genericSpan(statement), Value: value}
+	helper := systemQueryScalarHelper{ID: id, Declaration: systemOrigin(node), Signature: arrayGenericSignature{ID: signatureID, SourcePath: ast.GetSourceFileOfNode(node).FileName(), DeclarationRange: *genericSpan(node), Parameters: logical, ReturnType: returns}, Parameters: parameters, ReturnType: returns, ReturnAnnotationRange: *genericSpan(declaration.Type), BodyRange: *genericSpan(body), ReturnRange: *genericSpan(statement), Value: value}
 	height := 1 + state.frames[len(state.frames)-1]
 	state.helpers[node] = helper
 	state.heights[node] = height
@@ -196,8 +196,8 @@ func (p *arrayGenericProjection) systemScalarCall(node *ast.Node, bindings map[*
 		}
 		values = append(values, *value)
 	}
-	if !p.check.IsTypeAssignableTo(p.check.GetReturnTypeOfSignature(selected), p.actual["f32"]) {
-		return nil, p.fail(node, "scalar call selected return type differs from f32")
+	if !p.check.IsTypeAssignableTo(p.check.GetReturnTypeOfSignature(selected), p.actual[helper.ReturnType]) {
+		return nil, p.fail(node, "scalar call selected return type differs from original f32/f64 annotation")
 	}
-	return &arrayGenericExpression{Kind: "call", Type: "f32", FlowType: "f32", Range: *genericSpan(node), Callee: helper.ID, CalleeRange: genericSpan(call.Expression), Signature: &helper.Signature, Arguments: &values}, nil
+	return &arrayGenericExpression{Kind: "call", Type: helper.ReturnType, FlowType: helper.ReturnType, Range: *genericSpan(node), Callee: helper.ID, CalleeRange: genericSpan(call.Expression), Signature: &helper.Signature, Arguments: &values}, nil
 }
