@@ -65,11 +65,11 @@ func mappedCallJSON14(t *testing.T, value any) []byte {
 
 func mappedCallFixture14(t *testing.T) mappedCallOracle14 {
 	t.Helper()
-	data, err := os.ReadFile("testdata/generic-mapped-call/first-whole-oracle.json")
+	data, err := os.ReadFile("testdata/generic-mapped-call/first-whole-oracle-v7.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if mappedCallHash14(string(data)) != "fe290a59120a86fe916793d0cf4bd3f9305a0c121abec1fcb6100f989922ba61" {
+	if mappedCallHash14(string(data)) != "5a780b34cadd55421ca418e80a7764e0359b53bedf180fee4d85be6d092d2c2f" {
 		t.Fatal("independent mapped-call whole fixture changed")
 	}
 	var f mappedCallOracle14

@@ -53,9 +53,9 @@ func TestOwnedGenericMappedCallColdInstances(t *testing.T) {
 	if err := json.Unmarshal(data, &wire); err != nil {
 		t.Fatal(err)
 	}
-	if wire.Version != 6 || wire.Family != "tsfg-owned-generic-package" ||
-		wire.SchemaHash != "c6b6baa76be25f6ac4f619867273208c9adb595030f12e7c54a200ed8c677789" ||
-		wire.Payload.SemanticProfile != "tsfg-owned-scalar-generics-host-v6" {
+	if wire.Version != 7 || wire.Family != "tsfg-owned-generic-package" ||
+		wire.SchemaHash != "2e9d1e07016b6f8ce5f48bf8a3508491eaf1ce7e6fd43bf497c133f65c8dff94" ||
+		wire.Payload.SemanticProfile != "tsfg-owned-scalar-generics-host-v7" {
 		t.Fatal("successful mapped-call export did not use the real private-v6 contract")
 	}
 	if !bytes.Equal(data, mappedCallJSON14(t, f.Package)) {
@@ -91,12 +91,12 @@ func TestOwnedGenericMappedCallColdInstances(t *testing.T) {
 		t.Fatal("cold instantiation mutated actual package or original root requests")
 	}
 	record := mappedCallJSON14(t, map[string]any{"requests": requests, "result": facts})
-	t.Logf("TSFG_GENERIC_MAPPED_CALL_PACKAGE_V6 %s", base64.StdEncoding.EncodeToString(data))
-	t.Logf("TSFG_GENERIC_MAPPED_CALL_INSTANCE_V6 %s", base64.StdEncoding.EncodeToString(record))
+	t.Logf("TSFG_GENERIC_MAPPED_CALL_PACKAGE_V7 %s", base64.StdEncoding.EncodeToString(data))
+	t.Logf("TSFG_GENERIC_MAPPED_CALL_INSTANCE_V7 %s", base64.StdEncoding.EncodeToString(record))
 	for _, source := range []map[string]string{
 		{"path": f.Source.LogicalPath, "content": f.Source.SourceText, "digest": f.Source.SHA256},
 		{"path": f.Declaration.Path, "content": f.Declaration.Content, "digest": f.Declaration.SHA256},
 	} {
-		t.Logf("TSFG_GENERIC_MAPPED_CALL_ORIGINAL_V6 %s", base64.StdEncoding.EncodeToString(mappedCallJSON14(t, source)))
+		t.Logf("TSFG_GENERIC_MAPPED_CALL_ORIGINAL_V7 %s", base64.StdEncoding.EncodeToString(mappedCallJSON14(t, source)))
 	}
 }

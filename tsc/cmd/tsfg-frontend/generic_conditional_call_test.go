@@ -70,16 +70,16 @@ func TestOwnedGenericConditionalCallColdInstances(t *testing.T) {
 	// boundary test. These assertions follow export so version drift is not RED.
 	schema, err := hex.DecodeString(wire.SchemaHash)
 	if err != nil || len(schema) != 32 || wire.SchemaHash != strings.ToLower(wire.SchemaHash) ||
-		wire.Family != "tsfg-owned-generic-package" || wire.Version != 6 ||
-		wire.Payload.SemanticProfile != "tsfg-owned-scalar-generics-host-v6" ||
-		g.Semantics != "tsfg-owned-scalar-generics-host-v6" {
+		wire.Family != "tsfg-owned-generic-package" || wire.Version != 7 ||
+		wire.Payload.SemanticProfile != "tsfg-owned-scalar-generics-host-v7" ||
+		g.Semantics != "tsfg-owned-scalar-generics-host-v7" {
 		t.Fatal("conditional call was not versioned as a private6 owned package")
 	}
 	payload, err := genericPackageCanonical(wire.Payload)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if wire.PackageID != "sha256:"+genericTextDigest("tsfg-owned-generic-package/v6\n"+string(payload)) ||
+	if wire.PackageID != "sha256:"+genericTextDigest("tsfg-owned-generic-package/v7\n"+string(payload)) ||
 		wire.PackageID != "sha256:"+g.Digest || g.Package != "package:conditional-call" ||
 		g.Source.Path != "/original/main.ts" || g.Source.PositionUnit != "utf16" ||
 		g.Source.Digest != "0f7d41e4184bea4af390fd1e4671be1eee5847fc4fa092e95a39dbce55297fda" ||
@@ -153,7 +153,7 @@ func TestOwnedGenericConditionalCallColdInstances(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if facts.PackageID != wire.PackageID || facts.SemanticProfile != "tsfg-owned-scalar-generics-host-v6" ||
+	if facts.PackageID != wire.PackageID || facts.SemanticProfile != "tsfg-owned-scalar-generics-host-v7" ||
 		len(facts.Roots) != 2 || len(facts.Instances) != 4 || facts.Roots[0] == facts.Roots[1] {
 		t.Fatal("cold conditional calls lost two distinct roots or the exact four-instance closure")
 	}
@@ -167,7 +167,7 @@ func TestOwnedGenericConditionalCallColdInstances(t *testing.T) {
 		var leafKey string
 		for _, d := range []genericDefinition{leaf, route} {
 			identity, err := genericPackageCanonical(genericPackageInstanceIdentityDTO{Definition: d.Key, GraphDigest: g.Digest,
-				Scope: "package:conditional-call", SemanticProfile: "tsfg-owned-scalar-generics-host-v6", TypeArguments: requests[i].TypeArguments})
+				Scope: "package:conditional-call", SemanticProfile: "tsfg-owned-scalar-generics-host-v7", TypeArguments: requests[i].TypeArguments})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -226,13 +226,13 @@ func TestOwnedGenericConditionalCallColdInstances(t *testing.T) {
 	}
 	// Emit only actual public-seam bytes after all assertions. The instance
 	// record includes the exact requests and real official result together.
-	t.Logf("TSFG_GENERIC_CONDITIONAL_CALL_PACKAGE_V6 %s", base64.StdEncoding.EncodeToString(data))
-	t.Logf("TSFG_GENERIC_CONDITIONAL_CALL_INSTANCE_V6 %s", base64.StdEncoding.EncodeToString(fixture))
+	t.Logf("TSFG_GENERIC_CONDITIONAL_CALL_PACKAGE_V7 %s", base64.StdEncoding.EncodeToString(data))
+	t.Logf("TSFG_GENERIC_CONDITIONAL_CALL_INSTANCE_V7 %s", base64.StdEncoding.EncodeToString(fixture))
 	for _, original := range originals {
 		record, err := genericPackageCanonical(original)
 		if err != nil {
 			t.Fatal(err)
 		}
-		t.Logf("TSFG_GENERIC_CONDITIONAL_CALL_ORIGINAL_V6 %s", base64.StdEncoding.EncodeToString(record))
+		t.Logf("TSFG_GENERIC_CONDITIONAL_CALL_ORIGINAL_V7 %s", base64.StdEncoding.EncodeToString(record))
 	}
 }

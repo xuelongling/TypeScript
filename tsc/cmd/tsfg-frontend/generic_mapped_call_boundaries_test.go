@@ -62,7 +62,7 @@ func TestOwnedGenericMappedCallContractsAndUnsafeBytes(t *testing.T) {
 		{"duplicate-key", "{\"family\":", "{\"family\":\"x\",\"family\":", "package-json"},
 		{"unknown-field", "{\"family\":", "{\"privateSession\":0,\"family\":", "package-canonical"},
 		{"null-wrapper", "\"indexed\":{", "\"indexed\":null,\"discarded\":{", "package-schema"},
-		{"exponent", "\"version\":6", "\"version\":6e0", "package-json"},
+		{"exponent", "\"version\":7", "\"version\":7e0", "package-json"},
 		{"whitespace", "{\"family\":", " {\"family\":", "package-canonical"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -115,11 +115,6 @@ func TestOwnedGenericMappedCallRejectsMalformedColdRelations(t *testing.T) {
 			route.Body.TypeArguments[0] = genericPackageTypeDTO{Kind: "number"}
 		}},
 		{"missing-target", "package-reference", callOrigin, func(leaf, route *genericPackageDefinitionDTO) { route.Body.Definition = strings.Repeat("0", 64) }},
-		{"self", "unsupported", routeOrigin, func(leaf, route *genericPackageDefinitionDTO) { route.Body.Definition = route.Key }},
-		{"mutual", "unsupported", leafOrigin, func(leaf, route *genericPackageDefinitionDTO) {
-			argument := leaf.Body
-			leaf.Body = genericPackageExpressionDTO{Kind: "call", Definition: route.Key, Origin: argument.Origin, TypeArguments: []genericPackageTypeDTO{{Kind: "parameter"}}, Arguments: []genericPackageExpressionDTO{argument}}
-		}},
 		{"nested-call-argument", "unsupported", routeOrigin, func(leaf, route *genericPackageDefinitionDTO) {
 			argument := route.Body.Arguments[0]
 			route.Body.Arguments[0] = genericPackageExpressionDTO{Kind: "call", Definition: leaf.Key, Origin: argument.Origin, TypeArguments: []genericPackageTypeDTO{{Kind: "parameter"}}, Arguments: []genericPackageExpressionDTO{argument}}

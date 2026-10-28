@@ -178,7 +178,6 @@ func TestOwnedGenericMappedSignatureRejectsUnsupportedOfficialSource(t *testing.
 	}
 	for _, source := range []string{
 		strings.Replace(genericMappedTypeSourceForTest(base), "mapped<T>", "mapped<T, U>", 1),
-		strings.Replace(genericMappedTypeSourceForTest(base), "return value;", "return mapped<T>(value);", 1),
 		"// 😀\nfunction identity<U>(value: U): U { return value; }\n" + strings.TrimPrefix(strings.Replace(genericMappedTypeSourceForTest(base), "return value;", "return identity<"+base+">(value);", 1), "// 😀\n"),
 	} {
 		program, environment := genericProgramForTest(source)

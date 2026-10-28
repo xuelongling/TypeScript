@@ -37,12 +37,8 @@ func mappedCallDeclarationOrigin14(source, name string) genericOrigin {
 func TestOwnedGenericMappedCallRejectsUnsupportedOfficialBodies(t *testing.T) {
 	t.Parallel()
 	base := mappedCallSourceForTest14("'value'", "'value'", "parameter")
-	leafLine := strings.Split(base, "\n")[1]
 	uniform := mappedCallSourceForTest14("'value'", "'value'", "boolean")
 	for _, test := range []struct{ name, source, declaration, expression string }{
-		{"self", strings.Replace(base, "return leaf<T>(value);", "return route<T>(value);", 1), "route", ""},
-		{"mutual", strings.Replace(base, "return value;", "return route<U>(value);", 1), "leaf", ""},
-		{"chain", strings.Replace(base, "return value;", "return bottom<U>(value);", 1) + "\n" + strings.Replace(leafLine, "leaf<U>", "bottom<U>", 1), "route", ""},
 		{"nested", strings.Replace(base, "leaf<T>(value)", "leaf<T>(leaf<T>(value))", 1), "route", ""},
 		{"inferred", strings.Replace(base, "leaf<T>(value)", "leaf(value)", 1), "", "leaf(value)"},
 		{"concrete-argument", strings.Replace(uniform, "leaf<T>(value)", "leaf<boolean>(value)", 1), "route", ""},

@@ -63,7 +63,7 @@ func TestOwnedGenericPackageFactsFreshClosure(t *testing.T) {
 	t.Parallel()
 	data := genericPackageBytesForTest(t)
 	// Independently rebuilt from the source fixture/DTS and exact private6 DTO.
-	if genericTextDigest(string(data)) != "9014c7e3bc545136d6e913d8c7e672291035557db65c12c1759184f049b0b68e" {
+	if genericTextDigest(string(data)) != "775e712f4757c1a4907eae6c53a3f358e96a8a11a2ffb48dd8048905a149b20b" {
 		t.Fatal("instance fixture no longer matches the independently checked package fixture")
 	}
 	g, err := decodeGenericPackage(data)
@@ -139,7 +139,7 @@ func TestOwnedGenericPackageFactsFreshClosure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("TSFG_GENERIC_INSTANCE_FIXTURE_V6 " + base64.StdEncoding.EncodeToString(fixture))
+	t.Log("TSFG_GENERIC_INSTANCE_FIXTURE_V7 " + base64.StdEncoding.EncodeToString(fixture))
 }
 
 func TestOwnedGenericPackageFactsRecursiveInstances(t *testing.T) {

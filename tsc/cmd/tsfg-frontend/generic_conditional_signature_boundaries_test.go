@@ -70,9 +70,6 @@ func TestOwnedGenericConditionalSignatureRejectsOldAndMixedPackageClaims(t *test
 			t.Parallel()
 			wire := genericPackageWireForTest(t, data)
 			wire.PackageID = "sha256:" + genericPackageIdentity(domain, wire.Payload)
-			if strings.Contains(domain, "/v6") {
-				wire.PackageID = "sha256:" + strings.Repeat("0", 64)
-			}
 			bad, err := genericPackageCanonical(wire)
 			if err != nil {
 				t.Fatal(err)
@@ -301,7 +298,6 @@ func TestOwnedGenericConditionalSignatureRejectsUnsupportedOfficialSource(t *tes
 		{"different-branches", strings.ReplaceAll(genericConditionalSignatureSource, conditional, different), different, false},
 		{"two-type-parameters", strings.Replace(genericConditionalSignatureSource, "select<T>", "select<T, U>", 1), "", false},
 		{"two-value-parameters", strings.Replace(genericConditionalSignatureSource, "): T", ", other: number): T", 1), "", false},
-		{"recursive-call-body", strings.Replace(genericConditionalSignatureSource, "return value;", "return select<T>(value);", 1), "", false},
 		{"conditional-call-argument", "// 😀\nfunction identity<U>(value: U): U { return value; }\n" +
 			strings.TrimPrefix(strings.Replace(genericConditionalSignatureSource, "return value;", "return identity<"+conditional+">(value);", 1), "// 😀\n"), conditional, true},
 	} {

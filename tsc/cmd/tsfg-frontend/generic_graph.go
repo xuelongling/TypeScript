@@ -17,7 +17,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/scanner"
 )
 
-const genericSemantics = "tsfg-owned-scalar-generics-host-v6"
+const genericSemantics = "tsfg-owned-scalar-generics-host-v7"
 const genericDeclarationProfile = "minimal-scalars-v2"
 
 type genericOrigin struct {
@@ -228,9 +228,10 @@ func validateGenericIndexedType(t genericType, count int, origin genericOrigin) 
 	return nil
 }
 
-// Conditional and indexed signatures share this one-hop gate: both preserve
-// the complete owned syntax while scalar instantiation remains the checker's job.
-func genericOneHopCompoundCall(caller, callee genericDefinition) bool {
+// Validate one edge against its complete target signature. Every definition's
+// body is validated separately, so cycles require no recursive graph descent.
+// Scalar instantiation and body typing remain the official checker's job.
+func genericCompoundCall(caller, callee genericDefinition) bool {
 	call := caller.Body
 	if call.Kind != "call" || call.Parameter != 0 || len(call.TypeArguments) != 1 ||
 		call.TypeArguments[0] != (genericType{Kind: "parameter"}) || len(call.Arguments) != 1 ||
@@ -238,11 +239,9 @@ func genericOneHopCompoundCall(caller, callee genericDefinition) bool {
 		!reflect.DeepEqual(callee.Return, caller.Return) || !reflect.DeepEqual(callee.Parameters[0].Type, caller.Return) {
 		return false
 	}
-	argument, body := call.Arguments[0], callee.Body
+	argument := call.Arguments[0]
 	return argument.Kind == "parameter" && argument.Parameter == 0 && argument.Definition == "" &&
-		len(argument.TypeArguments) == 0 && len(argument.Arguments) == 0 &&
-		body.Kind == "parameter" && body.Parameter == 0 && body.Definition == "" &&
-		len(body.TypeArguments) == 0 && len(body.Arguments) == 0
+		len(argument.TypeArguments) == 0 && len(argument.Arguments) == 0
 }
 
 func (g genericGraph) validate() error {
@@ -306,9 +305,9 @@ func (g genericGraph) validate() error {
 			indexed = indexed || p.Type.Kind == "indexed"
 		}
 		if conditional || indexed {
-			kind, detail := "indexed", "mapped/indexed signature requires one type parameter, one value parameter and identical indexed types with a direct parameter return or one-hop generic call"
+			kind, detail := "indexed", "mapped/indexed signature requires one type parameter, one value parameter and identical indexed types with a direct parameter return or generic call"
 			if conditional {
-				kind, detail = "conditional", "conditional signature requires one type parameter, one value parameter and identical conditional types with a direct parameter return or one-hop generic call"
+				kind, detail = "conditional", "conditional signature requires one type parameter, one value parameter and identical conditional types with a direct parameter return or generic call"
 			}
 			if len(d.TypeParameters) != 1 || len(d.Parameters) != 1 || d.Return.Kind != kind ||
 				!reflect.DeepEqual(d.Parameters[0].Type, d.Return) ||
@@ -364,8 +363,8 @@ func (g genericGraph) validate() error {
 				if !ok || len(e.TypeArguments) != len(target.TypeParameters) || len(e.Arguments) != len(target.Parameters) {
 					return genericError("package-reference", "dangling definition or call arity", e.Origin)
 				}
-				if (d.Return.Kind == "conditional" || d.Return.Kind == "indexed") && (depth != 0 || !genericOneHopCompoundCall(d, target)) {
-					return genericError("unsupported", d.Return.Kind+" generic call requires bound parameter0 type/value arguments and a matching direct-return "+d.Return.Kind+" callee", d.Origin)
+				if (d.Return.Kind == "conditional" || d.Return.Kind == "indexed") && (depth != 0 || !genericCompoundCall(d, target)) {
+					return genericError("unsupported", d.Return.Kind+" generic call requires bound parameter0 type/value arguments and a matching "+d.Return.Kind+" callee signature", d.Origin)
 				}
 				for _, p := range d.Parameters {
 					if p.Name == target.Name {

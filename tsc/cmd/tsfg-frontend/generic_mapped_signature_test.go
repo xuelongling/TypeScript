@@ -62,9 +62,9 @@ func TestOwnedGenericPackageMappedSignatureColdInstances(t *testing.T) {
 		t.Fatalf("mapped-signature package changed on cold canonical roundtrip: %v", err)
 	}
 	wire := genericPackageWireForTest(t, data)
-	if wire.Family != "tsfg-owned-generic-package" || wire.Version != 6 ||
-		wire.Payload.SemanticProfile != "tsfg-owned-scalar-generics-host-v6" ||
-		wire.SchemaHash != "c6b6baa76be25f6ac4f619867273208c9adb595030f12e7c54a200ed8c677789" ||
+	if wire.Family != "tsfg-owned-generic-package" || wire.Version != 7 ||
+		wire.Payload.SemanticProfile != "tsfg-owned-scalar-generics-host-v7" ||
+		wire.SchemaHash != "2e9d1e07016b6f8ce5f48bf8a3508491eaf1ce7e6fd43bf497c133f65c8dff94" ||
 		!reflect.DeepEqual(wire.Payload.Capabilities, []string{"conditional-generic-call", "conditional-signature", "explicit-type-arguments", "mapped-indexed-generic-call", "mapped-indexed-signature", "number-add", "scalar-generics", "single-module"}) {
 		t.Fatal("mapped signature was mixed into the predecessor package contract")
 	}
@@ -72,9 +72,9 @@ func TestOwnedGenericPackageMappedSignatureColdInstances(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if wire.PackageID != "sha256:"+genericTextDigest("tsfg-owned-generic-package/v6\n"+string(payload)) ||
+	if wire.PackageID != "sha256:"+genericTextDigest("tsfg-owned-generic-package/v7\n"+string(payload)) ||
 		wire.PackageID != "sha256:"+g.Digest || g.Package != "package:mapped-signature" ||
-		g.Semantics != "tsfg-owned-scalar-generics-host-v6" || g.Source.Path != "/original/main.ts" ||
+		g.Semantics != "tsfg-owned-scalar-generics-host-v7" || g.Source.Path != "/original/main.ts" ||
 		g.Source.Digest != "eae49419fbca1d64bc6c55bb871da4b0d6eb942bdcd8cf14dbb09da903d6c356" ||
 		g.Source.Digest != genericTextDigest(genericMappedSignatureSource) || g.Source.PositionUnit != "utf16" ||
 		g.Source.Length != 120 || g.Source.Length != len(utf16.Encode([]rune(genericMappedSignatureSource))) ||
@@ -127,7 +127,7 @@ func TestOwnedGenericPackageMappedSignatureColdInstances(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if facts.PackageID != wire.PackageID || facts.SemanticProfile != "tsfg-owned-scalar-generics-host-v6" ||
+	if facts.PackageID != wire.PackageID || facts.SemanticProfile != "tsfg-owned-scalar-generics-host-v7" ||
 		len(facts.Roots) != 2 || len(facts.Instances) != 2 || facts.Roots[0] == facts.Roots[1] ||
 		facts.Instances[0].Key >= facts.Instances[1].Key {
 		t.Fatal("cold mapped requests lost full type arguments, distinct identity or sorted closure")
@@ -175,13 +175,13 @@ func TestOwnedGenericPackageMappedSignatureColdInstances(t *testing.T) {
 	}
 	// Records describe actual checked bytes and facts only after every assertion.
 	// No SourceEXE, VM or host-calculated runtime result is involved.
-	t.Logf("TSFG_GENERIC_MAPPED_SIGNATURE_PACKAGE_V6 %s", base64.StdEncoding.EncodeToString(data))
-	t.Logf("TSFG_GENERIC_MAPPED_SIGNATURE_INSTANCE_V6 %s", base64.StdEncoding.EncodeToString(fixture))
+	t.Logf("TSFG_GENERIC_MAPPED_SIGNATURE_PACKAGE_V7 %s", base64.StdEncoding.EncodeToString(data))
+	t.Logf("TSFG_GENERIC_MAPPED_SIGNATURE_INSTANCE_V7 %s", base64.StdEncoding.EncodeToString(fixture))
 	for _, original := range originals {
 		record, err := genericPackageCanonical(original)
 		if err != nil {
 			t.Fatal(err)
 		}
-		t.Logf("TSFG_GENERIC_MAPPED_SIGNATURE_ORIGINAL_V6 %s", base64.StdEncoding.EncodeToString(record))
+		t.Logf("TSFG_GENERIC_MAPPED_SIGNATURE_ORIGINAL_V7 %s", base64.StdEncoding.EncodeToString(record))
 	}
 }

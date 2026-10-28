@@ -5,9 +5,9 @@
 package main
 
 const genericPackageFamily = "tsfg-owned-generic-package"
-const genericPackageVersion = 6
-const genericPackageSchema = "c6b6baa76be25f6ac4f619867273208c9adb595030f12e7c54a200ed8c677789"
-const genericPackageDomain = "tsfg-owned-generic-package/v6\n"
+const genericPackageVersion = 7
+const genericPackageSchema = "2e9d1e07016b6f8ce5f48bf8a3508491eaf1ce7e6fd43bf497c133f65c8dff94"
+const genericPackageDomain = "tsfg-owned-generic-package/v7\n"
 const genericDefinitionDomain = "tsfg:generic-definition:v1\n"
 const genericInstanceDomain = "tsfg:generic-instance:v1\n"
 const genericPackageMaxBytes = 8 << 20
