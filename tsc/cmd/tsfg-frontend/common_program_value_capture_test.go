@@ -231,6 +231,10 @@ func TestCommonProgramValueCapture19v(t *testing.T) {
 			if len(uses) == 0 {
 				t.Fatal("original capture oracle empty")
 			}
+			var constFields func(commonProgramPayload)
+			if name == "const-field-write" || name == "const-managed-field-write" {
+				constFields = commonConstValueFieldsOfficial19v(t, file, check, anchor)
+			}
 			t.Log("pre-producer original nominal Symbol/type/signatures and UTF16 direct accesses verified")
 			request := scalarParameterRequest19m(t, source)
 			if name == "named-import" {
@@ -271,6 +275,9 @@ func TestCommonProgramValueCapture19v(t *testing.T) {
 			var packet commonProgramPackage
 			if err := json.Unmarshal(output.Bytes(), &packet); err != nil {
 				t.Fatal(err)
+			}
+			if constFields != nil {
+				constFields(packet.Payload)
 			}
 			if name == "named-import" {
 				if importName == nil || importedDeclaration == nil {

@@ -133,5 +133,15 @@
     "name": "borrow-slot-replaced",
     "sha": "1c2f0416f5a7d45a0fc89d89322ce5f381c128f6f7d091ff8c1ca594a8780921",
     "failure": false
+  },
+  {
+    "name": "const-field-write",
+    "sha": "da4909e71a8dfacb718f7ee74ab8602aed46066801a12323396ba960b594bd6e",
+    "failure": false
+  },
+  {
+    "name": "const-managed-field-write",
+    "sha": "f05d9e99e3a90d24061818d62f05b94f99fe7b95f23f67af244d30cfd3003edb",
+    "failure": false
   }
 ]
