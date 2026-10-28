@@ -20,7 +20,6 @@ func TestCommonProgramReadSpanCaptureBoundary26i(t *testing.T) {
 		changes [][2]string
 	}{
 		{"uninitialized-local", local, [][2]string{{"const r: ReadSpan<i32> = readSpan(a, 0, 1);", "let r: ReadSpan<i32>; r = readSpan(a, 0, 1);"}}},
-		{"value-local", local, [][2]string{{"const r: ReadSpan<i32> = readSpan(a, 0, 1);", "const r: Delta = new Delta();"}, {"return r[0];", "return r.n;"}}},
 		{"function-local", local, [][2]string{{"const r: ReadSpan<i32> = readSpan(a, 0, 1);", "const r: Unary = leafLeft;"}, {"return r[0];", "return r(0);"}}},
 	} {
 		t.Run(sample.name, func(t *testing.T) {

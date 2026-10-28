@@ -1,0 +1,137 @@
+[
+  {
+    "name": "local-const",
+    "sha": "ff7986f3783217f336a10db02bff1c39aa46e5a2dc0539f4c2c8c471afeab4ab",
+    "failure": false
+  },
+  {
+    "name": "local-let",
+    "sha": "abe8aa13ce8cf22ff918426bd2e3526406c32962eaf615fce51c0b42745ea2c7",
+    "failure": false
+  },
+  {
+    "name": "owner-write",
+    "sha": "7fe001a77d0301803e66d12c40b69da2285892df6ba249e62bd7f69dffb84cec",
+    "failure": false
+  },
+  {
+    "name": "sibling-write",
+    "sha": "3a834eb8ee7ad9275609de1ed31f7a5176ca3107b6432400d53fe9685145de72",
+    "failure": false
+  },
+  {
+    "name": "parameter",
+    "sha": "188b9b1d55479a6beba601e3769a4e34eee8dc8da6a98529dfc7708ac8367dbd",
+    "failure": false
+  },
+  {
+    "name": "parameter-rebind",
+    "sha": "71922449a4ff528fb1e4caf7d330fc432b17e671a9510b1a088b9d3a12208354",
+    "failure": false
+  },
+  {
+    "name": "ancestor",
+    "sha": "75c21f2db3a63725a14f48d1c8b0ac73d77d2755a41fa4fbf825d2db21eee511",
+    "failure": false
+  },
+  {
+    "name": "shadow",
+    "sha": "c5e929f59bc3a5f638cf1e10b5e59c2b0c102bba05dffb3764bbccf790a311ed",
+    "failure": false
+  },
+  {
+    "name": "copy-scalar",
+    "sha": "0f47beea4d36c75155289fca8b553728f0cb3b6f5f33bc54dd013075a44b2ea6",
+    "failure": false
+  },
+  {
+    "name": "return-copy",
+    "sha": "599274c186c2995ca1fc2b2dce6de3bffa6090df2d8c97fd367ecadb7f96ad73",
+    "failure": false
+  },
+  {
+    "name": "nested-value",
+    "sha": "eca7d91775b72c1ce36c151635964dd66f3edf08611eef8767ee1c7fa0b60092",
+    "failure": false
+  },
+  {
+    "name": "managed-fields",
+    "sha": "c36ff769f3491b294d06e4a856bd229bbacfade489d8ac224d8f8d088e9ce6d7",
+    "failure": false
+  },
+  {
+    "name": "owner-resize",
+    "sha": "337bc0793c57701e61aef4fd0bcbf2722ba785863372e8560e6728920db48de1",
+    "failure": false
+  },
+  {
+    "name": "slot-replaced",
+    "sha": "f07a73946b398d13e3d7f93f44e2b7f0166a2b68a36bef3d73a47137c2bc493b",
+    "failure": false
+  },
+  {
+    "name": "alias-type",
+    "sha": "864c74c2046a60206326998b2817f5b4c7ec0b79c2f4c4e6557cdc1dd2c24dd1",
+    "failure": false
+  },
+  {
+    "name": "named-import",
+    "sha": "36db5a063fce7f105c70908afd2f0fa8845293143ce63e01ab4bc78438d87769",
+    "failure": false
+  },
+  {
+    "name": "uninitialized",
+    "sha": "dfb40f2fcfe0b4c7f7b9b1e5d828260fc03ff99405e6f4ab9056a8d2c28591ad",
+    "failure": true
+  },
+  {
+    "name": "const-write",
+    "sha": "f0a17e3573f759c523d388f2a7fd763fbfdc2e0fc44fd29608a0c150112362cb",
+    "failure": true
+  },
+  {
+    "name": "wrong-class",
+    "sha": "090c2ee8a6aa02ea9ca46188b6fd7ceb27d2b0e141ebe849dfd9c79afcfa0d36",
+    "failure": true
+  },
+  {
+    "name": "readonly-field",
+    "sha": "14f658242b0a998b8304a407adc3c4796633b86867d83336c46d77a01bffeba8",
+    "failure": true
+  },
+  {
+    "name": "block-local",
+    "sha": "a5682efeab8a19b6b00cc305cbbae0b330e712416f1d5bb9fbb76b6788ec1e9e",
+    "failure": true
+  },
+  {
+    "name": "null-parameter",
+    "sha": "a1a0be44a50e40c78dfa2ee7d947691f5c3726bae05962b40b79a4be4257457d",
+    "failure": true
+  },
+  {
+    "name": "deferred-init",
+    "sha": "12364b52139d6b928acb652c8dc7835bb74a24d326989b0e955e0bcaf26562a8",
+    "failure": true
+  },
+  {
+    "name": "sibling-early-write",
+    "sha": "425a53254412c1902ad60c806c7b96ff637fe89a67196e0f544ddff7b89060d7",
+    "failure": false
+  },
+  {
+    "name": "ancestor-rebind",
+    "sha": "7a1ee5474b1ea9caf4057e30fc288b782a23c4dfee6a2e0130126fb657faf097",
+    "failure": false
+  },
+  {
+    "name": "nested-copy",
+    "sha": "6a732a8d92dc677051f3156a5b1bb4e8fd00e5ffd5d3e0aae6f9a4a0e9098be6",
+    "failure": false
+  },
+  {
+    "name": "borrow-slot-replaced",
+    "sha": "1c2f0416f5a7d45a0fc89d89322ce5f381c128f6f7d091ff8c1ca594a8780921",
+    "failure": false
+  }
+]

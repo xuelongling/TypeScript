@@ -100,11 +100,6 @@
     "failure": true
   },
   {
-    "name": "value-local",
-    "sha": "ff7986f3783217f336a10db02bff1c39aa46e5a2dc0539f4c2c8c471afeab4ab",
-    "failure": true
-  },
-  {
     "name": "null-parameter",
     "sha": "f98105edc11fd80110e7ae0192c812deb07aa1e828d670f3921f1581b5d4a0c1",
     "failure": true
