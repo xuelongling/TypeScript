@@ -106,7 +106,7 @@ func TestSystemQueryScalarHelperNegatives38g(t *testing.T) {
 			switch name {
 			case "captured-global":
 				replacement = "let global:f32=1;function scaled(v:f32,dt:f32):f32{return v*global;}"
-				expected = "original loop binding or f32 parameter"
+				expected = "original loop binding or f32/f64 parameter"
 			case "global-mutation":
 				replacement = "let global:f32=1;function scaled(v:f32,dt:f32):f32{global+=v;return v*dt;}"
 				expected = "one original pure scalar return"

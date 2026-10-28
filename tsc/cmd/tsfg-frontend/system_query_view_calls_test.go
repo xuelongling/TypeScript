@@ -108,7 +108,7 @@ func TestSystemQueryViewHelperNegatives38h(t *testing.T) {
 				expected = "owned Read or Write"
 			case "global-capture":
 				r.Files[0].Content = strings.Replace(strings.Replace(r.Files[0].Content, "function readX(", "const captured:Position=new Position();\nfunction readX(", 1), "return p.x;", "return captured.x;", 1)
-				expected = "original loop binding or f32 parameter"
+				expected = "original loop binding or f32/f64 parameter"
 			}
 			official, _, _, failure := newOwnedSystemProgram(r)
 			if failure != nil {

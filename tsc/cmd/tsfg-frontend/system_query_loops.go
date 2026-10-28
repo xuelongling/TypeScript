@@ -70,7 +70,7 @@ func (p *arrayGenericProjection) systemLoops(body *ast.Node, parameters []system
 		}
 		for _, node := range loop.Statement.AsBlock().Statements.Nodes {
 			if node.Kind != ast.KindExpressionStatement || node.AsExpressionStatement().Expression.Kind != ast.KindBinaryExpression {
-				return nil, p.fail(node, "Query body supports original f32 field assignments")
+				return nil, p.fail(node, "Query body supports original f32/f64 field assignments")
 			}
 			expression := node.AsExpressionStatement().Expression
 			assignment := expression.AsBinaryExpression()
@@ -107,10 +107,10 @@ func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings m
 		if binding, ok := bindings[symbol]; ok {
 			return &arrayGenericExpression{Kind: "bindingReference", Type: binding.ComponentType, FlowType: binding.ComponentType, Range: *genericSpan(node), Binding: binding.Declaration.ID}, nil
 		}
-		if parameter, ok := params[symbol]; ok && parameter.Query == nil && parameter.LogicalType == "f32" && actual.Flags()&checker.TypeFlagsNumberLike != 0 {
-			return &arrayGenericExpression{Kind: "bindingReference", Type: "f32", FlowType: "f32", Range: *genericSpan(node), Binding: parameter.Binding.ID}, nil
+		if parameter, ok := params[symbol]; ok && parameter.Query == nil && (parameter.LogicalType == "f32" || parameter.LogicalType == "f64") && actual.Flags()&checker.TypeFlagsNumberLike != 0 {
+			return &arrayGenericExpression{Kind: "bindingReference", Type: parameter.LogicalType, FlowType: parameter.LogicalType, Range: *genericSpan(node), Binding: parameter.Binding.ID}, nil
 		}
-		return nil, p.fail(node, "Query expression must join original loop binding or f32 parameter")
+		return nil, p.fail(node, "Query expression must join original loop binding or f32/f64 parameter")
 	case ast.KindPropertyAccessExpression:
 		access := node.AsPropertyAccessExpression()
 		if access.QuestionDotToken != nil || access.Expression.Kind != ast.KindIdentifier {
@@ -129,8 +129,8 @@ func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings m
 		if !ok || original == nil || selected == nil || len(original.Declarations) != 1 || len(selected.Declarations) != 1 || selected.Declarations[0] != original.Declarations[0] {
 			return nil, p.fail(node, "Query field must retain original component property declaration")
 		}
-		if field.Type != "f32" || actual.Flags()&checker.TypeFlagsNumberLike == 0 {
-			return nil, p.fail(node, "Query field arithmetic supports original f32 declaration")
+		if field.Type != "f32" && field.Type != "f64" || actual.Flags()&checker.TypeFlagsNumberLike == 0 {
+			return nil, p.fail(node, "Query field arithmetic supports original f32/f64 declaration")
 		}
 		return &arrayGenericExpression{Kind: "fieldAccess", Type: field.Type, FlowType: field.Type, Range: *genericSpan(node), Receiver: receiver, Property: field.ID, NameRange: genericSpan(node.Name())}, nil
 	case ast.KindCallExpression:
@@ -158,10 +158,10 @@ func (p *arrayGenericProjection) systemLoopExpression(node *ast.Node, bindings m
 		if e != nil {
 			return nil, e
 		}
-		if left.Type != "f32" || right.Type != "f32" || actual.Flags()&checker.TypeFlagsNumberLike == 0 {
-			return nil, p.fail(node, "Query binary must preserve f32 operands")
+		if left.Type != "f32" && left.Type != "f64" || right.Type != left.Type || actual.Flags()&checker.TypeFlagsNumberLike == 0 {
+			return nil, p.fail(node, "Query binary must preserve same-width f32/f64 operands")
 		}
-		return &arrayGenericExpression{Kind: "binary", Type: "f32", FlowType: "f32", Range: *genericSpan(node), Operator: genericText(binary.OperatorToken), OperatorRange: genericSpan(binary.OperatorToken), Left: left, Right: right}, nil
+		return &arrayGenericExpression{Kind: "binary", Type: left.Type, FlowType: left.Type, Range: *genericSpan(node), Operator: genericText(binary.OperatorToken), OperatorRange: genericSpan(binary.OperatorToken), Left: left, Right: right}, nil
 	default:
 		return nil, p.fail(node, "Query expression has no owned typed representation")
 	}
@@ -193,8 +193,8 @@ func (p *arrayGenericProjection) systemLoopAssignment(node *ast.Node, bindings m
 	if e != nil {
 		return nil, e
 	}
-	if target.Type != "f32" || value.Type != "f32" || p.check.GetTypeAtLocation(node).Flags()&checker.TypeFlagsNumberLike == 0 {
-		return nil, p.fail(node, "Query arithmetic requires original f32 operands")
+	if target.Type != "f32" && target.Type != "f64" || value.Type != target.Type || p.check.GetTypeAtLocation(node).Flags()&checker.TypeFlagsNumberLike == 0 {
+		return nil, p.fail(node, "Query arithmetic requires original same-width f32/f64 operands")
 	}
 	return &arrayGenericExpression{Kind: "fieldAssignment", Type: target.Type, FlowType: target.Type, Range: *genericSpan(node), Operator: genericText(assignment.OperatorToken), OperatorRange: genericSpan(assignment.OperatorToken), Target: &arrayGenericTarget{Kind: "fieldTarget", Type: target.Type, Range: target.Range, Receiver: target.Receiver, Property: target.Property, NameRange: target.NameRange}, Value: value}, nil
 }
