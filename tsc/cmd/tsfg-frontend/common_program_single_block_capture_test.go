@@ -34,7 +34,7 @@ func TestCommonProgramSingleEntryBlockCapture19ae(t *testing.T) {
 				t.Fatal("frozen complete block capture Source changed")
 			}
 			readSpanCaptureSave26i(t, sample.Name+"-source.ts", source)
-			compare := singleBlockCaptureOfficial19ae(t, string(source), sample.Cells, sample.CapturingFunctions, sample.Repeated, sample.Scalar)
+			compare := singleBlockCaptureOfficial19ae(t, string(source), blockCaptureExpectation{"blockEntry", "cell", sample.Cells, sample.CapturingFunctions, sample.Repeated, sample.Scalar})
 			request := scalarParameterRequest19m(t, source)
 			readSpanCaptureSave26i(t, sample.Name+"-request.json", request)
 			var output bytes.Buffer

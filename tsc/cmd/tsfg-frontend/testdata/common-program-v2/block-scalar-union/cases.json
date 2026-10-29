@@ -1,0 +1,46 @@
+[
+  {
+    "name": "if-let",
+    "sha": "a96b696fd4981ee743ef3c628438e6e467b8f6e23a256c1c8b0e09463a7d5f62",
+    "repeated": false,
+    "scalar": true,
+    "failure": ""
+  },
+  {
+    "name": "if-null",
+    "sha": "bd8f2bd9fdc32ac987d7cea6090bfb9a3b6809faf2755fd1bbf43898c5e05cee",
+    "repeated": false,
+    "scalar": false,
+    "failure": ""
+  },
+  {
+    "name": "if-undefined",
+    "sha": "d82871c52c190a2711d2eaf0d22b35fbce3277dccc9691a4c90c7f578b6ffe1b",
+    "repeated": false,
+    "scalar": false,
+    "failure": ""
+  },
+  {
+    "name": "if-both",
+    "sha": "d6a49e496f436252ce5303cde5ae03f3a7d9c57404d2ed61bbc9848ca3d9948f",
+    "repeated": false,
+    "scalar": false,
+    "failure": ""
+  },
+  {
+    "name": "mixed-string",
+    "sha": "21a9916ada194e34149041d59b4d3e944e7b520692d53d4e1171b4d9dfe3be43",
+    "repeated": false,
+    "scalar": false,
+    "failure": "r03-array-facts-capability",
+    "detail": "nullable capture requires one supported payload and null/undefined presence"
+  },
+  {
+    "name": "while-entry",
+    "sha": "fd84412360d8bc93fb5f9d2b3701cbfebb2d37e54450aba06db78d36c60f4e40",
+    "repeated": true,
+    "scalar": true,
+    "failure": "r03-array-facts-capability",
+    "detail": "captured declaration scope may be entered repeatedly in one function activation"
+  }
+]

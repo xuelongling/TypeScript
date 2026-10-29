@@ -27,7 +27,12 @@ func TestCommonProgramScalarUnionCapture19z(t *testing.T) {
 				t.Fatal("frozen complete scalar union Source changed")
 			}
 			readSpanCaptureSave26i(t, sample.Name+"-source.ts", source)
-			compare := unionCaptureOfficial19x(t, string(source), sample.Failure == "")
+			var compare func(commonProgramPayload)
+			if sample.Name == "block-local" {
+				compare = singleBlockCaptureOfficial19ae(t, string(source), blockCaptureExpectation{"makeOwnedReader", "held", 1, 1, false, true})
+			} else {
+				compare = unionCaptureOfficial19x(t, string(source), sample.Failure == "")
+			}
 			request := scalarParameterRequest19m(t, source)
 			readSpanCaptureSave26i(t, sample.Name+"-request.json", request)
 			var output bytes.Buffer

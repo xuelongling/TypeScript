@@ -118,8 +118,11 @@
     "name": "block-local",
     "source": "scalar-union-capture/block-local.ts",
     "sha": "53b0773d89fcf7871ece9f2a61718e0b341ada515ab6f4c02303852aafef0167",
-    "failure": "r03-array-facts-capability",
-    "detail": "block capture requires an initialized scalar local"
+    "failure": "",
+    "members": [
+      "bool",
+      "i32"
+    ]
   },
   {
     "name": "deferred-init",

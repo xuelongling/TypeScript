@@ -186,7 +186,7 @@ func (p *arrayGenericProjection) commonFunctionComplete(node *ast.Node, fn *arra
 				if err != nil {
 					return err
 				}
-				if declarationScope != owner.Body() && typeKind != "scalar" {
+				if declarationScope != owner.Body() && captureKind != "scalar" {
 					return p.fail(current, "block capture requires an initialized scalar local")
 				}
 			}

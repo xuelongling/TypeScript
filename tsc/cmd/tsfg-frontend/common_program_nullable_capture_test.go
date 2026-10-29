@@ -120,6 +120,24 @@ func TestCommonProgramNullableCapture19x(t *testing.T) {
 	}
 }
 
+// Only these original annotations are covered by the union oracle. In
+// particular, the checker's false|true representation does not make bool syntax
+// a declared union; its scalar type and flow remain the block oracle's job.
+func unionCaptureAnnotation19x(annotation *ast.Node, actual *checker.Type) bool {
+	if !actual.IsUnion() {
+		return false
+	}
+	for _, member := range actual.Types() {
+		if member.Flags()&(checker.TypeFlagsNull|checker.TypeFlagsUndefined) != 0 {
+			return true
+		}
+	}
+	for annotation.Kind == ast.KindParenthesizedType {
+		annotation = annotation.AsParenthesizedTypeNode().Type
+	}
+	return annotation.Kind == ast.KindUnionType
+}
+
 func unionCaptureOfficial19x(t *testing.T, source string, supported bool) func(commonProgramPayload) {
 	t.Helper()
 	program := commonMethodProgram37q(t, source)
@@ -165,19 +183,7 @@ func unionCaptureOfficial19x(t *testing.T, source string, supported bool) func(c
 			}
 			calls[anchor(n)] = signature.Declaration()
 		}
-		if (n.Kind == ast.KindVariableDeclaration || n.Kind == ast.KindParameter) && owner(n) != nil && n.Type() != nil && check.GetTypeFromTypeNode(n.Type()).IsUnion() {
-			absence := false
-			for _, member := range check.GetTypeFromTypeNode(n.Type()).Types() {
-				absence = absence || member.Flags()&(checker.TypeFlagsNull|checker.TypeFlagsUndefined) != 0
-			}
-			annotation := n.Type()
-			for annotation.Kind == ast.KindParenthesizedType {
-				annotation = annotation.AsParenthesizedTypeNode().Type
-			}
-			if !absence && annotation.Kind != ast.KindUnionType {
-				n.ForEachChild(func(c *ast.Node) bool { visit(c); return false })
-				return
-			}
+		if (n.Kind == ast.KindVariableDeclaration || n.Kind == ast.KindParameter) && owner(n) != nil && n.Type() != nil && unionCaptureAnnotation19x(n.Type(), check.GetTypeFromTypeNode(n.Type())) {
 			symbol := check.GetSymbolAtLocation(n.Name())
 			if symbol == nil || len(symbol.Declarations) != 1 || symbol.Declarations[0] != n {
 				t.Fatal("unique original nullable binding Symbol missing")

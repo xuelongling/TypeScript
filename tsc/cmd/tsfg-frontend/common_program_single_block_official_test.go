@@ -18,7 +18,13 @@ import (
 
 // Source ranges and Symbols, including repeated spellings, establish this oracle
 // before projection. No producer scope, binding or environment selects an owner.
-func singleBlockCaptureOfficial19ae(t *testing.T, source string, cells, capturingFunctions int, repeated, scalar bool) func(commonProgramPayload) {
+type blockCaptureExpectation struct {
+	Entry, Binding            string
+	Cells, CapturingFunctions int
+	Repeated, Scalar          bool
+}
+
+func singleBlockCaptureOfficial19ae(t *testing.T, source string, expected blockCaptureExpectation) func(commonProgramPayload) {
 	t.Helper()
 	program := commonMethodProgram37q(t, source)
 	file := program.GetSourceFile("/src/main.ts")
@@ -63,7 +69,7 @@ func singleBlockCaptureOfficial19ae(t *testing.T, source string, cells, capturin
 		nodes[rangeOf(n)] = n
 		if n.Kind == ast.KindFunctionDeclaration {
 			functions = append(functions, n)
-			if n.Name().Text() == "blockEntry" && owner(n) == nil {
+			if n.Name().Text() == expected.Entry && owner(n) == nil {
 				if entry != nil {
 					t.Fatal("original block entry duplicated")
 				}
@@ -100,15 +106,17 @@ func singleBlockCaptureOfficial19ae(t *testing.T, source string, cells, capturin
 	}
 	declarations := map[*ast.Symbol]*ast.Node{}
 	bindingIDs := map[*ast.Node]string{}
+	delegatedUnions := map[*ast.Node]bool{}
 	loopAncestor, allScalar, blockCells := false, true, 0
 	visit = func(n *ast.Node) {
-		if n.Kind == ast.KindVariableDeclaration && inEntry(n) && n.Name().Text() == "cell" {
+		if n.Kind == ast.KindVariableDeclaration && inEntry(n) && n.Name().Text() == expected.Binding {
 			symbol := check.GetSymbolAtLocation(n.Name())
 			if symbol == nil || len(symbol.Declarations) != 1 || symbol.Declarations[0] != n || n.Type() == nil || scope(n) == nil {
 				t.Fatal("unique original block binding Symbol/type/scope absent")
 			}
 			declarations[symbol] = n
 			actual := check.GetTypeFromTypeNode(n.Type())
+			delegatedUnions[n] = unionCaptureAnnotation19x(n.Type(), actual)
 			members := []*checker.Type{actual}
 			if actual.IsUnion() {
 				members = actual.Types()
@@ -178,12 +186,24 @@ func singleBlockCaptureOfficial19ae(t *testing.T, source string, cells, capturin
 		n.ForEachChild(func(c *ast.Node) bool { visit(c); return false })
 	}
 	visit(entry)
-	if len(declarations) != cells || len(uses) != capturingFunctions || blockCells == 0 || loopAncestor != repeated || allScalar != scalar {
+	if len(declarations) != expected.Cells || len(uses) != expected.CapturingFunctions || blockCells == 0 || loopAncestor != expected.Repeated || allScalar != expected.Scalar {
 		t.Fatalf("independent block/Symbol/loop inventory differs: cells=%d captures=%d blocks=%d repeated=%v scalar=%v", len(declarations), len(uses), blockCells, loopAncestor, allScalar)
+	}
+	var compareUnion func(commonProgramPayload)
+	for _, union := range delegatedUnions {
+		if union {
+			// The existing official union oracle owns exact constituent identities
+			// and checker narrowing; this oracle owns original block placement.
+			compareUnion = unionCaptureOfficial19x(t, source, true)
+			break
+		}
 	}
 	t.Log("pre-producer official complete Program diagnostics, Symbols, original blocks, loop ancestry, types, checker flow, signatures and UTF16 accesses verified")
 	return func(payload commonProgramPayload) {
 		t.Helper()
+		if compareUnion != nil {
+			compareUnion(payload)
+		}
 		byID := map[string]arrayGenericFunction{}
 		for _, fn := range payload.Functions {
 			byID[fn.ID] = fn
@@ -213,7 +233,7 @@ func singleBlockCaptureOfficial19ae(t *testing.T, source string, cells, capturin
 		for _, n := range declarations {
 			b, found := bindings[bindingIDs[n]]
 			typeName := strings.TrimSpace(source[n.Type().Pos():n.Type().End()])
-			if !found || b.Name != "cell" || b.Kind != "local" || b.DeclaredType != typeName || b.NameRange != rangeOf(n.Name()) || b.DeclarationRange != rangeOf(n) || b.Writable != (n.Parent.Flags&ast.NodeFlagsConst == 0) || b.LexicalOwner == nil || *b.LexicalOwner == nil || **b.LexicalOwner != functionIDs[owner(n)] {
+			if !found || b.Name != expected.Binding || b.Kind != "local" || !delegatedUnions[n] && b.DeclaredType != typeName || b.NameRange != rangeOf(n.Name()) || b.DeclarationRange != rangeOf(n) || b.Writable != (n.Parent.Flags&ast.NodeFlagsConst == 0) || b.LexicalOwner == nil || *b.LexicalOwner == nil || **b.LexicalOwner != functionIDs[owner(n)] {
 				t.Fatal("original scalar block binding identity/owner/const differs")
 			}
 		}
@@ -224,7 +244,7 @@ func singleBlockCaptureOfficial19ae(t *testing.T, source string, cells, capturin
 				return
 			}
 			if n := originalUses[v.Range]; n != nil && v.Kind == "bindingReference" {
-				if v.Binding != bindingIDs[n] || v.Type != bindings[bindingIDs[n]].DeclaredType || v.FlowType != flows[v.Range] {
+				if v.Binding != bindingIDs[n] || v.Type != bindings[bindingIDs[n]].DeclaredType || !delegatedUnions[n] && v.FlowType != flows[v.Range] {
 					t.Fatal("original scalar read/flow changed binding")
 				}
 				seenUses[v.Range] = true
