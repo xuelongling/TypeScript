@@ -59,7 +59,7 @@ func TestCommonProgramNullableCapture19x(t *testing.T) {
 			readSpanCaptureSave26i(t, sample.Name+"-request.json", request)
 			var compare func(commonProgramPayload)
 			if sample.Failure != "r03-array-facts-types" {
-				compare = nullableCaptureOfficial19x(t, string(source), sample.Failure == "")
+				compare = unionCaptureOfficial19x(t, string(source), sample.Failure == "")
 			}
 			var output bytes.Buffer
 			err = runFrontendCommand(t.Context(), []string{"--program-facts-io-v2"}, bytes.NewReader(request), &output)
@@ -120,7 +120,7 @@ func TestCommonProgramNullableCapture19x(t *testing.T) {
 	}
 }
 
-func nullableCaptureOfficial19x(t *testing.T, source string, supported bool) func(commonProgramPayload) {
+func unionCaptureOfficial19x(t *testing.T, source string, supported bool) func(commonProgramPayload) {
 	t.Helper()
 	program := commonMethodProgram37q(t, source)
 	file := program.GetSourceFile("/src/main.ts")
@@ -170,7 +170,11 @@ func nullableCaptureOfficial19x(t *testing.T, source string, supported bool) fun
 			for _, member := range check.GetTypeFromTypeNode(n.Type()).Types() {
 				absence = absence || member.Flags()&(checker.TypeFlagsNull|checker.TypeFlagsUndefined) != 0
 			}
-			if !absence {
+			annotation := n.Type()
+			for annotation.Kind == ast.KindParenthesizedType {
+				annotation = annotation.AsParenthesizedTypeNode().Type
+			}
+			if !absence && annotation.Kind != ast.KindUnionType {
 				n.ForEachChild(func(c *ast.Node) bool { visit(c); return false })
 				return
 			}
@@ -184,7 +188,7 @@ func nullableCaptureOfficial19x(t *testing.T, source string, supported bool) fun
 	}
 	visit(file.AsNode())
 	if len(declarations) == 0 {
-		t.Fatal("independent nullable declaration oracle empty")
+		t.Fatal("independent union declaration oracle empty")
 	}
 	uses := map[*ast.Node]map[*ast.Node][]commonProgramCaptureOccurrence{}
 	flows := map[span]struct {
@@ -216,9 +220,9 @@ func nullableCaptureOfficial19x(t *testing.T, source string, supported bool) fun
 	}
 	visit(file.AsNode())
 	if len(uses) == 0 {
-		t.Fatal("independent nullable capture oracle empty")
+		t.Fatal("independent union capture oracle empty")
 	}
-	t.Log("pre-producer original official diagnostics, nullable Symbols/types, selected signatures, flow and UTF16 accesses verified")
+	t.Log("pre-producer original official diagnostics, union Symbols/types, selected signatures, flow and UTF16 accesses verified")
 	return func(payload commonProgramPayload) {
 		t.Helper()
 		if !supported {

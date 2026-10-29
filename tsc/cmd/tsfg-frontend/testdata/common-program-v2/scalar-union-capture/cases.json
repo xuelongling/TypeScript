@@ -1,0 +1,66 @@
+[
+  {
+    "name": "local-let",
+    "sha": "a7290f955ae1220ced4e12ff352d53fdb89fddac7fcec484132c179cbcc06917",
+    "failure": ""
+  },
+  {
+    "name": "local-const",
+    "sha": "dbbf48d4203d8678dcf43cef5524a0cb986ee129aea634b99e1d9c41aefc7c2e",
+    "failure": ""
+  },
+  {
+    "name": "parameter",
+    "sha": "9b082a620509f1cea87b77e61d85270b91619b2a98848690682deac03578aa70",
+    "failure": ""
+  },
+  {
+    "name": "ancestor",
+    "sha": "75c4d89fc66a11df66924f09dc1e19c01205df8935693075625e15c4299f7783",
+    "failure": ""
+  },
+  {
+    "name": "shadow",
+    "sha": "cc76c8d8cbf36321ee86bb6e94c1255255dcaeb624c56fd474fc5fa37af7d0f5",
+    "failure": ""
+  },
+  {
+    "name": "copy",
+    "sha": "236a359b1c58f9b8eaece64807158fd67445fa2963e9f8abe66fa331f3aaaa61",
+    "failure": ""
+  },
+  {
+    "name": "duplicate-members",
+    "sha": "fdd884d7a8c3d8fbb3485041d4fd2f4f9dd5595cf3ceb6bc0c8f5a3939c382f9",
+    "failure": ""
+  },
+  {
+    "name": "parenthesized",
+    "sha": "d81d8ad0ab590afa4b931d498419f84922a8338d83544a37975b89d2af7d0e8e",
+    "failure": ""
+  },
+  {
+    "name": "multiple-scalar-null",
+    "sha": "074536bbaa76a67888b7b9420debaecb78ca639cb4815951046c1a46a617dabf",
+    "failure": "r03-array-facts-capability",
+    "detail": "nullable capture requires one supported payload and null/undefined presence"
+  },
+  {
+    "name": "mixed-string",
+    "sha": "2924c4edd60cbf69c0e03d4604cb1c740f96bb32eaf8c09ac98f1d4398ce48ce",
+    "failure": "r03-array-facts-capability",
+    "detail": "nullable capture requires one supported payload and null/undefined presence"
+  },
+  {
+    "name": "deferred-init",
+    "sha": "9d7db43cf2696cb63b19ec618062009d5bcbece639b20cb09a4c28ea94efac0c",
+    "failure": "r03-array-facts-capability",
+    "detail": "dense local requires initialization"
+  },
+  {
+    "name": "block-local",
+    "sha": "53b0773d89fcf7871ece9f2a61718e0b341ada515ab6f4c02303852aafef0167",
+    "failure": "r03-array-facts-capability",
+    "detail": "named closures require direct function-body declaration scope"
+  }
+]
