@@ -112,14 +112,36 @@ func (p *arrayGenericProjection) commonFunctionComplete(node *ast.Node, fn *arra
 			decl := original.Declarations[0]
 			owner := commonLexicalOwner37s(decl)
 			typeKind := p.types[b.DeclaredType].Kind
+			captureKind := typeKind
+			if typeKind == "union" {
+				// Presence belongs to the original slot. Admit exactly one existing
+				// payload, rather than granting capture authority to arbitrary unions.
+				captureKind = ""
+				payloads, absences := 0, 0
+				for _, member := range p.types[b.DeclaredType].Members {
+					kind := p.types[member].Kind
+					switch kind {
+					case "null", "undefined":
+						absences++
+					case "scalar", "string", "function", "array", "reference", "value":
+						payloads++
+						captureKind = kind
+					default:
+						return p.fail(current, "nullable capture requires one supported payload and null/undefined presence")
+					}
+				}
+				if payloads != 1 || absences < 1 || absences > 2 {
+					return p.fail(current, "nullable capture requires one supported payload and null/undefined presence")
+				}
+			}
 			// These parameters already have incoming values. Keep their original
 			// binding identity; callable types do not prove targets or lifetime.
-			if b.Kind == "parameter" && (typeKind == "scalar" || typeKind == "string" || typeKind == "function" || typeKind == "readSpan" || typeKind == "array" || typeKind == "reference" || typeKind == "value") {
+			if b.Kind == "parameter" && (captureKind == "scalar" || captureKind == "string" || captureKind == "function" || captureKind == "readSpan" || captureKind == "array" || captureKind == "reference" || captureKind == "value") {
 				if decl.Kind != ast.KindParameter || owner == nil || decl.Parent != owner {
 					return p.fail(current, "captured scalar/String/function/Array/ReadSpan/reference/value parameter must retain its original function declaration")
 				}
 			} else {
-				if b.Kind != "local" || typeKind != "scalar" && typeKind != "string" && typeKind != "function" && typeKind != "readSpan" && typeKind != "array" && typeKind != "reference" && typeKind != "value" {
+				if b.Kind != "local" || captureKind != "scalar" && captureKind != "string" && captureKind != "function" && captureKind != "readSpan" && captureKind != "array" && captureKind != "reference" && captureKind != "value" {
 					return p.fail(current, "named closure capture requires initialized scalar/String/function/Array/ReadSpan/reference/value local or direct scalar/String/function/Array/ReadSpan/reference/value parameter")
 				}
 				if decl.Kind != ast.KindVariableDeclaration || decl.AsVariableDeclaration().Initializer == nil || owner == nil || decl.Parent == nil || decl.Parent.Parent == nil || decl.Parent.Parent.Parent != owner.Body() {

@@ -105,11 +105,6 @@
     "failure": true
   },
   {
-    "name": "null-parameter",
-    "sha": "a1a0be44a50e40c78dfa2ee7d947691f5c3726bae05962b40b79a4be4257457d",
-    "failure": true
-  },
-  {
     "name": "deferred-init",
     "sha": "12364b52139d6b928acb652c8dc7835bb74a24d326989b0e955e0bcaf26562a8",
     "failure": true

@@ -86,39 +86,3 @@ func scalarParameterRequest19m(t *testing.T, source []byte) []byte {
 	}
 	return append(canonical, '\n')
 }
-
-// Scalar incoming initialization does not make union parameters legal
-// closure captures. These complete Programs remain checker-valid.
-func TestCommonProgramScalarParameterBoundary19m(t *testing.T) {
-	for _, sample := range []struct {
-		name, sha string
-		bytes     int
-	}{
-		{name: "union-parameter", sha: "57825f630aa81016c1af240571904826f5607f07c90b7dfb782ed3167d74ca37", bytes: 2317},
-	} {
-		t.Run(sample.name, func(t *testing.T) {
-			source, err := os.ReadFile("testdata/common-program-v2/scalar-parameter/" + sample.name + ".ts")
-			if err != nil {
-				t.Fatal(err)
-			}
-			if len(source) != sample.bytes || arrayFactsSHA(source) != sample.sha {
-				t.Fatal("frozen complete boundary source changed")
-			}
-			commonMethodProgram37q(t, string(source))
-			request := scalarParameterRequest19m(t, source)
-			readSpanCaptureSave26i(t, sample.name+"-request.json", request)
-			var output bytes.Buffer
-			err = runFrontendCommand(t.Context(), []string{"--program-facts-io-v2"}, bytes.NewReader(request), &output)
-			failure, ok := err.(*arrayFactsFailure)
-			if !ok || failure.Code != "r03-array-facts-capability" || output.Len() != 0 {
-				t.Fatalf("non-scalar parameter must remain unsupported atomically: %v/%d", err, output.Len())
-			}
-			b, e := json.Marshal(failure)
-			if e != nil {
-				t.Fatal(e)
-			}
-			readSpanCaptureSave26i(t, sample.name+"-failure.json", append(b, '\n'))
-			t.Log(string(b))
-		})
-	}
-}
