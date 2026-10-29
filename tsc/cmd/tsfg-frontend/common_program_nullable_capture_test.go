@@ -39,6 +39,23 @@ func TestCommonProgramNullableCapture19x(t *testing.T) {
 			}
 			readSpanCaptureSave26i(t, sample.Name+"-source.ts", source)
 			request := scalarParameterRequest19m(t, source)
+			applicationRoot := sample.Name == "root-callable-null" || sample.Name == "root-callable-undefined" || sample.Name == "root-callable-null-undefined"
+			if applicationRoot {
+				var input commonProgramRequest
+				if err := json.Unmarshal(request, &input); err != nil {
+					t.Fatal(err)
+				}
+				input.Input.CompilationClosure.Roots = append(input.Input.CompilationClosure.Roots, closureRoot{Kind: "application", SourcePath: "/src/main.ts", Name: "rootNullableCallable"})
+				sort.Slice(input.Input.CompilationClosure.Roots, func(i, j int) bool {
+					a, b := input.Input.CompilationClosure.Roots[i], input.Input.CompilationClosure.Roots[j]
+					return a.Kind+"\x00"+a.SourcePath+"\x00"+a.Name < b.Kind+"\x00"+b.SourcePath+"\x00"+b.Name
+				})
+				request, err = arrayFactsCanonical(input)
+				if err != nil {
+					t.Fatal(err)
+				}
+				request = append(request, '\n')
+			}
 			readSpanCaptureSave26i(t, sample.Name+"-request.json", request)
 			var compare func(commonProgramPayload)
 			if sample.Failure != "r03-array-facts-types" {
@@ -83,6 +100,22 @@ func TestCommonProgramNullableCapture19x(t *testing.T) {
 				t.Fatal(err)
 			}
 			compare(packet.Payload)
+			if applicationRoot {
+				found := 0
+				for _, root := range packet.Payload.Closure.Roots {
+					if root.Name != "rootNullableCallable" {
+						continue
+					}
+					for _, fn := range packet.Payload.Functions {
+						if fn.ID == root.Target && fn.Name == "rootNullableCallable" && fn.SourcePath == "/src/main.ts" && root.Kind == "application" && root.SourcePath == fn.SourcePath && len(fn.Parameters) == 1 {
+							found++
+						}
+					}
+				}
+				if found != 1 {
+					t.Fatal("original nullable callable application root missing or duplicated")
+				}
+			}
 		})
 	}
 }
@@ -216,7 +249,15 @@ func nullableCaptureOfficial19x(t *testing.T, source string, supported bool) fun
 				return typ.Kind == "array" && len(arguments) == 1 && match(typ.ElementType, arguments[0])
 			}
 			if signatures := check.GetSignaturesOfType(actual, checker.SignatureKindCall); len(signatures) == 1 {
-				return typ.Kind == "function" && typ.Parameters != nil && len(*typ.Parameters) == 0 && len(signatures[0].Parameters()) == 0 && typ.ReturnType == "i32"
+				if typ.Kind != "function" || typ.Parameters == nil || len(*typ.Parameters) != len(signatures[0].Parameters()) || !match(typ.ReturnType, check.GetReturnTypeOfSignature(signatures[0])) {
+					return false
+				}
+				for index, parameter := range signatures[0].Parameters() {
+					if !match((*typ.Parameters)[index], check.GetTypeOfSymbol(parameter)) {
+						return false
+					}
+				}
+				return true
 			}
 			symbol := actual.Symbol()
 			if symbol == nil || len(symbol.Declarations) != 1 {

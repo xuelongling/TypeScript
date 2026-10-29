@@ -563,5 +563,20 @@
     "name": "value-span-local-call",
     "sha": "c3786e13d2cd8e7eebff1c0d4ebbe7d00e34e5b246f74e686c4cd1f2b07c503b",
     "failure": ""
+  },
+  {
+    "name": "root-callable-null",
+    "sha": "2d17583df52e2abdd5b8436ca8643ab5b7de5589ed258f528746af06a783be66",
+    "failure": ""
+  },
+  {
+    "name": "root-callable-undefined",
+    "sha": "63ddd27fb00a55f278a26b98c01bfecfff4da371bcd9056af8db682160a44e4f",
+    "failure": ""
+  },
+  {
+    "name": "root-callable-null-undefined",
+    "sha": "345c2d5f523183a9707f8ce762a62f423d31173752e207b11b763452460f7b9b",
+    "failure": ""
   }
 ]
