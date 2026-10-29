@@ -42,8 +42,7 @@
   {
     "name": "multiple-scalar-null",
     "sha": "074536bbaa76a67888b7b9420debaecb78ca639cb4815951046c1a46a617dabf",
-    "failure": "r03-array-facts-capability",
-    "detail": "nullable capture requires one supported payload and null/undefined presence"
+    "failure": ""
   },
   {
     "name": "mixed-string",

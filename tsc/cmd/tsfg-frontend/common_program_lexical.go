@@ -114,25 +114,25 @@ func (p *arrayGenericProjection) commonFunctionComplete(node *ast.Node, fn *arra
 			typeKind := p.types[b.DeclaredType].Kind
 			captureKind := typeKind
 			if typeKind == "union" {
-				// Scalar members share the original binding slot. Presence-bearing
-				// unions still require exactly one supported payload.
+				// Scalar payloads share the original binding slot, including
+				// null/undefined alternatives. Other unions retain one payload.
 				captureKind = ""
 				payloads, absences := 0, 0
-				scalarOnly := true
+				scalarPayloads := true
 				for _, member := range p.types[b.DeclaredType].Members {
 					kind := p.types[member].Kind
-					scalarOnly = scalarOnly && kind == "scalar"
 					switch kind {
 					case "null", "undefined":
 						absences++
 					case "scalar", "string", "function", "array", "reference", "value":
+						scalarPayloads = scalarPayloads && kind == "scalar"
 						payloads++
 						captureKind = kind
 					default:
 						return p.fail(current, "nullable capture requires one supported payload and null/undefined presence")
 					}
 				}
-				scalarUnion := scalarOnly && payloads > 1
+				scalarUnion := scalarPayloads && payloads > 1
 				if !scalarUnion && (payloads != 1 || absences < 1 || absences > 2) {
 					return p.fail(current, "nullable capture requires one supported payload and null/undefined presence")
 				}

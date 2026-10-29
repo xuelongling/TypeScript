@@ -1,0 +1,152 @@
+[
+  {
+    "name": "original-null",
+    "source": "scalar-union-capture/multiple-scalar-null.ts",
+    "sha": "074536bbaa76a67888b7b9420debaecb78ca639cb4815951046c1a46a617dabf",
+    "failure": "",
+    "members": [
+      "bool",
+      "i32",
+      "null"
+    ]
+  },
+  {
+    "name": "undefined-shared",
+    "source": "scalar-presence-capture/undefined-shared.ts",
+    "sha": "e4c989d236adf1127776419155a3976be36bb634e2ca3132c14b57b95d15b1b0",
+    "failure": "",
+    "members": [
+      "bool",
+      "i32",
+      "undefined"
+    ]
+  },
+  {
+    "name": "both-shared",
+    "source": "scalar-presence-capture/both-shared.ts",
+    "sha": "dfcde6adc150e400841d4388f28aea513d4f83f8a1a899316ea69008e2385ee3",
+    "failure": "",
+    "members": [
+      "bool",
+      "i32",
+      "null",
+      "undefined"
+    ]
+  },
+  {
+    "name": "const-both",
+    "source": "scalar-presence-capture/const-both.ts",
+    "sha": "380e5d99f2e6e5482c5b9c29e12b651814284f36a5d4cdb112d4bcc899c1cd02",
+    "failure": "",
+    "members": [
+      "bool",
+      "i32",
+      "null",
+      "undefined"
+    ]
+  },
+  {
+    "name": "parameter-both",
+    "source": "scalar-presence-capture/parameter-both.ts",
+    "sha": "4bbb8cf0120ab5f47569474f0d2cd93f4e110eaa7474468a0b1472496b938618",
+    "failure": "",
+    "members": [
+      "bool",
+      "i32",
+      "null",
+      "undefined"
+    ]
+  },
+  {
+    "name": "ancestor-both",
+    "source": "scalar-presence-capture/ancestor-both.ts",
+    "sha": "3dc01bfa0883ce2c26dfb3fe8ee8021583607279f41f5974a2c8f130eefa426b",
+    "failure": "",
+    "members": [
+      "bool",
+      "i32",
+      "null",
+      "undefined"
+    ]
+  },
+  {
+    "name": "shadow-both",
+    "source": "scalar-presence-capture/shadow-both.ts",
+    "sha": "6597f3b7f7943a34572e1d97e251d4c46d46bdbb7799b74cdb4c96bd899a96ee",
+    "failure": "",
+    "members": [
+      "bool",
+      "i32",
+      "null",
+      "undefined"
+    ]
+  },
+  {
+    "name": "copy-both",
+    "source": "scalar-presence-capture/copy-both.ts",
+    "sha": "ec02c525b9c564f61e3d3474bf2ea1f28781927d2c8faa7a62e46b60ad219608",
+    "failure": "",
+    "members": [
+      "bool",
+      "i32",
+      "null",
+      "undefined"
+    ]
+  },
+  {
+    "name": "mixed-string",
+    "source": "scalar-union-capture/mixed-string.ts",
+    "sha": "2924c4edd60cbf69c0e03d4604cb1c740f96bb32eaf8c09ac98f1d4398ce48ce",
+    "failure": "r03-array-facts-capability",
+    "detail": "nullable capture requires one supported payload and null/undefined presence"
+  },
+  {
+    "name": "span-payload",
+    "source": "nullable-capture/span-payload.ts",
+    "sha": "ba01247113390ad7485cf7294b7c8a29a84334a81e54c2b8212fd25718951317",
+    "failure": "r03-array-facts-capability",
+    "detail": "nullable capture requires one supported payload and null/undefined presence"
+  },
+  {
+    "name": "generic-payload",
+    "source": "nullable-capture/generic-payload.ts",
+    "sha": "667e0435bcc07fe8bd1bbb6190fb176bbb6d5cad6f97c9a1e0511376b5121622",
+    "failure": "r03-array-facts-capability",
+    "detail": "closed original nominal class required"
+  },
+  {
+    "name": "block-local",
+    "source": "scalar-union-capture/block-local.ts",
+    "sha": "53b0773d89fcf7871ece9f2a61718e0b341ada515ab6f4c02303852aafef0167",
+    "failure": "r03-array-facts-capability",
+    "detail": "named closures require direct function-body declaration scope"
+  },
+  {
+    "name": "deferred-init",
+    "source": "scalar-union-capture/deferred-init.ts",
+    "sha": "9d7db43cf2696cb63b19ec618062009d5bcbece639b20cb09a4c28ea94efac0c",
+    "failure": "r03-array-facts-capability",
+    "detail": "dense local requires initialization"
+  },
+  {
+    "name": "mixed-reference",
+    "source": "scalar-presence-capture/mixed-reference.ts",
+    "sha": "c02876c38982e7bb6b8a87f042183cf681db773eac6936a974cf7d5379af8b5d",
+    "failure": "r03-array-facts-capability",
+    "detail": "nullable capture requires one supported payload and null/undefined presence"
+  },
+  {
+    "name": "mixed-value",
+    "source": "scalar-presence-capture/mixed-value.ts",
+    "sha": "16a3c106ac0ab348ccb15e474e6a9f5d6ec470ac5bc31fc01d73ae416eef6c3b",
+    "failure": "r03-array-facts-capability",
+    "detail": "nullable capture requires one supported payload and null/undefined presence"
+  },
+  {
+    "name": "mixed-function",
+    "source": "scalar-presence-capture/mixed-function.ts",
+    "sha": "07c868958dcb2e8bfd83822fe6c66a8a9e9c848a6ed5639df6f1aaae08292aa0",
+    "failure": "r03-array-facts-capability",
+    "detail": "nullable capture requires one supported payload and null/undefined presence"
+  }
+]
