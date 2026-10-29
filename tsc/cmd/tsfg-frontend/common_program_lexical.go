@@ -34,6 +34,35 @@ func commonLexicalOwner37s(node *ast.Node) *ast.Node {
 	}
 	return nil
 }
+
+// The original declaration block, not the containing function, owns lexical
+// visibility. This boundary excludes repeated entry in one function activation.
+func (p *arrayGenericProjection) commonSingleEntryScope(declaration, owner *ast.Node) (*ast.Node, error) {
+	scope := declaration.Parent
+	if declaration.Kind == ast.KindVariableDeclaration && scope != nil && scope.Parent != nil {
+		scope = scope.Parent.Parent
+	}
+	if scope == nil || scope.Kind != ast.KindBlock {
+		return nil, p.fail(declaration, "named closures require direct function-body declaration scope")
+	}
+	for ancestor := scope; ancestor != owner.Body(); ancestor = ancestor.Parent {
+		if err := p.annotationWork(); err != nil {
+			return nil, err
+		}
+		if ancestor == nil {
+			return nil, p.fail(declaration, "named closures require direct function-body declaration scope")
+		}
+		switch ancestor.Kind {
+		case ast.KindBlock, ast.KindIfStatement:
+		case ast.KindWhileStatement, ast.KindForStatement, ast.KindForInStatement, ast.KindForOfStatement, ast.KindDoStatement:
+			return nil, p.fail(declaration, "captured declaration scope may be entered repeatedly in one function activation")
+		default:
+			return nil, p.fail(declaration, "named closures require direct function-body declaration scope")
+		}
+	}
+	return scope, nil
+}
+
 func (p *arrayGenericProjection) commonBinding(node *ast.Node, b *arrayFactsBinding) error {
 	if err := p.annotationWork(); err != nil {
 		return err
@@ -58,12 +87,15 @@ func (p *arrayGenericProjection) commonFunctionHeader(node *ast.Node, fn *arrayG
 	scope := span{0, file.GetPositionMap().UTF8ToUTF16(len(file.Text()))}
 	parentID := ""
 	if parent := commonLexicalOwner37s(node); parent != nil {
-		var err error
+		declarationScope, err := p.commonSingleEntryScope(node, parent)
+		if err != nil {
+			return err
+		}
 		parentID, err = genericNodeID("tsfg.array-facts.function.v8\x00", parent)
 		if err != nil {
 			return err
 		}
-		scope = *genericSpan(parent.Body())
+		scope = *genericSpan(declarationScope)
 	} else if node.Parent != nil && node.Parent.Kind == ast.KindClassDeclaration {
 		scope = *genericSpan(node.Parent)
 	}
@@ -147,8 +179,15 @@ func (p *arrayGenericProjection) commonFunctionComplete(node *ast.Node, fn *arra
 				if b.Kind != "local" || captureKind != "scalar" && captureKind != "string" && captureKind != "function" && captureKind != "readSpan" && captureKind != "array" && captureKind != "reference" && captureKind != "value" {
 					return p.fail(current, "named closure capture requires initialized scalar/String/function/Array/ReadSpan/reference/value local or direct scalar/String/function/Array/ReadSpan/reference/value parameter")
 				}
-				if decl.Kind != ast.KindVariableDeclaration || decl.AsVariableDeclaration().Initializer == nil || owner == nil || decl.Parent == nil || decl.Parent.Parent == nil || decl.Parent.Parent.Parent != owner.Body() {
+				if decl.Kind != ast.KindVariableDeclaration || decl.AsVariableDeclaration().Initializer == nil || owner == nil {
 					return p.fail(current, "captured local must be initialized in its original function-body scope")
+				}
+				declarationScope, err := p.commonSingleEntryScope(decl, owner)
+				if err != nil {
+					return err
+				}
+				if declarationScope != owner.Body() && typeKind != "scalar" {
+					return p.fail(current, "block capture requires an initialized scalar local")
 				}
 			}
 			occurrences[b.ID] = append(occurrences[b.ID], commonProgramCaptureOccurrence{Range: *genericSpan(current), Read: read, Write: write})

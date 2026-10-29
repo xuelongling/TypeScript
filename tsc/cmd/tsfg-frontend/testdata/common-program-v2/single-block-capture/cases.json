@@ -1,0 +1,132 @@
+[
+  {
+    "name": "if-let",
+    "sha": "09ba0c606aa2131050208f436d6de7f693ca905959c6413e2d7fcb0b451ab2d6",
+    "cells": 1,
+    "capturingFunctions": 2,
+    "repeated": false,
+    "scalar": true,
+    "failure": ""
+  },
+  {
+    "name": "plain-let",
+    "sha": "2debcfdb3e554a872224d493db2170cd65846d3aea1f24ac35306db98c585e4a",
+    "cells": 1,
+    "capturingFunctions": 2,
+    "repeated": false,
+    "scalar": true,
+    "failure": ""
+  },
+  {
+    "name": "if-const",
+    "sha": "2d9967e2d1892d9f34056132805fe18fb8e727b0bcbb3a1c34a936a1e7228ad5",
+    "cells": 1,
+    "capturingFunctions": 2,
+    "repeated": false,
+    "scalar": true,
+    "failure": ""
+  },
+  {
+    "name": "if-bool",
+    "sha": "6f2fe19f4ab19724fdf521a7862f2dfabeb0a5d43ac23d09512eaf434dc80c8c",
+    "cells": 1,
+    "capturingFunctions": 2,
+    "repeated": false,
+    "scalar": true,
+    "failure": ""
+  },
+  {
+    "name": "nested-ancestor",
+    "sha": "573d228182209e685ebe602082859ef231a653c9578a071e8353981b10a2f2a7",
+    "cells": 1,
+    "capturingFunctions": 2,
+    "repeated": false,
+    "scalar": true,
+    "failure": ""
+  },
+  {
+    "name": "nested-block",
+    "sha": "379bf09b8891dcba7d7197234b2182fbc005aa7997a59e443a20f075fd371ac8",
+    "cells": 1,
+    "capturingFunctions": 2,
+    "repeated": false,
+    "scalar": true,
+    "failure": ""
+  },
+  {
+    "name": "shadow",
+    "sha": "22e315676b704a7e1e4265cb2e8568d8bed1397bf6ca4e1469ccb12e06e8b1dc",
+    "cells": 2,
+    "capturingFunctions": 3,
+    "repeated": false,
+    "scalar": true,
+    "failure": ""
+  },
+  {
+    "name": "same-name-blocks",
+    "sha": "cbe79e08b91609b3e053c1acfbfc79f8ba0bae17c51b9691e2d51b99754585a7",
+    "cells": 2,
+    "capturingFunctions": 4,
+    "repeated": false,
+    "scalar": true,
+    "failure": ""
+  },
+  {
+    "name": "unrelated-loop",
+    "sha": "ab8acfd9c5c86bd26705b62fb77ba3c0ea53c8a8e914973872d109d16de1aad5",
+    "cells": 1,
+    "capturingFunctions": 2,
+    "repeated": false,
+    "scalar": true,
+    "failure": ""
+  },
+  {
+    "name": "recursive-activation",
+    "sha": "ca27ae6508b04c1e7603cfae4617b1fbb53c0d9bedc3eacf7278e0dfe7952c37",
+    "cells": 1,
+    "capturingFunctions": 2,
+    "repeated": false,
+    "scalar": true,
+    "failure": ""
+  },
+  {
+    "name": "while-entry",
+    "sha": "94722c6b81b4753dacd5cf15a24f10375a74eb423711d0907554515015bb539d",
+    "cells": 1,
+    "capturingFunctions": 2,
+    "repeated": true,
+    "scalar": true,
+    "failure": "r03-array-facts-capability",
+    "detail": "captured declaration scope may be entered repeatedly in one function activation"
+  },
+  {
+    "name": "nested-while-entry",
+    "sha": "15224369b9263d9eef05df2bee66f96f750b0f8b48900a0d5d84663ba43bd6f4",
+    "cells": 1,
+    "capturingFunctions": 2,
+    "repeated": true,
+    "scalar": true,
+    "failure": "r03-array-facts-capability",
+    "detail": "captured declaration scope may be entered repeatedly in one function activation"
+  },
+  {
+    "name": "reference-block",
+    "sha": "679b0c886d9da9e36c5398e9e137a796e2f01b5b3ec9177720297035aaddd405",
+    "cells": 1,
+    "capturingFunctions": 2,
+    "repeated": false,
+    "scalar": false,
+    "failure": "r03-array-facts-capability",
+    "detail": "block capture requires an initialized scalar local"
+  },
+  {
+    "name": "deferred-init",
+    "sha": "71a0c99713bb52161f76569ff39a0b1a322f2cd1896cc7b9322990c1abf2f887",
+    "cells": 1,
+    "capturingFunctions": 2,
+    "repeated": false,
+    "scalar": true,
+    "failure": "r03-array-facts-capability",
+    "detail": "dense local requires initialization"
+  }
+]

@@ -162,9 +162,6 @@ func projectArrayGeneric(ctx context.Context, r request, input arrayFactsInput, 
 			if node.Kind != ast.KindFunctionDeclaration {
 				continue
 			}
-			if lexical != nil && lexical.parents[node] != nil && node.Parent != lexical.parents[node].Body() {
-				return empty, p.fail(node, "named closures require direct function-body declaration scope")
-			}
 			header, err := p.header(node, "")
 			if err != nil {
 				return empty, err

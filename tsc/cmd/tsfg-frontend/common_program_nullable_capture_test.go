@@ -79,7 +79,7 @@ func TestCommonProgramNullableCapture19x(t *testing.T) {
 				}
 				if sample.Failure == "r03-array-facts-capability" {
 					details := map[string]string{
-						"block-local":     "named closures require direct function-body declaration scope",
+						"block-local":     "block capture requires an initialized scalar local",
 						"deferred-init":   "dense local requires initialization",
 						"multi-payload":   "nullable capture requires one supported payload and null/undefined presence",
 						"span-payload":    "nullable capture requires one supported payload and null/undefined presence",
