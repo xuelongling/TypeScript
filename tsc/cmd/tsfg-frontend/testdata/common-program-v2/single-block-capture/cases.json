@@ -96,8 +96,8 @@
     "capturingFunctions": 2,
     "repeated": true,
     "scalar": true,
-    "failure": "r03-array-facts-capability",
-    "detail": "captured declaration scope may be entered repeatedly in one function activation"
+    "failure": "",
+    "detail": ""
   },
   {
     "name": "nested-while-entry",
@@ -106,8 +106,8 @@
     "capturingFunctions": 2,
     "repeated": true,
     "scalar": true,
-    "failure": "r03-array-facts-capability",
-    "detail": "captured declaration scope may be entered repeatedly in one function activation"
+    "failure": "",
+    "detail": ""
   },
   {
     "name": "reference-block",

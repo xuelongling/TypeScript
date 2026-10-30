@@ -40,7 +40,7 @@
     "sha": "fd84412360d8bc93fb5f9d2b3701cbfebb2d37e54450aba06db78d36c60f4e40",
     "repeated": true,
     "scalar": true,
-    "failure": "r03-array-facts-capability",
-    "detail": "captured declaration scope may be entered repeatedly in one function activation"
+    "failure": "",
+    "detail": ""
   }
 ]

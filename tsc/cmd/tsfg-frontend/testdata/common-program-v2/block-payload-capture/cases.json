@@ -178,8 +178,8 @@
     "name": "repeated-entry",
     "sha": "0a5769e96894ccb66e471c00bdc5bf6a75e7e6c915c4cc9d283420efb1ebe3d0",
     "repeated": true,
-    "failure": "r03-array-facts-capability",
-    "detail": "captured declaration scope may be entered repeatedly in one function activation"
+    "failure": "",
+    "detail": ""
   },
   {
     "name": "mixed-payload",

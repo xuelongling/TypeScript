@@ -35,11 +35,14 @@ func commonLexicalOwner37s(node *ast.Node) *ast.Node {
 	return nil
 }
 
-// The original declaration block, not the containing function, owns lexical
-// visibility. This boundary excludes repeated entry in one function activation.
-func (p *arrayGenericProjection) commonSingleEntryScope(declaration, owner *ast.Node) (*ast.Node, error) {
+// The original block owns lexical visibility. Repeated while entry remains
+// explicit in the statement tree; Source facts do not allocate environments.
+func (p *arrayGenericProjection) commonDeclarationScope(declaration, owner *ast.Node) (*ast.Node, error) {
 	scope := declaration.Parent
 	if declaration.Kind == ast.KindVariableDeclaration && scope != nil && scope.Parent != nil {
+		if scope.Flags&(ast.NodeFlagsLet|ast.NodeFlagsConst) == 0 {
+			return nil, p.fail(declaration, "captured local requires original let/const; var needs function-scope and hoisting facts")
+		}
 		scope = scope.Parent.Parent
 	}
 	if scope == nil || scope.Kind != ast.KindBlock {
@@ -53,9 +56,9 @@ func (p *arrayGenericProjection) commonSingleEntryScope(declaration, owner *ast.
 			return nil, p.fail(declaration, "named closures require direct function-body declaration scope")
 		}
 		switch ancestor.Kind {
-		case ast.KindBlock, ast.KindIfStatement:
-		case ast.KindWhileStatement, ast.KindForStatement, ast.KindForInStatement, ast.KindForOfStatement, ast.KindDoStatement:
-			return nil, p.fail(declaration, "captured declaration scope may be entered repeatedly in one function activation")
+		case ast.KindBlock, ast.KindIfStatement, ast.KindWhileStatement:
+		case ast.KindForStatement, ast.KindForInStatement, ast.KindForOfStatement, ast.KindDoStatement:
+			return nil, p.fail(declaration, "captured declaration loop has no common Program statement representation")
 		default:
 			return nil, p.fail(declaration, "named closures require direct function-body declaration scope")
 		}
@@ -87,7 +90,7 @@ func (p *arrayGenericProjection) commonFunctionHeader(node *ast.Node, fn *arrayG
 	scope := span{0, file.GetPositionMap().UTF8ToUTF16(len(file.Text()))}
 	parentID := ""
 	if parent := commonLexicalOwner37s(node); parent != nil {
-		declarationScope, err := p.commonSingleEntryScope(node, parent)
+		declarationScope, err := p.commonDeclarationScope(node, parent)
 		if err != nil {
 			return err
 		}
@@ -182,7 +185,7 @@ func (p *arrayGenericProjection) commonFunctionComplete(node *ast.Node, fn *arra
 				if decl.Kind != ast.KindVariableDeclaration || decl.AsVariableDeclaration().Initializer == nil || owner == nil {
 					return p.fail(current, "captured local must be initialized in its original function-body scope")
 				}
-				declarationScope, err := p.commonSingleEntryScope(decl, owner)
+				declarationScope, err := p.commonDeclarationScope(decl, owner)
 				if err != nil {
 					return err
 				}

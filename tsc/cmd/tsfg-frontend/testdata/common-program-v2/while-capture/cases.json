@@ -1,0 +1,250 @@
+[
+  {
+    "name": "string-concrete",
+    "sha": "f37e2f98dfc6715a000d0b5468959c67427e6e65343379d3127fe152563e7b84",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "string-null",
+    "sha": "0654d908f61c895d58bd31a2f50f5c61234472e873f42d7fbe855633010a96dd",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "string-undefined",
+    "sha": "f1184b1a1ddbe9b7387c1d860f0e0b33414cf3ec1eab54ed538def742866bbd5",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "string-both",
+    "sha": "5e7f0325be4ae44f2d3dd10c4f97f48cfd0a6791207abc20ca7f4d588943effb",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "string-const-both",
+    "sha": "b53cb386fa1c0fb875ae31554eb5e24c8417438263e54560cda2b0fbab5bbfd5",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "function-concrete",
+    "sha": "f34cf918a74e4f665caddcde53e933bbf008048dc0a40f8814f393221c34b662",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "function-null",
+    "sha": "cec1de64f84fc78196e0e936fea9c0dc39e3a7281f5793af939f09acc2bf5b5d",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "function-undefined",
+    "sha": "c04dbb20dfca509938a1b2594a41aa90d7c3b07496ce82b502a11cdcbbe2b2b2",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "function-both",
+    "sha": "0322e780bae38ee0ab0a776606c6fa29edde590862456b7901e973139435f23a",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "function-const-both",
+    "sha": "f9b903a0e2d878b88504d56be3a4aa9fdaa996bd851feaced050cf3e980b842e",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "array-concrete",
+    "sha": "3a09d3bb3c79dbbe1053cb7dcbd96c6df0eb9cfab0feea93d0aa5fef3af8ea2a",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "array-null",
+    "sha": "95213aa1a412df6c57bf03f4955b92d051a5fed5f01d4e282c72fe8a888c13e9",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "array-undefined",
+    "sha": "f43380cf2b12420df361c89f80536242723fcdf6f53945f72cc25762632d3204",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "array-both",
+    "sha": "4146e316a97feead851187f7a1321e7078b091d2791f811895913e05f515074e",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "array-const-both",
+    "sha": "c1f9485b0e1900ac0a0e306979217301a5d0e41d6412468c37074840eb764f22",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "reference-concrete",
+    "sha": "d2b3f785e04a6831b5ff083c640794ee8826ba1b0433a8c34c912fd2c9f793a8",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "reference-null",
+    "sha": "96d594e17ca09dacd9b91c62dcc2dfc7f1e74893fe2842dcd7e1a9f3cfe6a29e",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "reference-undefined",
+    "sha": "1468fead96ca8033a4db0993bac3b6e89b587c6f9a65e15328f1fa46d20cef95",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "reference-both",
+    "sha": "fcf0ede540d502153a64627fe2034fbebf47f204aaf5b9bb1d8074c9c84d228c",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "reference-const-both",
+    "sha": "c346bc3eee4c1bb450719ca1e3970e631f9c878d015cc10fbc45949dd8d03fcc",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "value-concrete",
+    "sha": "d45457a884a8b34a1b65403846711918e1fa8ddd2703b57a20a81dbc75af2bfc",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "value-null",
+    "sha": "fc251e53fce4d50736ab50925376bd1bb51acbe2d893dfcd805d0696e2c94d6c",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "value-undefined",
+    "sha": "dbf2512a0a7379077d3e55b77312577084385b6ee143e441d8085d3929067fec",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "value-both",
+    "sha": "58b5e6a872968fffc17c9a7c0dfcfc5455c3d4389ffa3adda7b1f358f4271912",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "value-const-both",
+    "sha": "04dad077afa444b86728537fb49e19844ec95042d367b309b727abddb0822452",
+    "repeated": true,
+    "scalar": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "var-binding",
+    "sha": "7a58e791a40ae90dc0a0542eb8a8dda6c9bfa5dd38dbf8b62b54cf6e62d949fe",
+    "repeated": true,
+    "scalar": true,
+    "failure": "r03-array-facts-capability",
+    "detail": "captured local requires original let/const; var needs function-scope and hoisting facts"
+  },
+  {
+    "name": "for-entry",
+    "sha": "60f89a2fac6ba1dda5b02db9479e3014baf5dd08647a7b215a6c87958ab6be4b",
+    "repeated": true,
+    "scalar": true,
+    "failure": "r03-array-facts-capability",
+    "detail": "statement has no owned array v8 representation"
+  },
+  {
+    "name": "do-entry",
+    "sha": "9fca9b1fff4005bde9499a53a197e19c72d18d5dd334708a3279f36aa9a292d6",
+    "repeated": true,
+    "scalar": true,
+    "failure": "r03-array-facts-capability",
+    "detail": "statement has no owned array v8 representation"
+  },
+  {
+    "name": "deferred-init",
+    "sha": "7d915f3c505c85fe25e0bfa1e6ca01fc035e69ddfdcfe06d044c16ba22eb85ee",
+    "repeated": true,
+    "scalar": true,
+    "failure": "r03-array-facts-capability",
+    "detail": "dense local requires initialization"
+  },
+  {
+    "name": "readspan-lifetime",
+    "sha": "931df38abf69bacb23595fb54ec3a1ae51379cb7d3c462dd29acc094e4c80c80",
+    "repeated": true,
+    "scalar": false,
+    "failure": "r03-array-facts-capability",
+    "detail": "block ReadSpan capture requires independent borrow lifetime qualification"
+  },
+  {
+    "name": "mixed-payload",
+    "sha": "2b9a157a2c27a4656d8f05b442b822cf14448ec5fb26dea20b9a3f801136249c",
+    "repeated": true,
+    "scalar": false,
+    "failure": "r03-array-facts-capability",
+    "detail": "nullable capture requires one supported payload and null/undefined presence"
+  }
+]
