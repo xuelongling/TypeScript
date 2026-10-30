@@ -33,7 +33,7 @@ func (p *arrayGenericProjection) commonException(node *ast.Node, state *arrayGen
 		if err := p.seedCommonGlobals(state); err != nil {
 			return out, err
 		}
-		selected := &arrayGenericState{header: state.header, ownerType: state.ownerType, commonSeeded: true,
+		selected := &arrayGenericState{header: state.header, ownerType: state.ownerType, commonSeeded: true, varDeclarations: state.varDeclarations,
 			bindings: map[*ast.Symbol]arrayFactsBinding{}, lengths: state.lengths}
 		for symbol, binding := range state.bindings {
 			if err := p.annotationWork(); err != nil {

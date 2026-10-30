@@ -117,19 +117,21 @@ type arrayGenericExpression struct {
 	NameRange          *span                                 `json:"nameRange,omitempty"`
 }
 type arrayGenericStatement struct {
-	FunctionID   string                   `json:"functionId,omitempty"`
-	TryBlock     *commonProgramBlock      `json:"tryBlock,omitempty"`
-	CatchClause  *commonProgramCatch      `json:"catchClause,omitempty"`
-	FinallyBlock *commonProgramBlock      `json:"finallyBlock,omitempty"`
-	Kind         string                   `json:"kind"`
-	Range        span                     `json:"range"`
-	Binding      string                   `json:"binding,omitempty"`
-	Initializer  *arrayGenericExpression  `json:"initializer,omitempty"`
-	Value        *arrayGenericExpression  `json:"value,omitempty"`
-	Condition    *arrayGenericExpression  `json:"condition,omitempty"`
-	Then         *[]arrayGenericStatement `json:"then,omitzero"`
-	Else         *[]arrayGenericStatement `json:"else,omitzero"`
-	Body         *[]arrayGenericStatement `json:"body,omitzero"`
+	NameRange       *span                    `json:"nameRange,omitempty"`
+	AnnotationRange *span                    `json:"annotationRange,omitempty"`
+	FunctionID      string                   `json:"functionId,omitempty"`
+	TryBlock        *commonProgramBlock      `json:"tryBlock,omitempty"`
+	CatchClause     *commonProgramCatch      `json:"catchClause,omitempty"`
+	FinallyBlock    *commonProgramBlock      `json:"finallyBlock,omitempty"`
+	Kind            string                   `json:"kind"`
+	Range           span                     `json:"range"`
+	Binding         string                   `json:"binding,omitempty"`
+	Initializer     *arrayGenericExpression  `json:"initializer,omitempty"`
+	Value           *arrayGenericExpression  `json:"value,omitempty"`
+	Condition       *arrayGenericExpression  `json:"condition,omitempty"`
+	Then            *[]arrayGenericStatement `json:"then,omitzero"`
+	Else            *[]arrayGenericStatement `json:"else,omitzero"`
+	Body            *[]arrayGenericStatement `json:"body,omitzero"`
 }
 type arrayGenericFunction struct {
 	LexicalParent         **string                `json:"lexicalParent,omitzero"`

@@ -29,11 +29,12 @@ func arrayFactsBindingID(path string, name span) (string, error) {
 }
 
 type arrayGenericState struct {
-	commonSeeded bool
-	ownerType    string
-	header       *arrayGenericHeader
-	bindings     map[*ast.Symbol]arrayFactsBinding
-	lengths      map[string]*arrayFactsLengthState
+	commonSeeded    bool
+	ownerType       string
+	header          *arrayGenericHeader
+	bindings        map[*ast.Symbol]arrayFactsBinding
+	varDeclarations map[*ast.Symbol]bool
+	lengths         map[string]*arrayFactsLengthState
 }
 
 func genericNodeID(domain string, node *ast.Node) (string, error) {
@@ -55,10 +56,19 @@ func (p *arrayGenericProjection) typedBinding(node, annotation *ast.Node, kind s
 		return empty, p.fail(node, "original named binding required")
 	}
 	symbol := p.check.GetSymbolAtLocation(node.Name())
-	if symbol == nil || len(symbol.Declarations) != 1 || symbol.Declarations[0] != node {
+	if p.common != nil && (commonVarDeclaration(node) || node.Kind == ast.KindParameter && symbol != nil && len(symbol.Declarations) != 1) {
+		original, err := p.commonVarOriginal(symbol, commonLexicalOwner37s(node))
+		if err != nil {
+			return empty, err
+		}
+		if original != node {
+			return empty, p.fail(node, "binding must retain its original value declaration")
+		}
+	} else if symbol == nil || len(symbol.Declarations) != 1 || symbol.Declarations[0] != node {
 		return empty, p.fail(node, "binding must own its unique original declaration")
 	}
-	if !p.check.IsTypeAssignableTo(p.check.GetTypeOfSymbol(symbol), p.actual[typ]) {
+	actual := p.check.GetTypeOfSymbol(symbol)
+	if !p.check.IsTypeAssignableTo(actual, p.actual[typ]) || p.common != nil && commonVarDeclaration(node) && annotation == nil && !p.check.IsTypeAssignableTo(p.actual[typ], actual) {
 		return empty, p.fail(node, "binding official type differs from annotation")
 	}
 	id, err := arrayFactsBindingID(ast.GetSourceFileOfNode(node).FileName(), *genericSpan(node.Name()))
@@ -198,6 +208,11 @@ func (p *arrayGenericProjection) function(header *arrayGenericHeader) (arrayGene
 	if header.node.Body() == nil {
 		return fn, p.fail(header.node, "original implementation body required")
 	}
+	if p.common != nil {
+		if err := p.commonEnterVars(state); err != nil {
+			return fn, err
+		}
+	}
 	body, err := p.statements(header.node.Body().AsBlock().Statements.Nodes, state, &fn, 0)
 	if err != nil {
 		return fn, err
@@ -234,6 +249,14 @@ func (p *arrayGenericProjection) statements(nodes []*ast.Node, state *arrayGener
 		case ast.KindVariableStatement:
 			list := node.AsVariableStatement().DeclarationList
 			for _, local := range list.AsVariableDeclarationList().Declarations.Nodes {
+				if p.common != nil && commonVarDeclaration(local) {
+					row, err := p.commonVarStatement(local, state, fn)
+					if err != nil {
+						return nil, err
+					}
+					result = append(result, row)
+					continue
+				}
 				decl := local.AsVariableDeclaration()
 				if decl.Initializer == nil {
 					return nil, p.fail(local, "dense local requires initialization")

@@ -38,8 +38,9 @@ func TestCommonProgramWhileCapturePayloads19ak(t *testing.T) {
 				t.Fatal("frozen complete while capture Source changed")
 			}
 			readSpanCaptureSave26i(t, sample.Name+"-source.ts", source)
-			compare := singleBlockCaptureOfficial19ae(t, string(source), blockCaptureExpectation{"blockEntry", "cell", 1, 2, sample.Repeated, sample.Scalar})
+			var compare func(commonProgramPayload)
 			if sample.Name == "var-binding" {
+				compare = varBindingOfficial19am(t, string(source), "blockEntry", "cell")
 				program := commonMethodProgram37q(t, string(source))
 				file := program.GetSourceFile("/src/main.ts")
 				check, release := program.GetTypeCheckerForFileExclusive(t.Context(), file)
@@ -51,7 +52,7 @@ func TestCommonProgramWhileCapturePayloads19ak(t *testing.T) {
 						found++
 						original := check.GetSymbolAtLocation(node.Name())
 						if node.Parent.Flags&ast.NodeFlagsBlockScoped != 0 || original == nil || original.Flags&ast.SymbolFlagsFunctionScopedVariable == 0 || len(original.Declarations) != 1 || original.Declarations[0] != node {
-							t.Fatal("negative must retain the original function-scoped var Symbol")
+							t.Fatal("case must retain the original function-scoped var Symbol")
 						}
 					}
 					node.ForEachChild(func(child *ast.Node) bool { walk(child); return false })
@@ -60,6 +61,8 @@ func TestCommonProgramWhileCapturePayloads19ak(t *testing.T) {
 				if found != 1 {
 					t.Fatal("original unique var declaration absent")
 				}
+			} else {
+				compare = singleBlockCaptureOfficial19ae(t, string(source), blockCaptureExpectation{"blockEntry", "cell", 1, 2, sample.Repeated, sample.Scalar})
 			}
 			request := scalarParameterRequest19m(t, source)
 			readSpanCaptureSave26i(t, sample.Name+"-request.json", request)

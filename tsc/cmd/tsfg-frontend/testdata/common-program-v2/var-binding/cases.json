@@ -1,0 +1,44 @@
+[
+  {
+    "name": "no-init",
+    "sha": "b70db868135e3ec4261408a8ad369ec79bd37c532f9d6406661e378232753541",
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "redeclared",
+    "sha": "30cef2397f498fd781e8b080949ef48bf62325071e2fe5dbc2d37325bebd1a40",
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "parameter-redeclared",
+    "sha": "b083d4fd5c81b32dff758b4a3e9ff0822c603f6812ad21e8dec19965a273cd98",
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "shadowed-owner",
+    "sha": "9fef2b5903ed5d5ba37a0485c367101c0b99b916d118b9e1229209e663a6c040",
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "logical-type-conflict",
+    "sha": "58f3eb55048476c803e609d5adec3dc3f8a730fce765ca35bd5aa8eb43116ae4",
+    "failure": "r03-array-facts-capability",
+    "detail": "var redeclaration must retain the original logical declared type"
+  },
+  {
+    "name": "inferred-parameter",
+    "sha": "87fa6d05ef6667cfb968411a81475577e8d7701067596af97f105b67b8908901",
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "readspan-lifetime",
+    "sha": "b45fa51312479ef7c590bff9ee159a623076fe44521e0c63b7f224a81a449ab5",
+    "failure": "r03-array-facts-capability",
+    "detail": "function-scoped var ReadSpan capture requires independent borrow lifetime qualification"
+  }
+]

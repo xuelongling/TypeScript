@@ -40,8 +40,8 @@ func commonLexicalOwner37s(node *ast.Node) *ast.Node {
 func (p *arrayGenericProjection) commonDeclarationScope(declaration, owner *ast.Node) (*ast.Node, error) {
 	scope := declaration.Parent
 	if declaration.Kind == ast.KindVariableDeclaration && scope != nil && scope.Parent != nil {
-		if scope.Flags&(ast.NodeFlagsLet|ast.NodeFlagsConst) == 0 {
-			return nil, p.fail(declaration, "captured local requires original let/const; var needs function-scope and hoisting facts")
+		if commonVarDeclaration(declaration) {
+			return owner.Body(), nil
 		}
 		scope = scope.Parent.Parent
 	}
@@ -141,10 +141,16 @@ func (p *arrayGenericProjection) commonFunctionComplete(node *ast.Node, fn *arra
 			if !found || !ledger.add(b.ID, read, write) {
 				return nil
 			}
-			if len(original.Declarations) != 1 {
+			decl := original.ValueDeclaration
+			if commonVarDeclaration(decl) || b.Kind == "parameter" && len(original.Declarations) != 1 {
+				var err error
+				decl, err = p.commonVarOriginal(original, commonLexicalOwner37s(decl))
+				if err != nil {
+					return err
+				}
+			} else if len(original.Declarations) != 1 || original.Declarations[0] != decl {
 				return p.fail(current, "captured binding must retain its unique original declaration")
 			}
-			decl := original.Declarations[0]
 			owner := commonLexicalOwner37s(decl)
 			typeKind := p.types[b.DeclaredType].Kind
 			captureKind := typeKind
@@ -182,8 +188,12 @@ func (p *arrayGenericProjection) commonFunctionComplete(node *ast.Node, fn *arra
 				if b.Kind != "local" || captureKind != "scalar" && captureKind != "string" && captureKind != "function" && captureKind != "readSpan" && captureKind != "array" && captureKind != "reference" && captureKind != "value" {
 					return p.fail(current, "named closure capture requires initialized scalar/String/function/Array/ReadSpan/reference/value local or direct scalar/String/function/Array/ReadSpan/reference/value parameter")
 				}
-				if decl.Kind != ast.KindVariableDeclaration || decl.AsVariableDeclaration().Initializer == nil || owner == nil {
+				isVar := commonVarDeclaration(decl)
+				if decl.Kind != ast.KindVariableDeclaration || !isVar && decl.AsVariableDeclaration().Initializer == nil || owner == nil {
 					return p.fail(current, "captured local must be initialized in its original function-body scope")
+				}
+				if isVar && captureKind == "readSpan" {
+					return p.fail(current, "function-scoped var ReadSpan capture requires independent borrow lifetime qualification")
 				}
 				declarationScope, err := p.commonDeclarationScope(decl, owner)
 				if err != nil {

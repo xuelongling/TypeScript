@@ -204,8 +204,8 @@
     "sha": "7a58e791a40ae90dc0a0542eb8a8dda6c9bfa5dd38dbf8b62b54cf6e62d949fe",
     "repeated": true,
     "scalar": true,
-    "failure": "r03-array-facts-capability",
-    "detail": "captured local requires original let/const; var needs function-scope and hoisting facts"
+    "failure": "",
+    "detail": ""
   },
   {
     "name": "for-entry",
