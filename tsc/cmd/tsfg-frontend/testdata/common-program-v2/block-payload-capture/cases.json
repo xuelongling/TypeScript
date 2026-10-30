@@ -1,0 +1,205 @@
+[
+  {
+    "name": "string-concrete",
+    "sha": "fb1f1e9550e6f79b1b9ffa259f52c9d91910828423c7bf70a41c4e05aeb60560",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "string-null",
+    "sha": "d959cf83e06c546a67a2e5903b06cdc765aed7164401d0fe86ac56e17db3de57",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "string-undefined",
+    "sha": "33c610ef3e842d11be8d308e08090f873a80eb67a8b2bd8dae026e0079b5614a",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "string-both",
+    "sha": "6ce72d7ead9d63230172f639e076bb13baeadbd0dcdaebf730d8bd4ae2c9cb23",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "string-const-both",
+    "sha": "172bfbc9dfccdbb565dc4b0c583526a681634fb1fea748f60641026041cdbb24",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "function-concrete",
+    "sha": "4afeec3e7d006d146c613908ecc81998bfdd811f5d0ad9cfe3576e4de90404a3",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "function-null",
+    "sha": "17ccbceb0ad63935d68cb45614f809c0da83e016c9d952ec0e9af970cae93a0e",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "function-undefined",
+    "sha": "9735d34783e099a89b66cda2b2f5336570741ea276c091a3f753ae250dc53ae3",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "function-both",
+    "sha": "7c43e49fb85af1ce2982b6b57fcdcbe6e20bf370d149d406681a27f6fe7139fe",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "function-const-both",
+    "sha": "07c60995f9f999fab392850576b8766356f06828730c7f524ea9aaedac9167d0",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "array-concrete",
+    "sha": "1547c422ae51a535f91d886c058513f8a97989294f3fb3c0606e0746ba8999c5",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "array-null",
+    "sha": "cd35a5483d39b740fa1f98551cfb36c8343b152e03328bfae33f0bc7bd01590e",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "array-undefined",
+    "sha": "f5b9b2f401f4ea3c72e7f4882e309697e344ebe3800689db30caf847841403f5",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "array-both",
+    "sha": "2df9dd7f99a45665f52d9c77f67421772bad99754da4aa2ccc20b46eb798a938",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "array-const-both",
+    "sha": "4b9660571a5c364dc32266312343e44e06369b82a1791461407c3f0b1a30d11c",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "reference-concrete",
+    "sha": "b0b2fe096c1f98ab04a3727f794067fb4a8aee70ee1510167320d47def232394",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "reference-null",
+    "sha": "edbdbc97541cd55c80d0e830bc080138b896c2e6f17979d969ae8b46bf52635d",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "reference-undefined",
+    "sha": "ec6c9230f19e06f8567029bd8f73733ba3ea4d07d00e1821695ccdfbd0e03c17",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "reference-both",
+    "sha": "1edc14d16b58c929fcaf1d34962915afb597cbe14c8a3d9a9a564a9688817c59",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "reference-const-both",
+    "sha": "57f12ca6cd800548949eb9e3f516d9b88d9337f3932a6ea3ad35adafb939da0a",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "value-concrete",
+    "sha": "7cc076bcf05404702f0330ebf35e81845edbab96060c19e9bb0eb166e68ad6c6",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "value-null",
+    "sha": "149f00f82297fae6d1ac86ec7433705c4aa78c691f371944527863a9507b3240",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "value-undefined",
+    "sha": "3866864547a5a4146522d5202e27a827f87b86726fe687141b7c34ab8f433091",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "value-both",
+    "sha": "b710e82a9959fbd80231ba92363e81ed623da1c9e171019bb150b58a5807b19d",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "value-const-both",
+    "sha": "949039904ed777cfaa3e442d37b5ff737b686fc2948c845d61d7e1a7ce71e553",
+    "repeated": false,
+    "failure": "",
+    "detail": ""
+  },
+  {
+    "name": "repeated-entry",
+    "sha": "0a5769e96894ccb66e471c00bdc5bf6a75e7e6c915c4cc9d283420efb1ebe3d0",
+    "repeated": true,
+    "failure": "r03-array-facts-capability",
+    "detail": "captured declaration scope may be entered repeatedly in one function activation"
+  },
+  {
+    "name": "mixed-payload",
+    "sha": "889d67b8406136f01d6a957b0be24b5be8226aa833ecd0800514d6d00b12797f",
+    "repeated": false,
+    "failure": "r03-array-facts-capability",
+    "detail": "nullable capture requires one supported payload and null/undefined presence"
+  },
+  {
+    "name": "deferred-init",
+    "sha": "cf0677c10e8b72515418eb63671142103638b50b8bf96b06cae7432be58665b5",
+    "repeated": false,
+    "failure": "r03-array-facts-capability",
+    "detail": "dense local requires initialization"
+  },
+  {
+    "name": "readspan-lifetime",
+    "sha": "d8ce6693e2e70240dd20ac11d55603d8daa99a1629a02052810c14233f38dbcb",
+    "repeated": false,
+    "failure": "r03-array-facts-capability",
+    "detail": "block ReadSpan capture requires independent borrow lifetime qualification"
+  }
+]

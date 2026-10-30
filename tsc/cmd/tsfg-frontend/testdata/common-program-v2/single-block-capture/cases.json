@@ -116,8 +116,8 @@
     "capturingFunctions": 2,
     "repeated": false,
     "scalar": false,
-    "failure": "r03-array-facts-capability",
-    "detail": "block capture requires an initialized scalar local"
+    "failure": "",
+    "detail": ""
   },
   {
     "name": "deferred-init",

@@ -186,8 +186,8 @@ func (p *arrayGenericProjection) commonFunctionComplete(node *ast.Node, fn *arra
 				if err != nil {
 					return err
 				}
-				if declarationScope != owner.Body() && captureKind != "scalar" {
-					return p.fail(current, "block capture requires an initialized scalar local")
+				if declarationScope != owner.Body() && captureKind == "readSpan" {
+					return p.fail(current, "block ReadSpan capture requires independent borrow lifetime qualification")
 				}
 			}
 			occurrences[b.ID] = append(occurrences[b.ID], commonProgramCaptureOccurrence{Range: *genericSpan(current), Read: read, Write: write})

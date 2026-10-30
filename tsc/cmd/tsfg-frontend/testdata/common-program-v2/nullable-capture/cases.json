@@ -517,7 +517,7 @@
   {
     "name": "block-local",
     "sha": "94af7bafef6097cdf0d4c10d25f6db996efab3bcd399a3390965540146b72a78",
-    "failure": "r03-array-facts-capability"
+    "failure": ""
   },
   {
     "name": "deferred-init",

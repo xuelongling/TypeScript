@@ -106,6 +106,7 @@ func singleBlockCaptureOfficial19ae(t *testing.T, source string, expected blockC
 	}
 	declarations := map[*ast.Symbol]*ast.Node{}
 	bindingIDs := map[*ast.Node]string{}
+	declaredTypes := map[*ast.Node]*checker.Type{}
 	delegatedUnions := map[*ast.Node]bool{}
 	loopAncestor, allScalar, blockCells := false, true, 0
 	visit = func(n *ast.Node) {
@@ -116,6 +117,7 @@ func singleBlockCaptureOfficial19ae(t *testing.T, source string, expected blockC
 			}
 			declarations[symbol] = n
 			actual := check.GetTypeFromTypeNode(n.Type())
+			declaredTypes[n] = actual
 			delegatedUnions[n] = unionCaptureAnnotation19x(n.Type(), actual)
 			members := []*checker.Type{actual}
 			if actual.IsUnion() {
@@ -144,34 +146,30 @@ func singleBlockCaptureOfficial19ae(t *testing.T, source string, expected blockC
 	visit(entry)
 	uses := map[*ast.Node]map[*ast.Node][]commonProgramCaptureOccurrence{}
 	originalUses := map[span]*ast.Node{}
-	flows := map[span]string{}
+	flows := map[span]*checker.Type{}
 	calls := map[span]*ast.Node{}
+	functionReferences := map[span]*ast.Node{}
 	visit = func(n *ast.Node) {
-		if n.Kind == ast.KindCallExpression {
+		if n.Kind == ast.KindCallExpression || n.Kind == ast.KindNewExpression {
 			signature := check.GetResolvedSignature(n)
-			if signature == nil || signature.Declaration() == nil {
+			if signature == nil {
 				t.Fatal("original selected block call signature absent")
 			}
-			calls[rangeOf(n)] = signature.Declaration()
+			if signature.Declaration() != nil {
+				calls[rangeOf(n)] = signature.Declaration()
+			}
 		}
 		if n.Kind == ast.KindIdentifier {
+			if symbol := check.GetSymbolAtLocation(n); symbol != nil && len(symbol.Declarations) == 1 {
+				declaration := symbol.Declarations[0]
+				directCallee := n.Parent.Kind == ast.KindCallExpression && n.Parent.AsCallExpression().Expression == n
+				if declaration.Kind == ast.KindFunctionDeclaration && n != declaration.Name() && !directCallee {
+					functionReferences[rangeOf(n)] = declaration
+				}
+			}
 			if declaration := declarations[check.GetSymbolAtLocation(n)]; declaration != nil && n != declaration.Name() {
 				originalUses[rangeOf(n)] = declaration
-				actual := check.GetTypeAtLocation(n)
-				members := []*checker.Type{actual}
-				if actual.IsUnion() {
-					members = actual.Types()
-				}
-				numbers, booleans := true, true
-				for _, member := range members {
-					numbers = numbers && member.Flags()&checker.TypeFlagsNumberLike != 0
-					booleans = booleans && member.Flags()&checker.TypeFlagsBooleanLike != 0
-				}
-				if numbers {
-					flows[rangeOf(n)] = "i32"
-				} else if booleans {
-					flows[rangeOf(n)] = "bool"
-				}
+				flows[rangeOf(n)] = check.GetTypeAtLocation(n)
 				fn := owner(n)
 				if fn != owner(declaration) {
 					if uses[fn] == nil {
@@ -225,6 +223,11 @@ func singleBlockCaptureOfficial19ae(t *testing.T, source string, expected blockC
 			}
 		}
 		bindings := map[string]arrayFactsBinding{}
+		types := map[string]arrayGenericType{}
+		for _, typ := range payload.Types {
+			types[typ.ID] = typ
+		}
+		matchType := captureTypeMatcherOfficial19ai(t, check, types, rangeOf)
 		for _, fn := range payload.Functions {
 			for _, b := range fn.Bindings {
 				bindings[b.ID] = b
@@ -232,20 +235,20 @@ func singleBlockCaptureOfficial19ae(t *testing.T, source string, expected blockC
 		}
 		for _, n := range declarations {
 			b, found := bindings[bindingIDs[n]]
-			typeName := strings.TrimSpace(source[n.Type().Pos():n.Type().End()])
-			if !found || b.Name != expected.Binding || b.Kind != "local" || !delegatedUnions[n] && b.DeclaredType != typeName || b.NameRange != rangeOf(n.Name()) || b.DeclarationRange != rangeOf(n) || b.Writable != (n.Parent.Flags&ast.NodeFlagsConst == 0) || b.LexicalOwner == nil || *b.LexicalOwner == nil || **b.LexicalOwner != functionIDs[owner(n)] {
-				t.Fatal("original scalar block binding identity/owner/const differs")
+			if !found || b.Name != expected.Binding || b.Kind != "local" || !matchType(b.DeclaredType, declaredTypes[n]) || b.NameRange != rangeOf(n.Name()) || b.DeclarationRange != rangeOf(n) || b.Writable != (n.Parent.Flags&ast.NodeFlagsConst == 0) || b.LexicalOwner == nil || *b.LexicalOwner == nil || **b.LexicalOwner != functionIDs[owner(n)] {
+				t.Fatal("original block binding type/identity/owner/const differs")
 			}
 		}
 		seenUses, seenCalls, seenDeclarations := map[span]bool{}, map[span]bool{}, map[string]bool{}
+		seenFunctionReferences := map[span]bool{}
 		var expression func(*arrayGenericExpression)
 		expression = func(v *arrayGenericExpression) {
 			if v == nil {
 				return
 			}
 			if n := originalUses[v.Range]; n != nil && v.Kind == "bindingReference" {
-				if v.Binding != bindingIDs[n] || v.Type != bindings[bindingIDs[n]].DeclaredType || !delegatedUnions[n] && v.FlowType != flows[v.Range] {
-					t.Fatal("original scalar read/flow changed binding")
+				if v.Binding != bindingIDs[n] || v.Type != bindings[bindingIDs[n]].DeclaredType || !matchType(v.FlowType, flows[v.Range]) {
+					t.Fatal("original block read/flow changed binding or official payload")
 				}
 				seenUses[v.Range] = true
 			}
@@ -264,6 +267,15 @@ func singleBlockCaptureOfficial19ae(t *testing.T, source string, expected blockC
 					t.Fatal("original selected block call signature differs")
 				}
 				seenCalls[v.Range] = true
+				if v.Kind == "call" && declaration.Kind == ast.KindFunctionDeclaration && v.Callee != functionIDs[declaration] {
+					t.Fatal("original direct call changed function target")
+				}
+			}
+			if declaration := functionReferences[v.Range]; declaration != nil && v.Kind == "functionReference" {
+				if v.FunctionID != functionIDs[declaration] {
+					t.Fatal("original function value changed target with the same signature")
+				}
+				seenFunctionReferences[v.Range] = true
 			}
 			for _, child := range []*arrayGenericExpression{v.Receiver, v.Index, v.Expression, v.Value, v.Left, v.Right} {
 				expression(child)
@@ -346,7 +358,7 @@ func singleBlockCaptureOfficial19ae(t *testing.T, source string, expected blockC
 			}
 			statements(fn.Body, rangeOf(n.Body()))
 		}
-		if len(seenUses) != len(originalUses) || len(seenCalls) != len(calls) || len(seenDeclarations) != len(bindingIDs) {
+		if len(seenUses) != len(originalUses) || len(seenCalls) != len(calls) || len(seenDeclarations) != len(bindingIDs) || len(seenFunctionReferences) != len(functionReferences) {
 			t.Fatal("original complete block accesses/calls/declarations cropped")
 		}
 	}
