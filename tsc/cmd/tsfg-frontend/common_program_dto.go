@@ -11,6 +11,21 @@ import (
 //go:embed testdata/common-program-v2/schema.json
 var commonProgramSchema []byte
 
+//go:embed testdata/common-program-v3/schema.json
+var commonProgramConstructorSchema []byte
+
+type commonProgramParameterStep struct {
+	Binding      string                  `json:"binding"`
+	ArgumentType string                  `json:"argumentType"`
+	Range        span                    `json:"range"`
+	Initializer  *arrayGenericExpression `json:"initializer,omitempty"`
+}
+type commonProgramParameterInitialization struct {
+	MinimumArgumentCount    int                          `json:"minimumArgumentCount"`
+	HasParameterExpressions bool                         `json:"hasParameterExpressions"`
+	Steps                   []commonProgramParameterStep `json:"steps"`
+}
+
 type commonProgramCaptureOccurrence struct {
 	Range span `json:"range"`
 	Read  bool `json:"read"`
@@ -180,6 +195,7 @@ type commonProgramPackage struct {
 // Private projection state lives only inside the one official checker lease.
 // Its AST/Symbol keys never enter the returned DTO.
 type commonProgramProjection struct {
+	version      int
 	hosts        map[*ast.Symbol]commonProgramHost
 	hostNodes    map[*ast.Symbol]*ast.Node
 	hostImports  []commonProgramHost

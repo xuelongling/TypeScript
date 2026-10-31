@@ -6,11 +6,12 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"strconv"
 
 	"github.com/microsoft/typescript-go/internal/json"
 )
 
-func runCommonProgramFacts(ctx context.Context, input io.Reader, output io.Writer) error {
+func runCommonProgramFacts(ctx context.Context, input io.Reader, output io.Writer, version int) error {
 	data, err := io.ReadAll(io.LimitReader(arrayFactsReader{ctx, input}, arrayFactsMaxBytes+1))
 	if err != nil {
 		return arrayFactsError("io", "common Program request", err)
@@ -34,8 +35,12 @@ func runCommonProgramFacts(ctx context.Context, input io.Reader, output io.Write
 		return arrayFactsError("schema", "common Program exact request", err)
 	}
 	encoded, err := arrayFactsCanonical(r)
-	schema := "sha256:" + arrayFactsSHA(commonProgramSchema)
-	if err != nil || !bytes.Equal(encoded, raw) || r.Family != "tsfg.program-facts-request-candidate" || r.Version != 2 || r.SchemaHash != schema {
+	schemaBytes := commonProgramSchema
+	if version == 3 {
+		schemaBytes = commonProgramConstructorSchema
+	}
+	schema := "sha256:" + arrayFactsSHA(schemaBytes)
+	if err != nil || !bytes.Equal(encoded, raw) || r.Family != "tsfg.program-facts-request-candidate" || r.Version != version || r.SchemaHash != schema {
 		return arrayFactsError("schema", "common Program identity/fields", err)
 	}
 	hostPaths, err := commonHostPaths(r.Input)
@@ -65,7 +70,7 @@ func runCommonProgramFacts(ctx context.Context, input io.Reader, output io.Write
 	}
 	owned.Target, owned.CompilationClosure = target, r.Input.CompilationClosure
 	owned.Declarations.Paths = append(owned.Declarations.Paths, hostPaths...)
-	projection := &commonProgramProjection{input: r.Input}
+	projection := &commonProgramProjection{input: r.Input, version: version}
 	payload, err := projectArrayGeneric(ctx, owned, r.Input.arrayInput(), projection)
 	if err != nil {
 		return err
@@ -75,9 +80,10 @@ func runCommonProgramFacts(ctx context.Context, input io.Reader, output io.Write
 	if err != nil {
 		return err
 	}
-	packet := commonProgramPackage{Family: "tsfg.program-facts-package-candidate", Version: 2, SchemaHash: schema,
-		RequestID: "sha256:" + arrayFactsSHA(append([]byte("tsfg.program-facts.request.v2\x00"), data...)),
-		PackageID: "sha256:" + arrayFactsSHA(append([]byte("tsfg.program-facts.package.v2\x00"+schema+"\x00"), payloadBytes...)), Payload: complete}
+	domainVersion := strconv.Itoa(version)
+	packet := commonProgramPackage{Family: "tsfg.program-facts-package-candidate", Version: version, SchemaHash: schema,
+		RequestID: "sha256:" + arrayFactsSHA(append([]byte("tsfg.program-facts.request.v"+domainVersion+"\x00"), data...)),
+		PackageID: "sha256:" + arrayFactsSHA(append([]byte("tsfg.program-facts.package.v"+domainVersion+"\x00"+schema+"\x00"), payloadBytes...)), Payload: complete}
 	encoded, err = arrayFactsCanonical(packet)
 	if err != nil {
 		return err

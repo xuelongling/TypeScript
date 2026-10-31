@@ -149,7 +149,8 @@ func (p *arrayGenericProjection) constructorSignature(id string, signature *chec
 	if static != expected || len(sigs) != 1 || signature != sigs[0] || p.check.GetReturnTypeOfSignature(signature) != p.actual[id] {
 		return empty, p.fail(at, "actual selected constructor value/signature differs from owner")
 	}
-	if signature.HasRestParameter() || signature.MinArgumentCount() != len(signature.Parameters()) {
+	defaults := p.common != nil && p.common.version == 3
+	if signature.HasRestParameter() || !defaults && signature.MinArgumentCount() != len(signature.Parameters()) {
 		return empty, p.fail(at, "constructor requires the existing required-parameter source capability")
 	}
 	decl := signature.Declaration()
@@ -181,6 +182,10 @@ func (p *arrayGenericProjection) constructorSignature(id string, signature *chec
 		return empty, err
 	}
 	result := arrayGenericSignature{ID: idHash, SourcePath: ast.GetSourceFileOfNode(decl).FileName(), DeclarationRange: *genericSpan(decl), Parameters: []string{}, ReturnType: id}
+	if defaults {
+		minimum := signature.MinArgumentCount()
+		result.MinimumArgumentCount = &minimum
+	}
 	for _, param := range signature.Parameters() {
 		if err := p.annotationWork(); err != nil {
 			return empty, err
@@ -189,19 +194,33 @@ func (p *arrayGenericProjection) constructorSignature(id string, signature *chec
 			return empty, p.fail(at, "actual constructor parameter declaration required")
 		}
 		original := param.Declarations[0].AsParameterDeclaration()
-		if original.QuestionToken != nil || original.Initializer != nil || original.DotDotDotToken != nil {
+		if original.QuestionToken != nil || original.DotDotDotToken != nil || original.Initializer != nil && !defaults {
 			return empty, p.fail(at, "constructor requires the existing required-parameter source capability")
 		}
 		typ, err := p.annotation(original.Type)
 		if err != nil {
 			return empty, err
 		}
-		if !p.check.IsTypeAssignableTo(p.check.GetTypeOfSymbolAtLocation(param, at), p.actual[typ]) {
+		argumentType, err := p.constructorArgumentType(param.Declarations[0], typ)
+		if err != nil {
+			return empty, err
+		}
+		if !p.check.IsTypeAssignableTo(p.check.GetTypeOfSymbolAtLocation(param, at), p.actual[argumentType]) {
 			return empty, p.fail(at, "actual constructor parameter differs from original logical annotation")
 		}
 		result.Parameters = append(result.Parameters, typ)
 	}
 	return result, nil
+}
+
+// The incoming argument can be undefined even when the initialized binding
+// cannot. Preserve both logical types instead of retyping an actual argument.
+func (p *arrayGenericProjection) constructorArgumentType(node *ast.Node, declared string) (string, error) {
+	if p.common == nil || p.common.version != 3 || node.AsParameterDeclaration().Initializer == nil {
+		return declared, nil
+	}
+	undefined := p.addType(arrayGenericType{ID: "undefined", Kind: "undefined"}, p.check.GetUndefinedType())
+	return p.union([]string{declared, undefined}, p.check.GetUnionType([]*checker.Type{p.actual[declared], p.check.GetUndefinedType()}))
 }
 
 func (p *arrayGenericProjection) constructorForwardCompatibility(source, target *ast.Symbol, typ string, node *ast.Node) (classCompatibility, error) {

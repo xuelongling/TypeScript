@@ -113,7 +113,7 @@ func (p *arrayGenericProjection) commonIndirectCall(node, callee *ast.Node, args
 	if len(parameters) != len(args) || len(resolved.Parameters()) != len(args) {
 		return nil, p.fail(node, "indirect call must retain every original required argument")
 	}
-	values, err := p.argumentValues(args, resolved, parameters, state, depth, nil)
+	values, err := p.argumentValues(args, resolved, parameters, len(parameters), state, depth, nil)
 	if err != nil {
 		return nil, err
 	}

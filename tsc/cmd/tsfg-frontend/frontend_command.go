@@ -15,7 +15,10 @@ func runFrontendCommand(ctx context.Context, args []string, input io.Reader, out
 		return runSystemQueryFacts(ctx, input, output)
 	}
 	if len(args) == 1 && args[0] == "--program-facts-io-v2" {
-		return runCommonProgramFacts(ctx, input, output)
+		return runCommonProgramFacts(ctx, input, output, 2)
+	}
+	if len(args) == 1 && args[0] == "--program-facts-io-v3" {
+		return runCommonProgramFacts(ctx, input, output, 3)
 	}
 	if len(args) == 1 && args[0] == "--array-facts-io-v8" {
 		return runArrayGenericCandidate(ctx, input, output)

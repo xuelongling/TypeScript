@@ -124,7 +124,11 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 			parameters = append(parameters, param.DeclaredType)
 		}
 	}
-	if len(parameters) != len(args) || len(resolved.Parameters()) != len(args) {
+	minimum := len(parameters)
+	if selected != nil && selected.MinimumArgumentCount != nil {
+		minimum = *selected.MinimumArgumentCount
+	}
+	if len(args) < minimum || len(args) > len(parameters) || len(resolved.Parameters()) != len(parameters) {
 		return nil, p.fail(node, "all original call parameters required")
 	}
 	if callee.Kind == ast.KindPropertyAccessExpression && (p.common == nil || receiverExpected != "") {
@@ -134,7 +138,7 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 			return nil, err
 		}
 	}
-	values, err := p.argumentValues(args, resolved, parameters, state, depth, projectedOwner)
+	values, err := p.argumentValues(args, resolved, parameters, minimum, state, depth, projectedOwner)
 	if err != nil {
 		return nil, err
 	}
@@ -164,8 +168,8 @@ func (p *arrayGenericProjection) call(node *ast.Node, state *arrayGenericState, 
 	return v, nil
 }
 
-func (p *arrayGenericProjection) argumentValues(args []*ast.Node, resolved *checker.Signature, parameters []string, state *arrayGenericState, depth int, projectedOwner *arrayGenericExpression) ([]arrayGenericExpression, error) {
-	if len(args) != len(parameters) || len(args) != len(resolved.Parameters()) {
+func (p *arrayGenericProjection) argumentValues(args []*ast.Node, resolved *checker.Signature, parameters []string, minimum int, state *arrayGenericState, depth int, projectedOwner *arrayGenericExpression) ([]arrayGenericExpression, error) {
+	if len(args) < minimum || len(args) > len(parameters) || len(parameters) != len(resolved.Parameters()) {
 		return nil, arrayFactsError("identity", "original argument/parameter arity differs", nil)
 	}
 	values := []arrayGenericExpression{}
@@ -173,7 +177,17 @@ func (p *arrayGenericProjection) argumentValues(args []*ast.Node, resolved *chec
 		if err := p.annotationWork(); err != nil {
 			return nil, err
 		}
-		if !p.check.IsTypeAssignableTo(p.check.GetTypeAtLocation(arg), p.check.GetTypeOfSymbolAtLocation(resolved.Parameters()[i], arg)) {
+		expected := parameters[i]
+		actualParameter := p.check.GetTypeOfSymbolAtLocation(resolved.Parameters()[i], arg)
+		if p.common != nil && p.common.version == 3 && resolved.Declaration() != nil && resolved.Declaration().Kind == ast.KindConstructor {
+			var err error
+			expected, err = p.constructorArgumentType(resolved.Parameters()[i].Declarations[0], expected)
+			if err != nil {
+				return nil, err
+			}
+			actualParameter = p.actual[expected]
+		}
+		if !p.check.IsTypeAssignableTo(p.check.GetTypeAtLocation(arg), actualParameter) {
 			return nil, p.fail(arg, "actual resolved signature argument assignability")
 		}
 		var value *arrayGenericExpression
@@ -183,7 +197,7 @@ func (p *arrayGenericProjection) argumentValues(args []*ast.Node, resolved *chec
 		} else if projectedOwner != nil {
 			value, err = p.index(arg, true, state, depth+1)
 		} else {
-			value, err = p.expression(arg, parameters[i], state, depth+1)
+			value, err = p.expression(arg, expected, state, depth+1)
 		}
 		if err != nil {
 			return nil, err

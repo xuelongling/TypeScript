@@ -32,7 +32,11 @@ func (p *arrayGenericProjection) superConstruct(node *ast.Node, state *arrayGene
 	if err != nil {
 		return nil, err
 	}
-	values, err := p.argumentValues(call.Arguments.Nodes, resolved, signature.Parameters, state, depth, nil)
+	minimum := len(signature.Parameters)
+	if signature.MinimumArgumentCount != nil {
+		minimum = *signature.MinimumArgumentCount
+	}
+	values, err := p.argumentValues(call.Arguments.Nodes, resolved, signature.Parameters, minimum, state, depth, nil)
 	if err != nil {
 		return nil, err
 	}

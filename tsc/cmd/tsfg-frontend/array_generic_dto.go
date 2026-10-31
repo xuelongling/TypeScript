@@ -53,11 +53,12 @@ type arrayGenericField struct {
 	Initializer      *arrayGenericExpression `json:"initializer,omitempty"`
 }
 type arrayGenericSignature struct {
-	ID               string   `json:"id"`
-	SourcePath       string   `json:"sourcePath"`
-	DeclarationRange span     `json:"declarationRange"`
-	Parameters       []string `json:"parameters"`
-	ReturnType       string   `json:"returnType"`
+	MinimumArgumentCount *int     `json:"minimumArgumentCount,omitempty"`
+	ID                   string   `json:"id"`
+	SourcePath           string   `json:"sourcePath"`
+	DeclarationRange     span     `json:"declarationRange"`
+	Parameters           []string `json:"parameters"`
+	ReturnType           string   `json:"returnType"`
 }
 type arrayGenericCompatibilityDependency struct {
 	SourceType string `json:"sourceType"`
@@ -134,22 +135,23 @@ type arrayGenericStatement struct {
 	Body            *[]arrayGenericStatement `json:"body,omitzero"`
 }
 type arrayGenericFunction struct {
-	LexicalParent         **string                `json:"lexicalParent,omitzero"`
-	DeclarationScope      *span                   `json:"declarationScope,omitempty"`
-	Captures              *[]commonProgramCapture `json:"captures,omitzero"`
-	Access                string                  `json:"access,omitempty"`
-	OwnerType             string                  `json:"ownerType,omitempty"`
-	OverrideTarget        string                  `json:"overrideTarget,omitempty"`
-	ID                    string                  `json:"id"`
-	Name                  string                  `json:"name"`
-	SourcePath            string                  `json:"sourcePath"`
-	DeclarationRange      span                    `json:"declarationRange"`
-	NameRange             span                    `json:"nameRange"`
-	ReturnType            string                  `json:"returnType"`
-	ReturnAnnotationRange *span                   `json:"returnAnnotationRange"`
-	Parameters            []arrayFactsBinding     `json:"parameters"`
-	Bindings              []arrayFactsBinding     `json:"bindings"`
-	Body                  []arrayGenericStatement `json:"body"`
+	ParameterInitialization *commonProgramParameterInitialization `json:"parameterInitialization,omitempty"`
+	LexicalParent           **string                              `json:"lexicalParent,omitzero"`
+	DeclarationScope        *span                                 `json:"declarationScope,omitempty"`
+	Captures                *[]commonProgramCapture               `json:"captures,omitzero"`
+	Access                  string                                `json:"access,omitempty"`
+	OwnerType               string                                `json:"ownerType,omitempty"`
+	OverrideTarget          string                                `json:"overrideTarget,omitempty"`
+	ID                      string                                `json:"id"`
+	Name                    string                                `json:"name"`
+	SourcePath              string                                `json:"sourcePath"`
+	DeclarationRange        span                                  `json:"declarationRange"`
+	NameRange               span                                  `json:"nameRange"`
+	ReturnType              string                                `json:"returnType"`
+	ReturnAnnotationRange   *span                                 `json:"returnAnnotationRange"`
+	Parameters              []arrayFactsBinding                   `json:"parameters"`
+	Bindings                []arrayFactsBinding                   `json:"bindings"`
+	Body                    []arrayGenericStatement               `json:"body"`
 }
 type arrayGenericPayload struct {
 	CompatibilityWitnesses  []arrayGenericCompatibilityWitness    `json:"compatibilityWitnesses"`

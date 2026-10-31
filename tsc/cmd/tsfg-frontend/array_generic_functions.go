@@ -155,8 +155,11 @@ func (p *arrayGenericProjection) header(node *ast.Node, constructorType string) 
 	}
 	for i, node := range parameters {
 		decl := node.AsParameterDeclaration()
-		if decl.QuestionToken != nil || decl.Initializer != nil || decl.DotDotDotToken != nil {
+		if decl.QuestionToken != nil || decl.DotDotDotToken != nil || decl.Initializer != nil && (constructorType == "" || p.common == nil || p.common.version != 3) {
 			return nil, p.fail(node, "required original parameter required")
+		}
+		if constructorType != "" && p.common != nil && p.common.version == 3 && decl.Type == nil {
+			return nil, p.fail(node, "constructor parameter requires an explicit logical type annotation")
 		}
 		v, err := p.binding(node, decl.Type, "parameter", true)
 		if err != nil {
@@ -204,6 +207,27 @@ func (p *arrayGenericProjection) function(header *arrayGenericHeader) (arrayGene
 		if p.types[b.DeclaredType].Kind == "array" {
 			state.lengths[b.ID] = &arrayFactsLengthState{parameter: true}
 		}
+	}
+	if header.node.Kind == ast.KindConstructor && p.common != nil && p.common.version == 3 {
+		initialization := &commonProgramParameterInitialization{MinimumArgumentCount: header.signature.MinArgumentCount(), Steps: []commonProgramParameterStep{}}
+		for i, node := range nodes {
+			declaration := node.AsParameterDeclaration()
+			binding := fn.Parameters[i]
+			argumentType, err := p.constructorArgumentType(node, binding.DeclaredType)
+			if err != nil {
+				return fn, err
+			}
+			step := commonProgramParameterStep{Binding: binding.ID, ArgumentType: argumentType, Range: *genericSpan(node)}
+			if declaration.Initializer != nil {
+				initialization.HasParameterExpressions = true
+				step.Initializer, err = p.expression(declaration.Initializer, binding.DeclaredType, state, 0)
+				if err != nil {
+					return fn, err
+				}
+			}
+			initialization.Steps = append(initialization.Steps, step)
+		}
+		fn.ParameterInitialization = initialization
 	}
 	if header.node.Body() == nil {
 		return fn, p.fail(header.node, "original implementation body required")
